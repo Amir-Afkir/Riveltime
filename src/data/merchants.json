@@ -1,0 +1,35 @@
+[
+  {
+    "id": 0,
+    "name": "Épicerie Bio",
+    "category": "Alimentation",
+    "distance": 1.2,
+    "products": [
+      { "name": "Pommes", "price": 2.5 },
+      { "name": "Pâtes complètes", "price": 3.2 },
+      { "name": "Lait d’avoine", "price": 2.8 }
+    ]
+  },
+  {
+    "id": 1,
+    "name": "La Papeterie Locale",
+    "category": "Fournitures",
+    "distance": 0.7,
+    "products": [
+      { "name": "Carnet A5", "price": 4.0 },
+      { "name": "Stylos", "price": 1.5 },
+      { "name": "Feuilles perforées", "price": 2.0 }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Fleuriste L'Orchidée",
+    "category": "Fleurs",
+    "distance": 2.1,
+    "products": [
+      { "name": "Bouquet de roses", "price": 12.5 },
+      { "name": "Orchidée blanche", "price": 15.0 },
+      { "name": "Plante verte", "price": 9.9 }
+    ]
+  }
+]

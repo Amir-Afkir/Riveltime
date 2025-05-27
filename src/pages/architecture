@@ -1,0 +1,28 @@
+pages/
+├── client/
+│   ├── Accueil.jsx         // /client
+│   ├── Vitrine.jsx         // /client/vitrine/:id
+│   ├── Panier.jsx          // /client/panier
+│   ├── Commandes.jsx       // /client/commandes
+│   ├── Profil.jsx          // /client/profil
+│   └── Messages.jsx        // /client/messages
+
+├── vendeur/
+│   ├── Dashboard.jsx       // /vendeur
+│   ├── Produits.jsx        // /vendeur/produits
+│   ├── Commandes.jsx       // /vendeur/commandes
+│   ├── Profil.jsx          // /vendeur/profil
+│   └── Messages.jsx        // /vendeur/messages
+
+├── livreur/
+│   ├── Dashboard.jsx       // /livreur
+│   ├── Courses.jsx         // /livreur/courses
+│   ├── Historique.jsx      // /livreur/historique
+│   ├── Profil.jsx          // /livreur/profil
+│   └── Messages.jsx        // /livreur/messages
+
+├── common/
+│   ├── Home.jsx            // / (choix du rôle)
+│   ├── Connexion.jsx       // /connexion
+│   ├── Inscription.jsx     // /inscription
+│   └── Erreur404.jsx       // 404 page
