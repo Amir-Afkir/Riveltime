@@ -17,7 +17,7 @@ export default function Accueil() {
 
   return (
     <div className="min-h-screen bg-blue-50 pb-20">
-      <Header title="Commerçants près de vous" showBack={true} showCart={true} />
+      <Header title="Commerçants près de vous" showBack={true} backTo="/" showCart={true} />
       <div className="p-4">
         <input
           type="text"

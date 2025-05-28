@@ -1,13 +1,14 @@
+// ✅ src/components/Header.jsx
 import { useNavigate } from 'react-router-dom';
 
-export default function Header({ title, showBack }) {
+export default function Header({ title, showBack, backTo }) {
   const navigate = useNavigate();
 
   return (
     <header className="w-full p-4 bg-blue-600 text-white shadow-md flex items-center justify-between relative">
       {showBack && (
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => backTo ? navigate(backTo) : navigate(-1)}
           className="text-white text-2xl font-light"
           aria-label="Retour"
         >

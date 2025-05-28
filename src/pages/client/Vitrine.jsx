@@ -1,5 +1,5 @@
 // src/pages/client/Vitrine.jsx
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import BottomNav from "../../components/BottomNav";
 import { useEffect, useState } from "react";
@@ -7,6 +7,7 @@ import { useCart } from "../../context/CartContext";
 
 export default function Vitrine() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addToCart } = useCart();
 
   const [merchant, setMerchant] = useState(null);
@@ -29,8 +30,8 @@ export default function Vitrine() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50 pb-20">
-      <Header title={merchant.name} showBack={true} />
+    <div className="min-h-screen bg-blue-50 pb-28">
+      <Header title={merchant.name} showBack={true} onBack={() => navigate("/client")} />
       <div className="p-4 max-w-md mx-auto">
         <h2 className="text-lg font-semibold mb-2">
           Catégorie : {merchant.category}
@@ -57,6 +58,13 @@ export default function Vitrine() {
             </li>
           ))}
         </ul>
+
+        <button
+          onClick={() => navigate("/client/panier")}
+          className="mt-6 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+        >
+          Voir le panier
+        </button>
       </div>
       <BottomNav />
     </div>
