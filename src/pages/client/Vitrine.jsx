@@ -61,7 +61,7 @@ export default function Vitrine() {
 
         <button
           onClick={() => navigate("/client/panier")}
-          className="mt-6 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+          className="mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-green-700"
         >
           Voir le panier
         </button>
