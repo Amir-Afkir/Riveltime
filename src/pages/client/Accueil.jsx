@@ -1,10 +1,10 @@
 // src/pages/client/Accueil.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../../components/Header";
+import Layout from "../../components/ui/Layout";
 import MerchantCard from "../../components/MerchantCard";
 import merchants from "../../data/merchants.json";
-import BottomNav from "../../components/BottomNav";
+import Input from "../../components/ui/Input";
 
 export default function Accueil() {
   const [query, setQuery] = useState("");
@@ -16,13 +16,11 @@ export default function Accueil() {
   );
 
   return (
-    <div className="min-h-screen bg-blue-50 pb-20">
-      <Header title="Commerçants près de vous" showBack={true} backTo="/" showCart={true} />
+    <Layout title="Commerçants près de vous" showBack backTo="/" showCart>
       <div className="p-4">
-        <input
+        <Input
           type="text"
           placeholder="Rechercher un commerçant ou une catégorie..."
-          className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -40,7 +38,6 @@ export default function Accueil() {
           ))}
         </main>
       </div>
-      <BottomNav />
-    </div>
+    </Layout>
   );
 }

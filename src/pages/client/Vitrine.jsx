@@ -1,9 +1,12 @@
 // src/pages/client/Vitrine.jsx
 import { useParams, useNavigate } from "react-router-dom";
-import Header from "../../components/Header";
-import BottomNav from "../../components/BottomNav";
 import { useEffect, useState } from "react";
 import { useCart } from "../../context/CartContext";
+import Layout from "../../components/ui/Layout";
+import Button from "../../components/ui/Button";
+import Section from "../../components/ui/Section";
+import Title from "../../components/ui/Title";
+import Card from "../../components/ui/Card";
 
 export default function Vitrine() {
   const { id } = useParams();
@@ -30,43 +33,37 @@ export default function Vitrine() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50 pb-28">
-      <Header title={merchant.name} showBack={true} onBack={() => navigate("/client")} />
-      <div className="p-4 max-w-md mx-auto">
-        <h2 className="text-lg font-semibold mb-2">
-          Catégorie : {merchant.category}
-        </h2>
-        <ul className="space-y-2">
-          {merchant.products.map((product, index) => (
-            <li
-              key={index}
-              className="bg-white p-3 rounded shadow text-gray-700 flex justify-between items-center"
-            >
-              <div>
-                <span className="font-medium">{product.name}</span>
-                <br />
-                <span className="text-sm text-gray-500">
-                  {product.price.toFixed(2)} €
-                </span>
-              </div>
-              <button
-                onClick={() => addToCart({ merchant: merchant.name, product })}
-                className="ml-4 text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-              >
-                Ajouter
-              </button>
-            </li>
-          ))}
-        </ul>
+    <Layout title={merchant.name} showBack={true} backTo="/client" showCart={false} color="blue">
+      <Section>
+        <Title level={2}>Catégorie : {merchant.category}</Title>
+      </Section>
 
-        <button
-          onClick={() => navigate("/client/panier")}
-          className="mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-green-700"
-        >
-          Voir le panier
-        </button>
-      </div>
-      <BottomNav />
-    </div>
+      <ul className="space-y-2">
+        {merchant.products.map((product, index) => (
+          <Card key={index} className="flex justify-between items-center">
+            <div>
+              <span className="font-medium">{product.name}</span>
+              <br />
+              <span className="text-sm text-gray-500">
+                {product.price.toFixed(2)} €
+              </span>
+            </div>
+            <Button
+              onClick={() => addToCart({ merchant: merchant.name, product })}
+              className="ml-4 text-sm"
+            >
+              Ajouter
+            </Button>
+          </Card>
+        ))}
+      </ul>
+
+      <Button
+        onClick={() => navigate("/client/panier")}
+        className="mt-6 w-full"
+      >
+        Voir le panier
+      </Button>
+    </Layout>
   );
 }

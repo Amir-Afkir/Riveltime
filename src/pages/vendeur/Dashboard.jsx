@@ -4,7 +4,7 @@ import BottomNav from "../../components/BottomNav";
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-green-50 pb-24">
+    <div className="min-h-screen bg-blue-50 pb-20">
       <Header title="Espace Commerçant" showBack={true} backTo="/" showCart={true} color="green" />
       <div className="p-6 max-w-md mx-auto text-center">
         <h2 className="text-xl font-semibold text-gray-800 mb-2">Bienvenue dans votre espace commerçant</h2>

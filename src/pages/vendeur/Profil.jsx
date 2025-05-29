@@ -1,32 +1,31 @@
 import Header from "../../components/Header";
 import BottomNav from "../../components/BottomNav";
+import UserProfileSections from "../../components/ui/UserProfileSections";
 
-export default function Profil() {
+export default function ProfilVendeur() {
+  const user = {
+    nom: "Michel S",
+    email: "contact@papeterie-locale.fr",
+    telephone: "06 12 34 56 78",
+    notifications: true,
+    boutique: {
+      nom: "La Papeterie Locale",
+      categorie: "Fournitures",
+      siret: "123 456 789 00013",
+      email: "contact@papeterie-locale.fr",
+      telephone: "06 12 34 56 78",
+      adresse: "123 rue de l'Artisanat, Orléans",
+      horaires: "Lun-Sam : 9h - 19h",
+    },
+  };
+    
   return (
-    <div className="min-h-screen bg-green-50 pb-24">
-      <Header title="Mon Profil" showBack={false} color="green" />
-      <div className="p-4 max-w-md mx-auto space-y-4 text-gray-700">
-
-        <section className="bg-white p-4 rounded shadow">
-          <h2 className="font-semibold text-lg mb-2">Informations</h2>
-          <p><strong>Boutique :</strong> La Papeterie Locale</p>
-          <p><strong>Catégorie :</strong> Fournitures</p>
-          <p><strong>Email :</strong> contact@papeterie-locale.fr</p>
-          <p><strong>Téléphone :</strong> 06 12 34 56 78</p>
-          <p><strong>Adresse :</strong> 123 rue de l'Artisanat, Orléans</p>
-          <p><strong>Horaires :</strong> Lun-Sam : 9h - 19h</p>
-        </section>
-
-        <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
-          Modifier mes informations
-        </button>
-
-        <button className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600">
-          Se déconnecter
-        </button>
-
+    <div className="min-h-screen bg-green-50 pb-28">
+      <Header title="Mon profil" showBack={false} color="green" />
+      <div className="max-w-md mx-auto p-4 space-y-6 text-gray-700">
+        <UserProfileSections user={user} role="vendeur" />
       </div>
-      <BottomNav role="vendeur" />
+      <BottomNav />
     </div>
   );
 }
