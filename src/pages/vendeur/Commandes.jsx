@@ -1,5 +1,8 @@
-import Header from "../../components/Header";
-import BottomNav from "../../components/BottomNav";
+import Header from "../../components/layout/Header";
+import BottomNav from "../../components/layout/BottomNav";
+import Card from "../../components/ui/Card";
+import Title from "../../components/ui/Title";
+import Badge from "../../components/ui/Badge";
 
 export default function CommandesVendeur() {
   const commandes = [
@@ -27,16 +30,18 @@ export default function CommandesVendeur() {
       <Header title="Commandes reçues" showBack={true} backTo="/vendeur" color="green" />
       <div className="p-4 max-w-md mx-auto space-y-4">
         {commandes.map((commande) => (
-          <div key={commande.id} className="bg-white rounded shadow p-4">
-            <p className="font-semibold">Client : {commande.client}</p>
+          <Card key={commande.id}>
+            <Title level={4} className="mb-1">Client : {commande.client}</Title>
             <ul className="text-sm text-gray-600 mt-2">
               {commande.produits.map((p, i) => (
                 <li key={i}>{p.quantite}× {p.nom}</li>
               ))}
             </ul>
             <p className="text-sm mt-2">Total : {commande.total.toFixed(2)} €</p>
-            <p className="text-xs text-green-600 mt-1">Statut : {commande.statut}</p>
-          </div>
+            <Badge color={commande.statut === "En cours" ? "blue" : "gray"} className="mt-2 inline-block">
+              Statut : {commande.statut}
+            </Badge>
+          </Card>
         ))}
       </div>
       <BottomNav />

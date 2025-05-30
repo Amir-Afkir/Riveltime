@@ -1,0 +1,98 @@
+📘 Nature de la relation
+
+Les relations entre Riveltime et les livreurs s’inscrivent exclusivement dans le cadre d’un contrat de mise à disposition d’un outil technique de mise en relation. Le livreur demeure un prestataire indépendant, non salarié, agissant pour son propre compte et sous sa seule responsabilité. Aucune disposition du présent contrat ne saurait être interprétée comme établissant un contrat de travail, de subordination, de mandat ou de représentation au sens du droit commun ou du droit du travail.
+
+🔒 Responsabilité, sinistre et obligations contractuelles du livreur
+
+Riveltime agit exclusivement en tant que plateforme technique de mise en relation entre commerçants, livreurs et clients. Elle n’intervient à aucun moment dans l’exécution matérielle des livraisons, lesquelles relèvent de la seule relation contractuelle entre le livreur, le vendeur et le client.
+
+À ce titre, Riveltime décline toute responsabilité en cas de vol, perte, dégradation, détournement ou non-livraison des marchandises.
+
+Toutefois, tout comportement fautif ou négligent imputable au livreur peut engager sa responsabilité contractuelle vis-à-vis de Riveltime, dans la seule mesure où ce comportement :
+
+Porte atteinte à l’image, à la crédibilité ou à la réputation de la plateforme ;
+
+Génère des frais internes importants (gestion, médiation, service client, assistance juridique) sans contrepartie ;
+
+Met en péril la relation de confiance avec les partenaires vendeurs ou clients de la plateforme.
+
+Ces dispositions relèvent exclusivement du régime de la responsabilité contractuelle de droit commun et visent à protéger les intérêts légitimes de Riveltime en tant qu’intermédiaire neutre.
+
+Elles ne sauraient en aucun cas être assimilées à des mesures disciplinaires, ni interprétées comme l'exercice d’un pouvoir hiérarchique, de direction ou de contrôle permanent. Le livreur conserve l’entière autonomie de son activité.
+
+🔧 Défaut de coopération
+
+En cas d’incident lors d’une livraison (perte, détérioration, accident, etc.), un délai contradictoire de 48 heures à compter de la date de survenance est ouvert pour permettre au livreur de :
+
+Déclarer l’incident via l’application ou par écrit ;
+
+Transmettre toute information utile (lieu, heure, circonstances) ;
+
+Coopérer activement à l’examen de la situation.
+
+À l’issue de ce délai, en l’absence de toute déclaration ou coopération, les faits rapportés par la partie plaignante (client ou commerçant) seront considérés comme établis à titre unilatéral et non contesté. Le livreur sera alors réputé en faute contractuelle volontaire et pleinement responsable des conséquences.
+
+Cette procédure respecte les principes de bonne foi contractuelle, tout en assurant une gestion rapide et équitable des litiges. Elle ne constitue en aucun cas une sanction disciplinaire.
+
+🚨 Manquement grave (vol, fraude, détournement)
+
+En cas de manquement grave aux obligations contractuelles, ou de comportement préjudiciable manifeste, Riveltime se réserve le droit de suspendre ou restreindre temporairement l’accès du livreur à la plateforme, sans préavis, pour des motifs tenant :
+
+À la prévention d’un risque de récidive immédiate ;
+
+À la protection des utilisateurs de la plateforme ;
+
+À la préservation de la réputation commerciale de Riveltime.
+
+Cette mesure conservatoire ne constitue ni une sanction disciplinaire, ni une rupture de contrat, mais un droit contractuel d’interruption d’accès à l’outil numérique.
+
+⚠️ Clause spéciale : Accident, force majeure et obligations du livreur
+
+📌 1. Obligation d’assurance
+
+Le livreur s’engage à souscrire et maintenir en vigueur une assurance responsabilité civile professionnelle (RC Pro) ou une assurance responsabilité civile circulation couvrant l’ensemble des dommages pouvant survenir dans le cadre de son activité.
+
+📌 2. Déclaration d’incident
+
+En cas d’accident ou d’empêchement :
+
+Déclaration impérative dans les 48h via l’application ou par écrit ;
+
+Transmission des justificatifs nécessaires (certificat médical, constat, etc.).
+
+📌 3. Cas de force majeure
+
+Conformément à l’article 1218 du Code civil, un événement de force majeure doit être : imprévisible, irrésistible et extérieur. Le livreur doit :
+
+Justifier l’existence de l’événement dans les 7 jours ;
+
+Fournir toutes preuves documentées de l’impossibilité d’exécution.
+
+À défaut, la force majeure ne pourra être reconnue.
+
+📌 4. Conséquences en cas de non-respect
+
+Sans déclaration ni justificatif recevable, la faute sera réputée volontaire. Le livreur sera redevable :
+
+D'une indemnisation intégrale du commerçant, incluant la valeur des marchandises concernées ainsi que le préjudice moral et commercial subi (perte de clientèle, réputation, retards) ;
+
+D’un versement forfaitaire de 200 € à Riveltime, à titre d'une clause de réparation anticipé préalablement convenue (article 1231-5 du Code civil), couvrant les frais administratifs, techniques et le préjudice d’image subi par la plateforme ;
+
+D’une suspension conservatoire immédiate de l’accès à la plateforme, destinée à prévenir toute récidive ou aggravation des conséquences contractuelles ;
+
+D’une procédure de recouvrement à ses frais exclusifs, par tout moyen légal (Stripe Connect, cabinet de recouvrement, huissier) ;
+
+De la transmission du dossier aux autorités compétentes, si des éléments graves, précis et concordants permettent de suspecter une infraction pénale, conformément aux textes en vigueur.
+
+Ces dispositions s’appliquent notamment en cas de faute lourde ou frauduleuse (vol, dissimulation, détournement, etc.).
+
+🛑 Obligation de médiation préalable
+
+Conformément à l’article 1530 du Code de procédure civile, toute action judiciaire entre les parties devra être précédée d’une tentative de médiation. À défaut, la saisine des tribunaux sera irrecevable.
+
+🔹 Indépendance et absence de lien de subordination
+
+Toutes les obligations ci-dessus visent exclusivement à encadrer les engagements contractuels dans le respect des droits de chaque partie. Elles ne sauraient en aucun cas être interprétées comme l’instauration d’un lien de subordination.
+
+Le livreur agit en toute indépendance : il choisit librement ses créneaux, ses missions, ses trajets et conserve l'entière responsabilité de son activité, y compris ses obligations fiscales, sociales et comptables. Riveltime n'exerce aucun pouvoir de direction ou de contrôle sur la manière dont le livreur accomplit ses prestations.
+

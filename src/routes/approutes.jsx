@@ -13,6 +13,7 @@ import Produits from '../pages/vendeur/Produits';
 import CommandesVendeur from '../pages/vendeur/Commandes';
 import ProfilVendeur from '../pages/vendeur/Profil';
 import MessagesVendeur from '../pages/vendeur/Messages';
+import MaBoutique from '../pages/vendeur/MaBoutique';
 
 import DashboardLivreur from '../pages/livreur/Dashboard';
 import Courses from '../pages/livreur/Courses';
@@ -39,6 +40,7 @@ export default function AppRoutes() {
       <Route path="/vendeur/commandes" element={<CommandesVendeur />} />
       <Route path="/vendeur/profil" element={<ProfilVendeur />} />
       <Route path="/vendeur/messages" element={<MessagesVendeur />} />
+      <Route path="/vendeur/boutique" element={<MaBoutique />} />
 
       {/* Livreur */}
       <Route path="/livreur" element={<DashboardLivreur />} />

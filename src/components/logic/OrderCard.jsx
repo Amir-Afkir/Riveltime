@@ -1,8 +1,8 @@
 // src/components/OrderCard.jsx
 import React from 'react';
-import Card from './Card';
-import Title from './Title';
-import Badge from './Badge';
+import Card from '../ui/Card';
+import Title from '../ui/Title';
+import Badge from '../ui/Badge';
 
 export default function OrderCard({ order }) {
   const colorMap = {

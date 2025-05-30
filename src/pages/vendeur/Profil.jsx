@@ -1,6 +1,6 @@
-import Header from "../../components/Header";
-import BottomNav from "../../components/BottomNav";
-import UserProfileSections from "../../components/ui/UserProfileSections";
+import Header from "../../components/layout/Header";
+import BottomNav from "../../components/layout/BottomNav";
+import UserProfileSections from "../../components/logic/UserProfileSections";
 
 export default function ProfilVendeur() {
   const user = {

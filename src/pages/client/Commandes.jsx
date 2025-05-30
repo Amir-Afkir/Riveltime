@@ -1,9 +1,9 @@
 import Section from "../../components/ui/Section";
 import { useCart } from "../../context/CartContext";
-import Header from "../../components/Header";
-import BottomNav from "../../components/BottomNav";
+import Header from "../../components/layout/Header";
+import BottomNav from "../../components/layout/BottomNav";
 import Title from "../../components/ui/Title";
-import OrderCard from "../../components/ui/OrderCard"; 
+import OrderCard from "../../components/logic/OrderCard"; 
 
 export default function CommandesClient() {
   const { orders } = useCart();

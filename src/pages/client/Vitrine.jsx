@@ -2,7 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useCart } from "../../context/CartContext";
-import Layout from "../../components/ui/Layout";
+import Layout from "../../components/layout/Layout";
 import Button from "../../components/ui/Button";
 import Section from "../../components/ui/Section";
 import Title from "../../components/ui/Title";

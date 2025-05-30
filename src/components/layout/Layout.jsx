@@ -1,7 +1,7 @@
 // src/components/Layout.jsx
 import React from 'react';
-import Header from '../Header';
-import BottomNav from '../BottomNav';
+import Header from './Header';
+import BottomNav from './BottomNav';
 
 export default function Layout({
   title,

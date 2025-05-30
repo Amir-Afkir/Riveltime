@@ -1,6 +1,6 @@
 import { useCart } from "../../context/CartContext";
 import { useNavigate } from "react-router-dom"; // ← import
-import Layout from "../../components/ui/Layout";
+import Layout from "../../components/layout/Layout";
 import Card from "../../components/ui/Card";
 import Section from "../../components/ui/Section";
 import Title from "../../components/ui/Title";
@@ -40,9 +40,13 @@ export default function Panier() {
                   <span className="text-sm text-gray-600">
                     {(item.product.price * item.quantity).toFixed(2)} €
                   </span>
-                  <Button variant="danger" size="icon" onClick={() => removeFromCart(item)}>
-                    ×
-                  </Button>
+                    <Button
+                    onClick={() => removeFromCart(item)}
+                    variant="danger"
+                    size="small"
+                    >
+                    X
+                    </Button>
                 </div>
               </Card>
             ))}

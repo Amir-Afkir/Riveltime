@@ -1,7 +1,11 @@
 // src/pages/vendeur/Produits.jsx
 import { useState } from "react";
-import Header from "../../components/Header";
-import BottomNav from "../../components/BottomNav";
+import Header from "../../components/layout/Header";
+import BottomNav from "../../components/layout/BottomNav";
+import Card from "../../components/ui/Card";
+import Title from "../../components/ui/Title";
+import Button from "../../components/ui/Button";
+import Input from "../../components/ui/Input";
 
 export default function Produits() {
   const [produits, setProduits] = useState([
@@ -13,28 +17,71 @@ export default function Produits() {
     setProduits((prev) => prev.filter((p) => p.id !== id));
   };
 
+
+  const [showModal, setShowModal] = useState(false);
+  const [nouveauProduit, setNouveauProduit] = useState({ nom: "", prix: "" });
+  
+  const ajouterProduit = () => {
+    const id = Date.now();
+    setProduits([...produits, { id, ...nouveauProduit, prix: parseFloat(nouveauProduit.prix) }]);
+    setNouveauProduit({ nom: "", prix: "" });
+    setShowModal(false);
+  };
+
   return (
     <div className="min-h-screen bg-green-50 pb-24">
       <Header title="Mes produits" showBack={false} backTo="/vendeur" color="green" />
       <div className="p-4 max-w-md mx-auto space-y-4">
         {produits.map((produit) => (
-          <div key={produit.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
+          <Card key={produit.id} className="flex justify-between items-center">
             <div>
-              <h3 className="font-semibold text-gray-700">{produit.nom}</h3>
+              <Title level={4} className="text-gray-700">{produit.nom}</Title>
               <p className="text-sm text-gray-500">{produit.prix.toFixed(2)} €</p>
             </div>
-            <button
+            <Button
               onClick={() => supprimerProduit(produit.id)}
-              className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+              variant="danger"
+              size="small"
             >
               Supprimer
-            </button>
-          </div>
+            </Button>
+          </Card>
         ))}
 
-        <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+        <Button className="w-full" variant="success" onClick={() => setShowModal(true)}>
           ➕ Ajouter un produit
-        </button>
+        </Button>
+
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded shadow w-full max-w-sm">
+              <Title level={3}>Nouveau produit</Title>
+              <div className="space-y-4 mt-4">
+                <Input
+                  label="Nom du produit"
+                  name="nom"
+                  value={nouveauProduit.nom}
+                  onChange={(e) => setNouveauProduit({ ...nouveauProduit, nom: e.target.value })}
+                />
+                <Input
+                  label="Prix (€)"
+                  name="prix"
+                  type="number"
+                  value={nouveauProduit.prix}
+                  onChange={(e) => setNouveauProduit({ ...nouveauProduit, prix: e.target.value })}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button variant="secondary" onClick={() => setShowModal(false)}>
+                    Annuler
+                  </Button>
+                  <Button variant="success" onClick={ajouterProduit}>
+                    Ajouter
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <BottomNav />
     </div>
