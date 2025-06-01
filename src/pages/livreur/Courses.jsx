@@ -40,11 +40,11 @@ export default function Courses() {
           {status !== "terminee" && (
             <Button
               onClick={handleAdvance}
-              className="w-full"
-              variant="primary"
-            >
+              variant="orange" 
+              className="w-full">
               Passer à l'étape suivante
             </Button>
+
           )}
           {status === "terminee" && (
             <Title as="p" className="text-green-600 font-semibold mt-4">

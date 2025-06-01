@@ -12,7 +12,7 @@ export default function ProfilLivreur() {
     zone: "Orléans",
     notifications: true,
   };
-
+  
   return (
     <div className="min-h-screen bg-orange-50 pb-28">
       <Header title="Mon profil" showBack={false} color="orange" />
