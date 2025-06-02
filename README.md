@@ -26,15 +26,6 @@
 
 ---
 
-## 💼 Modèle économique
-
-- 📦 **Pas d’abonnement** pour les commerçants
-- 💳 **Commission fixe de 8 %** sur chaque commande (HT)
-- 🤝 **Livraison partagée** : 2,50 € client + 2,50 € vendeur
-- 💸 **Livreur rémunéré 5 € net/course**, sans frais
-
----
-
 ## ⚙️ Stack technique
 
 - 🧠 **React.js** (avec Vite)
@@ -42,25 +33,6 @@
 - 🔐 **Stripe Connect** pour le paiement sécurisé
 - 🌐 **MongoDB** / Express (API REST)
 - 📦 Architecture modulaire : `client/`, `vendeur/`, `livreur/`, `common/`
-
----
-
-## 🌍 Objectif
-
-Lancer un service de livraison local à Orléans, basé sur des valeurs fortes :
-- 🔄 Circuits courts
-- 🔒 Transparence
-- ⚖️ Équité entre les parties
-- 🚀 Simplicité d’usage 
-
----
-
-## 📄 Légal & conformité
-
-- CGU Clients / Vendeurs / Livreurs
-- Politique de confidentialité (RGPD)
-- Mentions légales
-- Contrats d’intermédiation disponibles dans `/docs`
 
 ---
 
