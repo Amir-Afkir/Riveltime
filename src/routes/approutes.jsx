@@ -27,7 +27,7 @@ export default function AppRoutes() {
       <Route path="/" element={<Home />} />
 
       {/* Client */}
-      <Route path="/client" element={<ClientAccueil />} />
+      <Route path="/client/accueil" element={<ClientAccueil />} />
       <Route path="/vitrine/:id" element={<Vitrine />} />
       <Route path="/client/panier" element={<Panier />} />
       <Route path="/client/commandes" element={<CommandesClient />} />
@@ -35,7 +35,7 @@ export default function AppRoutes() {
       <Route path="/client/messages" element={<MessagesClient />} />
 
       {/* Vendeur */}
-      <Route path="/vendeur" element={<DashboardVendeur />} />
+      <Route path="/vendeur/dashboard" element={<DashboardVendeur />} />
       <Route path="/vendeur/produits" element={<Produits />} />
       <Route path="/vendeur/commandes" element={<CommandesVendeur />} />
       <Route path="/vendeur/profil" element={<ProfilVendeur />} />
@@ -43,7 +43,7 @@ export default function AppRoutes() {
       <Route path="/vendeur/boutique" element={<MaBoutique />} />
 
       {/* Livreur */}
-      <Route path="/livreur" element={<DashboardLivreur />} />
+      <Route path="/livreur/dashboard" element={<DashboardLivreur />} />
       <Route path="/livreur/courses" element={<Courses />} />
       <Route path="/livreur/historique" element={<Historique />} />
       <Route path="/livreur/profil" element={<ProfilLivreur />} />

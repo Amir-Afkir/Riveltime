@@ -16,7 +16,7 @@ export default function Accueil() {
   );
 
   return (
-    <Layout title="Commerçants près de vous" showBack backTo="/" showCart>
+    <Layout title="Commerçants près de vous" showCart>
       <div className="p-4">
         <Input
           type="text"

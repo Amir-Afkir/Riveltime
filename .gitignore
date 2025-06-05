@@ -7,22 +7,41 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Build & deps
-node_modules
-dist
-dist-ssr
-*.local
+# Dependency directories
+node_modules/
 
-# Docs
-docs/
+# Build outputs
+dist/
+dist-ssr/
+.vite/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Local env files
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# System files
 .DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+!.vscode/extensions.json
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Test coverage
+coverage/
+
+# Optional npm cache directory
+.npm/
+
+# MongoDB data dumps
+*.dump
+*.archive
+dump/

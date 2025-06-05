@@ -15,7 +15,7 @@ export default function BottomNav() {
 
   if (path.startsWith("/client") || path.startsWith("/vitrine")) {
     navItems = [
-      { label: "Accueil", path: "/client", emoji: "🏠" },
+      { label: "Accueil", path: "/client/accueil", emoji: "🏠" },
       {
         label: "Panier",
         path: "/client/panier",
@@ -35,14 +35,14 @@ export default function BottomNav() {
     ];
   } else if (path.startsWith("/vendeur")) {
     navItems = [
-      { label: "Dashboard", path: "/vendeur", emoji: "🏪" },
+      { label: "Dashboard", path: "/vendeur/dashboard", emoji: "🏪" },
       { label: "Produits", path: "/vendeur/produits", emoji: "📦" },
       { label: "Commandes", path: "/vendeur/commandes", emoji: "🧾" },
       { label: "Profil", path: "/vendeur/profil", emoji: "👤" },
     ];
   } else if (path.startsWith("/livreur")) {
     navItems = [
-      { label: "Dashboard", path: "/livreur", emoji: "🚴" },
+      { label: "Dashboard", path: "/livreur/dashboard", emoji: "🚴" },
       { label: "Courses", path: "/livreur/courses", emoji: "📬" },
       { label: "Historique", path: "/livreur/historique", emoji: "📜" },
       { label: "Profil", path: "/livreur/profil", emoji: "👤" },

@@ -8,7 +8,7 @@ import Button from "../../components/ui/Button";
 export default function DashboardLivreur() {
   return (
     <div className="min-h-screen bg-orange-50 pb-28">
-      <Header title="Bonjour, Amir 🚴" showBack={true} backTo="/" color="orange" />
+      <Header title="Bonjour, Amir 🚴" showBack={false} color="orange" />
 
       <div className="p-4 max-w-md mx-auto space-y-6 text-gray-700">
 

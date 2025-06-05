@@ -1,10 +1,21 @@
-// src/App.jsx
+import { Auth0Provider } from "@auth0/auth0-react";
+import AppRoutes from './routes/AppRoutes.jsx';
+
 function App() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <h1 className="text-3xl font-bold">Bienvenue sur Riveltime</h1>
-    </div>
-  );
+  return <AppRoutes />;
 }
 
-export default App;
+export default function AppWrapper() {
+  return (
+    <Auth0Provider
+      domain="dev-x240f0akkby8jtyr.us.auth0.com"
+      clientId="LgbGjKYPe3klaxWN6NNkAeaAziOVW3tk"
+      authorizationParams={{
+        redirect_uri: window.location.origin,
+        audience: "https://riveltime/api"
+      }}
+    >
+      <App />
+    </Auth0Provider>
+  );
+}
