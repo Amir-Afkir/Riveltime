@@ -6,12 +6,32 @@ const cors = require('cors');
 const { auth } = require('express-oauth2-jwt-bearer');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const notificationRoutes = require('./routes/notificationRoutes');
+const productRoutes = require('./routes/productRoutes');
+const fs = require('fs');
+const path = require('path');
+
+// 📁 Créer le dossier uploads si nécessaire
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// const orderRoutes = require('./routes/orderRoutes');
+
+// 🚦 Health check route (avant routes dynamiques)
+app.get('/', (req, res) => {
+  res.send('✅ API Riveltime en ligne');
+});
+
 app.use(cors());
 app.use(express.json());
+
+// 📂 Rendre le dossier uploads accessible publiquement
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 🔗 Connexion Mongo
 mongoose.connect(process.env.MONGO_URI)
@@ -65,6 +85,23 @@ app.delete('/api/auth/delete/me', jwtCheck, async (req, res) => {
 // Exemple route protégée
 app.get('/authorized', jwtCheck, (req, res) => {
   res.send('✅ Ressource sécurisée accessible');
+});
+
+// app.use('/api/orders', jwtCheck, orderRoutes);
+app.use('/api/notifications', jwtCheck, notificationRoutes);
+app.use('/api/products', jwtCheck, (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token) {
+    const decoded = jwt.decode(token);
+    req.user = decoded;
+  }
+  next();
+}, productRoutes);
+
+// 🌐 Middleware de gestion des erreurs globales
+app.use((err, req, res, next) => {
+  console.error('❌ Erreur serveur :', err);
+  res.status(500).json({ error: 'Erreur serveur' });
 });
 
 app.listen(PORT, () => {

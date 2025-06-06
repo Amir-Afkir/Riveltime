@@ -6,7 +6,7 @@ import Button from "../../components/ui/Button";
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-blue-50 pb-20">
+    <div className="min-h-screen bg-green-50 pb-20">
       <Header title="Espace Commerçant" showBack={false}  showCart={true} color="green" />
       <div className="p-6 max-w-md mx-auto text-center">
         <Title level={2} className="mb-2 text-gray-800">Bienvenue dans votre espace commerçant</Title>

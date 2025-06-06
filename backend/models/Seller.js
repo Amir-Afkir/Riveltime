@@ -1,16 +1,19 @@
+// backend/models/Seller.js
 const mongoose = require('mongoose');
-
-const productSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-});
 
 const sellerSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
   address: String,
-  products: [productSchema],
-  owner: { type: String, required: true },
+  location: {
+    lat: Number,
+    lng: Number
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Seller', sellerSchema); 
+module.exports = mongoose.model('Seller', sellerSchema);
