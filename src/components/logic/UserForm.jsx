@@ -3,7 +3,8 @@ import Input from "../ui/Input";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import Title from "../ui/Title";
-
+import defaults from '@shared/userDefaults.json';
+const { clientDefaults, vendeurDefaults, livreurDefaults } = defaults;
 const isLocalhost = window.location.hostname === "localhost";
 
 export default function UserForm({ role, initialData = {}, onSubmit }) {
@@ -15,27 +16,9 @@ export default function UserForm({ role, initialData = {}, onSubmit }) {
       kbis: initialData.kbis || "",
       raisonSociale: initialData.raisonSociale || "",
       notifications: initialData.notifications ?? true,
-      infosClient: {
-        adresseComplete: initialData.infosClient?.adresseComplete || "",
-        latitude: initialData.infosClient?.latitude || null,
-        longitude: initialData.infosClient?.longitude || null,
-      },
-      infosVendeur: {
-        siret: initialData.infosVendeur?.siret || "",
-        categorie: initialData.infosVendeur?.categorie || "",
-        adresseComplete: initialData.infosVendeur?.adresseComplete || "",
-        latitude: initialData.infosVendeur?.latitude || null,
-        longitude: initialData.infosVendeur?.longitude || null,
-        telephone: initialData.infosVendeur?.telephone || "",
-        moyensPaiement: initialData.infosVendeur?.moyensPaiement || [],
-        categorieCustom: initialData.infosVendeur?.categorieCustom || "",
-      },
-      infosLivreur: {
-        siret: initialData.infosLivreur?.siret || "",
-        zone: initialData.infosLivreur?.zone || "",
-        disponible: initialData.infosLivreur?.disponible ?? true,
-        typeDeTransport: initialData.infosLivreur?.typeDeTransport || "",
-      },
+      infosClient: { ...clientDefaults, ...initialData.infosClient },
+      infosVendeur: { ...vendeurDefaults, ...initialData.infosVendeur },
+      infosLivreur: { ...livreurDefaults, ...initialData.infosLivreur },
     };
   };
 

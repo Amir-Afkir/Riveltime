@@ -1,5 +1,3 @@
-import Header from "../../components/layout/Header";
-import BottomNav from "../../components/layout/BottomNav";
 import Section from "../../components/ui/Section";
 import Title from "../../components/ui/Title";
 import Card from "../../components/ui/Card";
@@ -25,8 +23,7 @@ export default function Historique() {
   ];
 
   return (
-    <div className="min-h-screen bg-orange-50 pb-28">
-      <Header title="Historique des courses" showBack={true} backTo="/livreur" color="orange" />
+    <>
       <div className="p-4">
         <main className="max-w-md mx-auto space-y-4">
           {courses.map((course) => (
@@ -40,7 +37,6 @@ export default function Historique() {
           ))}
         </main>
       </div>
-      <BottomNav role="livreur" />
-    </div>
+    </>
   );
 }

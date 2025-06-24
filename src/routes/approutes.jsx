@@ -1,7 +1,8 @@
 // src/routes/AppRoutes.jsx
 import { Routes, Route } from 'react-router-dom';
 import Home from '../pages/common/Home';
-import ProfilCommun from '../pages/common/Profil'; // ✅ Profil commun
+import Layout from '../components/layout/Layout.jsx';
+import ProfilCommun from '../pages/common/Profil';
 
 // Client
 import ClientAccueil from '../pages/client/Accueil';
@@ -22,32 +23,43 @@ import Courses from '../pages/livreur/Courses';
 import Historique from '../pages/livreur/Historique';
 import MessagesLivreur from '../pages/livreur/Messages';
 
+const clientRoutes = [
+  { path: "/client/accueil", element: <ClientAccueil /> },
+  { path: "/vitrine/:id", element: <Vitrine /> },
+  { path: "/client/panier", element: <Panier /> },
+  { path: "/client/commandes", element: <CommandesClient /> },
+  { path: "/client/profil", element: <ProfilCommun /> },
+  { path: "/client/messages", element: <MessagesClient /> },
+];
+
+const vendeurRoutes = [
+  { path: "/vendeur/dashboard", element: <DashboardVendeur /> },
+  { path: "/vendeur/produits", element: <Produits /> },
+  { path: "/vendeur/commandes", element: <CommandesVendeur /> },
+  { path: "/vendeur/profil", element: <ProfilCommun /> },
+  { path: "/vendeur/messages", element: <MessagesVendeur /> },
+];
+
+const livreurRoutes = [
+  { path: "/livreur/dashboard", element: <DashboardLivreur /> },
+  { path: "/livreur/courses", element: <Courses /> },
+  { path: "/livreur/historique", element: <Historique /> },
+  { path: "/livreur/profil", element: <ProfilCommun /> },
+  { path: "/livreur/messages", element: <MessagesLivreur /> },
+];
+
 export default function AppRoutes() {
   return (
     <Routes>
+      {/* Page d'accueil publique (hors layout) */}
       <Route path="/" element={<Home />} />
 
-      {/* Client */}
-      <Route path="/client/accueil" element={<ClientAccueil />} />
-      <Route path="/vitrine/:id" element={<Vitrine />} />
-      <Route path="/client/panier" element={<Panier />} />
-      <Route path="/client/commandes" element={<CommandesClient />} />
-      <Route path="/client/profil" element={<ProfilCommun />} />
-      <Route path="/client/messages" element={<MessagesClient />} />
-
-      {/* Vendeur */}
-      <Route path="/vendeur/dashboard" element={<DashboardVendeur />} />
-      <Route path="/vendeur/produits" element={<Produits />} />
-      <Route path="/vendeur/commandes" element={<CommandesVendeur />} />
-      <Route path="/vendeur/profil" element={<ProfilCommun />} />
-      <Route path="/vendeur/messages" element={<MessagesVendeur />} />
-
-      {/* Livreur */}
-      <Route path="/livreur/dashboard" element={<DashboardLivreur />} />
-      <Route path="/livreur/courses" element={<Courses />} />
-      <Route path="/livreur/historique" element={<Historique />} />
-      <Route path="/livreur/profil" element={<ProfilCommun />} />
-      <Route path="/livreur/messages" element={<MessagesLivreur />} />
+      {/* Layout commun à toutes les routes utilisateur */}
+      <Route element={<Layout />}>
+        {[...clientRoutes, ...vendeurRoutes, ...livreurRoutes].map(({ path, element }) => (
+          <Route key={path} path={path} element={element} />
+        ))}
+      </Route>
     </Routes>
   );
 }

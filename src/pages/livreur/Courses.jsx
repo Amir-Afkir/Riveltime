@@ -1,6 +1,4 @@
 import { useState } from "react";
-import Header from "../../components/layout/Header";
-import BottomNav from "../../components/layout/BottomNav";
 import Title from "../../components/ui/Title";
 import Section from "../../components/ui/Section";
 import Button from "../../components/ui/Button";
@@ -27,8 +25,7 @@ export default function Courses() {
   };
 
   return (
-    <div className="min-h-screen bg-orange-50 pb-28">
-      <Header title="Ma course" showBack={false} color="orange" />
+    <div>
       <div className="p-4 max-w-md mx-auto text-center">
         <Section className="text-center">
           <Title level={2} className="mb-4">
@@ -53,8 +50,6 @@ export default function Courses() {
           )}
         </Section>
       </div>
-      <BottomNav role="livreur" />
     </div>
   );
 }
-

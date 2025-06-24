@@ -1,5 +1,3 @@
-import Header from "../../components/layout/Header";
-import BottomNav from "../../components/layout/BottomNav";
 import Card from "../../components/ui/Card";
 import Title from "../../components/ui/Title";
 import Badge from "../../components/ui/Badge";
@@ -26,25 +24,21 @@ export default function CommandesVendeur() {
   ];
 
   return (
-    <div className="min-h-screen bg-green-50 pb-20">
-      <Header title="Commandes reçues" showBack={true} backTo="/vendeur" color="green" />
-      <div className="p-4 max-w-md mx-auto space-y-4">
-        {commandes.map((commande) => (
-          <Card key={commande.id}>
-            <Title level={4} className="mb-1">Client : {commande.client}</Title>
-            <ul className="text-sm text-gray-600 mt-2">
-              {commande.produits.map((p, i) => (
-                <li key={i}>{p.quantite}× {p.nom}</li>
-              ))}
-            </ul>
-            <p className="text-sm mt-2">Total : {commande.total.toFixed(2)} €</p>
-            <Badge color={commande.statut === "En cours" ? "blue" : "gray"} className="mt-2 inline-block">
-              Statut : {commande.statut}
-            </Badge>
-          </Card>
-        ))}
-      </div>
-      <BottomNav />
+    <div className="space-y-4">
+      {commandes.map((commande) => (
+        <Card key={commande.id}>
+          <Title level={4} className="mb-1">Client : {commande.client}</Title>
+          <ul className="text-sm text-gray-600 mt-2">
+            {commande.produits.map((p, i) => (
+              <li key={i}>{p.quantite}× {p.nom}</li>
+            ))}
+          </ul>
+          <p className="text-sm mt-2">Total : {commande.total.toFixed(2)} €</p>
+          <Badge color={commande.statut === "En cours" ? "blue" : "gray"} className="mt-2 inline-block">
+            Statut : {commande.statut}
+          </Badge>
+        </Card>
+      ))}
     </div>
   );
 }

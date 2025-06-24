@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const { jwtCheck, injectUser } = require('../middleware/auth');
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -22,24 +22,9 @@ const upload = multer({
 });
 
 
-const injectUserFromToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'Token manquant' });
-
-  const token = authHeader.split(' ')[1];
-  try {
-    const decoded = jwt.decode(token);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    console.error('Erreur décodage token :', err);
-    return res.status(401).json({ error: 'Token invalide' });
-  }
-};
-
-router.post('/', injectUserFromToken, upload.single('image'), createProduct);
-router.get('/mine', injectUserFromToken, getMyProducts);
-router.delete('/:id', injectUserFromToken, deleteProduct);
-router.put('/:id', injectUserFromToken, upload.single('image'), updateProduct);
+router.post('/', jwtCheck, injectUser, upload.single('image'), createProduct);
+router.get('/mine', jwtCheck, injectUser, getMyProducts);
+router.delete('/:id', jwtCheck, injectUser, deleteProduct);
+router.put('/:id', jwtCheck, injectUser, upload.single('image'), updateProduct);
 
 module.exports = router;

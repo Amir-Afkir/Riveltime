@@ -1,4 +1,8 @@
-// backend/middleware/auth.js
+const fs = require('fs');
+const path = require('path');
+
+const userDefaults = JSON.parse(fs.readFileSync(path.join(__dirname, '../../shared/userDefaults.json'), 'utf-8'));
+const { clientDefaults, vendeurDefaults, livreurDefaults } = userDefaults;
 const { auth } = require('express-oauth2-jwt-bearer');
 const User = require('../models/User');
 
@@ -39,9 +43,9 @@ const createUserIfNotExists = async (req, res, next) => {
         raisonSociale: "",
       };
 
-      if (role === 'client') userData.infosClient = {};
-      if (role === 'vendeur') userData.infosVendeur = {};
-      if (role === 'livreur') userData.infosLivreur = {};
+      if (role === 'client') userData.infosClient = clientDefaults;
+      if (role === 'vendeur') userData.infosVendeur = vendeurDefaults;
+      if (role === 'livreur') userData.infosLivreur = livreurDefaults;
 
       user = await User.create(userData);
       console.log('🆕 Utilisateur créé automatiquement :', safeEmail);

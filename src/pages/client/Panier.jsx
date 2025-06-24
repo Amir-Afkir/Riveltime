@@ -1,6 +1,5 @@
 import { useCart } from "../../context/CartContext";
 import { useNavigate } from "react-router-dom"; // ← import
-import Layout from "../../components/layout/Layout";
 import Card from "../../components/ui/Card";
 import Section from "../../components/ui/Section";
 import Title from "../../components/ui/Title";
@@ -19,7 +18,7 @@ export default function Panier() {
   };
 
   return (
-    <Layout title="Votre panier" showBack={false} showCart={true} color="blue">
+    <>
       {cart.length === 0 ? (
         <Title level={4} className="text-center text-gray-500">
           Votre panier est vide.
@@ -40,13 +39,13 @@ export default function Panier() {
                   <span className="text-sm text-gray-600">
                     {(item.product.price * item.quantity).toFixed(2)} €
                   </span>
-                    <Button
+                  <Button
                     onClick={() => removeFromCart(item)}
                     variant="danger"
                     size="small"
-                    >
+                  >
                     X
-                    </Button>
+                  </Button>
                 </div>
               </Card>
             ))}
@@ -63,6 +62,6 @@ export default function Panier() {
           </Section>
         </>
       )}
-    </Layout>
+    </>
   );
 }

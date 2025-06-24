@@ -1,16 +1,15 @@
 // backend/controllers/userController.js
 
-exports.getMyProfile = async (req, res) => {
-  try {
-    const user = req.dbUser || req.user;
+const fs = require('fs');
+const path = require('path');
 
-    if (!user) {
-      return res.status(404).json({ error: 'Utilisateur introuvable' });
-    }
+const defaultsPath = path.join(__dirname, '../../shared/userDefaults.json');
+const { clientDefaults, vendeurDefaults, livreurDefaults } = JSON.parse(fs.readFileSync(defaultsPath, 'utf-8'));
 
-    // Réponse filtrée selon le rôle
-    if (user.role === 'client') {
-      return res.json({
+const formatUserProfile = (user) => {
+  switch (user.role) {
+    case 'client':
+      return {
         role: 'client',
         fullname: user.fullname,
         phone: user.phone,
@@ -21,11 +20,9 @@ exports.getMyProfile = async (req, res) => {
           longitude: user.infosClient?.longitude || null,
           telephone: user.infosClient?.telephone || "",
         }
-      });
-    }
-
-    if (user.role === 'vendeur') {
-      return res.json({
+      };
+    case 'vendeur':
+      return {
         role: 'vendeur',
         fullname: user.fullname,
         phone: user.phone,
@@ -33,11 +30,9 @@ exports.getMyProfile = async (req, res) => {
         kbis: user.kbis,
         notifications: user.notifications,
         infosVendeur: user.infosVendeur,
-      });
-    }
-
-    if (user.role === 'livreur') {
-      return res.json({
+      };
+    case 'livreur':
+      return {
         role: 'livreur',
         fullname: user.fullname,
         phone: user.phone,
@@ -45,12 +40,21 @@ exports.getMyProfile = async (req, res) => {
         kbis: user.kbis,
         notifications: user.notifications,
         infosLivreur: user.infosLivreur,
-      });
-    }
+      };
+    default:
+      return null;
+  }
+};
 
-    // Cas inattendu (aucun des rôles)
-    return res.status(400).json({ error: 'Rôle utilisateur inconnu' });
+exports.getMyProfile = async (req, res) => {
+  try {
+    const dbUser = req.dbUser;
+    if (!dbUser) return res.status(404).json({ error: 'Utilisateur introuvable' });
 
+    const formatted = formatUserProfile(dbUser);
+    if (!formatted) return res.status(400).json({ error: 'Rôle utilisateur inconnu' });
+
+    return res.json(formatted);
   } catch (err) {
     console.error('❌ Erreur lors de la récupération du profil :', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -59,8 +63,8 @@ exports.getMyProfile = async (req, res) => {
 
 exports.updateMyProfile = async (req, res) => {
   try {
-    const user = req.dbUser;
-    if (!user) {
+    const dbUser = req.dbUser;
+    if (!dbUser) {
       return res.status(404).json({ error: 'Utilisateur introuvable' });
     }
 
@@ -68,50 +72,31 @@ exports.updateMyProfile = async (req, res) => {
       return res.status(400).json({ error: 'Données invalides' });
     }
 
-    const role = user.role;
+    const role = dbUser.role;
     const { fullname, phone, notifications, infosClient, infosVendeur, infosLivreur, raisonSociale, kbis } = req.body;
 
-    if (fullname) user.fullname = fullname;
-    if (phone) user.phone = phone;
-    if (typeof notifications === 'boolean') user.notifications = notifications;
-    if (raisonSociale) user.raisonSociale = raisonSociale;
-    if (kbis) user.kbis = kbis;
-
-    const vendeurDefaults = {
-      categorie: "",
-      adresseComplete: "",
-      latitude: null,
-      longitude: null,
-      telephone: "",
-      moyensPaiement: [],
-    };
-
-    const clientDefaults = {
-      adresseComplete: "",
-      latitude: null,
-      longitude: null,
-    };
-
-    const livreurDefaults = {
-      siret: "", zone: "", typeDeTransport: "",
-    };
+    if (fullname) dbUser.fullname = fullname;
+    if (phone) dbUser.phone = phone;
+    if (typeof notifications === 'boolean') dbUser.notifications = notifications;
+    if (raisonSociale) dbUser.raisonSociale = raisonSociale;
+    if (kbis) dbUser.kbis = kbis;
 
     if (role === 'client') {
-      user.infosClient = { ...clientDefaults, ...user.infosClient, ...infosClient };
-      user.infosVendeur = null;
-      user.infosLivreur = null;
+      dbUser.infosClient = { ...clientDefaults, ...dbUser.infosClient, ...infosClient };
+      dbUser.infosVendeur = null;
+      dbUser.infosLivreur = null;
     } else if (role === 'vendeur') {
-      user.infosVendeur = { ...vendeurDefaults, ...user.infosVendeur, ...infosVendeur };
-      user.infosClient = null;
-      user.infosLivreur = null;
+      dbUser.infosVendeur = { ...vendeurDefaults, ...dbUser.infosVendeur, ...infosVendeur };
+      dbUser.infosClient = null;
+      dbUser.infosLivreur = null;
     } else if (role === 'livreur') {
-      user.infosLivreur = { ...livreurDefaults, ...user.infosLivreur, ...infosLivreur };
-      user.infosClient = null;
-      user.infosVendeur = null;
+      dbUser.infosLivreur = { ...livreurDefaults, ...dbUser.infosLivreur, ...infosLivreur };
+      dbUser.infosClient = null;
+      dbUser.infosVendeur = null;
     }
 
-    await user.save();
-    res.json(user);
+    await dbUser.save();
+    res.json(dbUser);
   } catch (err) {
     console.error('❌ Erreur lors de la mise à jour du profil :', err);
     res.status(500).json({ error: 'Erreur serveur' });

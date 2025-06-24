@@ -1,0 +1,21 @@
+{
+  "clientDefaults": {
+    "adresseComplete": "",
+    "latitude": null,
+    "longitude": null
+  },
+  "vendeurDefaults": {
+    "siret": "",
+    "categorie": "",
+    "adresseComplete": "",
+    "latitude": null,
+    "longitude": null,
+    "moyensPaiement": []
+  },
+  "livreurDefaults": {
+    "siret": "",
+    "zone": "",
+    "disponible": true,
+    "typeDeTransport": ""
+  }
+}

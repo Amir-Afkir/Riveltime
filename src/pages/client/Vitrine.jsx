@@ -2,7 +2,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useCart } from "../../context/CartContext";
-import Layout from "../../components/layout/Layout";
 import Button from "../../components/ui/Button";
 import Section from "../../components/ui/Section";
 import Title from "../../components/ui/Title";
@@ -33,7 +32,7 @@ export default function Vitrine() {
   }
 
   return (
-    <Layout title={merchant.name} showBack={true} backTo="/client" showCart={false} color="blue">
+    <>
       <Section>
         <Title level={2}>Catégorie : {merchant.category}</Title>
       </Section>
@@ -64,6 +63,6 @@ export default function Vitrine() {
       >
         Voir le panier
       </Button>
-    </Layout>
+    </>
   );
 }

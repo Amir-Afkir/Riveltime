@@ -7,7 +7,7 @@ import UserForm from "../logic/UserForm";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
-export default function UserProfileSections({ user: passedUser }) {
+export default function UserProfileSections({ user: passedUser, setUser }) {
   const [modalOpen, setModalOpen] = useState(false);
   const user = passedUser;
   const navigate = useNavigate();
@@ -152,9 +152,11 @@ export default function UserProfileSections({ user: passedUser }) {
               });
 
               if (!res.ok) throw new Error("Erreur lors de la mise à jour");
+
+              const updatedUser = await res.json();
+              setUser(updatedUser); // ✅ met à jour localement sans reload
               alert("Profil mis à jour !");
               setModalOpen(false);
-              window.location.reload();
             } catch (err) {
               console.error("❌", err);
               alert("Échec de la mise à jour");

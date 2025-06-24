@@ -3,8 +3,6 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const axios = require('axios');
-const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 
@@ -12,9 +10,10 @@ const { jwtCheck, injectUser, createUserIfNotExists } = require('./middleware/au
 const User = require('./models/User');
 
 const notificationRoutes = require('./routes/notificationRoutes');
-const productRoutes = require('./routes/productRoutes');
-const userRoutes = require('./routes/userRoutes');
-const addressRoutes = require('./routes/addressRoutes');
+const productRoutes = require('./routes/productRoutes.js');
+const userRoutes = require('./routes/userRoutes.js');
+const addressRoutes = require('./routes/addressRoutes.js');
+const accountRoutes = require('./routes/accountRoutes.js'); // ✅ Ajouté
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,8 +45,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// 🌍 Route publique
+// 🌍 Routes publiques
 app.use('/api/address', addressRoutes);
+app.use('/api/products', productRoutes);
 
 // 🔐 Middleware Auth0 commun
 app.use(jwtCheck, injectUser, createUserIfNotExists);
@@ -55,39 +55,9 @@ app.use(jwtCheck, injectUser, createUserIfNotExists);
 // 📦 Routes API sécurisées
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/account', accountRoutes); // ✅ Route centralisée pour la suppression de compte
 
-// 🌍 Route publique
-app.use('/api/products', productRoutes);
-
-// ❌ Suppression d'un compte utilisateur
-app.delete('/api/auth/delete/me', async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    const decoded = jwt.decode(token);
-    const userId = decoded?.sub;
-    if (!userId) return res.status(400).json({ error: 'ID utilisateur introuvable' });
-
-    const { data } = await axios.post(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
-      client_id: process.env.AUTH0_CLIENT_ID,
-      client_secret: process.env.AUTH0_CLIENT_SECRET,
-      audience: `https://${process.env.AUTH0_DOMAIN}/api/v2/`,
-      grant_type: 'client_credentials',
-    });
-
-    await axios.delete(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(userId)}`, {
-      headers: { Authorization: `Bearer ${data.access_token}` }
-    });
-
-    await User.findOneAndDelete({ auth0Id: userId });
-
-    res.status(200).json({ message: '✅ Compte supprimé avec succès' });
-  } catch (error) {
-    console.error('❌ Erreur suppression :', error?.response?.data || error.message);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// ✅ Route sécurisée de test
+// ✅ Route de test sécurisée
 app.get('/authorized', (req, res) => {
   res.send('✅ Ressource sécurisée accessible');
 });
