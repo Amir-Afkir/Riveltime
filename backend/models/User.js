@@ -1,26 +1,40 @@
-// backend/models/User.js
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
-  fullname: { type: String, required: true },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true,
-  },
-  password: { type: String, required: true },
-  phone: { type: String },
-  role: {
-    type: String,
-    enum: ['client', 'merchant', 'deliverer', 'admin'],
-    default: 'client',
-  },
-  isActive: { type: Boolean, default: true },
-  avatarUrl: { type: String },
-}, { timestamps: true });
+const infosClientSchema = new mongoose.Schema({
+  adresseComplete: String,
+  latitude: Number,
+  longitude: Number,
+}, { _id: false });
 
-userSchema.index({ email: 1 }); // pour recherche rapide
+const infosVendeurSchema = new mongoose.Schema({
+  categorie: String,
+  adresseComplete: String,
+  latitude: Number,
+  longitude: Number,
+  moyensPaiement: [String],
+}, { _id: false });
+
+const infosLivreurSchema = new mongoose.Schema({
+  siret: String,
+  zone: String,
+  typeDeTransport: String,
+}, { _id: false });
+
+const userSchema = new mongoose.Schema({
+  auth0Id: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
+  fullname: { type: String, default: 'Utilisateur' },
+  phone: { type: String },
+  avatarUrl: { type: String },
+  raisonSociale: String,
+  kbis: String,
+  role: { type: String, enum: ['client', 'vendeur', 'livreur'], default: 'client' },
+
+  infosClient: { type: infosClientSchema, default: null },
+  infosVendeur: { type: infosVendeurSchema, default: null },
+  infosLivreur: { type: infosLivreurSchema, default: null },
+
+  notifications: { type: Boolean, default: true },
+}, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -1,19 +1,58 @@
 // backend/middleware/auth.js
 const { auth } = require('express-oauth2-jwt-bearer');
+const User = require('../models/User');
 
-// Middleware Auth0 : vérifie le token JWT
+// 1️⃣ Vérifie le token JWT Auth0
 const jwtCheck = auth({
-  audience: 'https://riveltime/api',
-  issuerBaseURL: 'https://dev-x240f0akkby8jtyr.us.auth0.com/',
+  audience: process.env.AUTH0_AUDIENCE,
+  issuerBaseURL: process.env.AUTH0_ISSUER,
   tokenSigningAlg: 'RS256',
 });
 
-// Middleware complémentaire : injecte les infos utilisateur dans req.user
+// 2️⃣ Injecte le payload dans req.user
 const injectUser = (req, res, next) => {
-  if (req.auth) {
-    req.user = req.auth;
-  }
+  req.user = req.auth?.payload || {};
   next();
 };
 
-module.exports = { jwtCheck, injectUser };
+// 3️⃣ Crée automatiquement un utilisateur Mongo si absent
+const createUserIfNotExists = async (req, res, next) => {
+  try {
+    const { sub: auth0Id, email, name, picture } = req.user;
+    if (!auth0Id) {
+      return res.status(400).json({ error: 'Token invalide : sub manquant' });
+    }
+
+    const safeEmail = email || `${auth0Id}@no-email.local`;
+    const role = req.user['https://riveltime/api/role'] || 'client';
+
+    let user = await User.findOne({ auth0Id });
+    if (!user) {
+      const userData = {
+        auth0Id,
+        email: safeEmail,
+        fullname: name || 'Utilisateur',
+        avatarUrl: picture || '',
+        role,
+        notifications: true,
+        kbis: "",
+        raisonSociale: "",
+      };
+
+      if (role === 'client') userData.infosClient = {};
+      if (role === 'vendeur') userData.infosVendeur = {};
+      if (role === 'livreur') userData.infosLivreur = {};
+
+      user = await User.create(userData);
+      console.log('🆕 Utilisateur créé automatiquement :', safeEmail);
+    }
+
+    req.dbUser = user;
+    next();
+  } catch (err) {
+    console.error('❌ Erreur middleware createUserIfNotExists :', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+module.exports = { jwtCheck, injectUser, createUserIfNotExists };

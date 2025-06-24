@@ -101,7 +101,8 @@ exports.deleteProduct = async (req, res) => {
     }
 
     if (product.imagePublicId) {
-      await cloudinary.uploader.destroy(product.imagePublicId);
+      const result = await cloudinary.uploader.destroy(product.imagePublicId);
+      console.log("🗑️ Résultat suppression Cloudinary :", result);
     }
 
     await Product.deleteOne({ _id: productId });
@@ -131,7 +132,8 @@ exports.updateProduct = async (req, res) => {
     const { name, price, category, description } = req.body;
     if (req.file && req.file.buffer) {
       if (existingProduct.imagePublicId) {
-        await cloudinary.uploader.destroy(existingProduct.imagePublicId);
+        const destroyResult = await cloudinary.uploader.destroy(existingProduct.imagePublicId);
+        console.log("🗑️ Résultat suppression ancienne image :", destroyResult);
       }
       const streamUpload = () => {
         return new Promise((resolve, reject) => {
