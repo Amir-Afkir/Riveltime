@@ -5,24 +5,23 @@ import { useUser } from "../../context/UserContext";
 import { useMemo } from "react";
 
 export default function Layout() {
-  const location = useLocation();
+  const { pathname } = useLocation();
   const { userData } = useUser();
 
-  const getColor = (path) =>
-    path.startsWith("/vendeur") ? "green" :
-    path.startsWith("/livreur") ? "orange" : "blue";
+  // Utilitaire combiné pour couleur et background
+  const getTheme = (path) => {
+    if (path.startsWith("/vendeur")) return { color: "green", bgColor: "bg-green-50" };
+    if (path.startsWith("/livreur")) return { color: "orange", bgColor: "bg-orange-50" };
+    return { color: "blue", bgColor: "bg-blue-50" };
+  };
 
-  const color = getColor(location.pathname);
-  const path = location.pathname;
+  const { color, bgColor } = getTheme(pathname);
 
-  const bgColor = {
-    blue: "bg-blue-50",
-    green: "bg-green-50",
-    orange: "bg-orange-50",
-  }[color] || "bg-gray-50";
+  // Profil: regrouper logique avatar et sous-titre
+  const isProfilePage = ["/client/profil", "/vendeur/profil", "/livreur/profil"].includes(pathname);
 
   const title = useMemo(() => {
-    if (["/client/profil", "/vendeur/profil", "/livreur/profil"].some(p => path.startsWith(p))) {
+    if (isProfilePage) {
       return userData?.fullname?.trim() || "Mon profil";
     }
 
@@ -43,14 +42,11 @@ export default function Layout() {
     ];
 
     for (const [prefix, label] of rules) {
-      if (path.startsWith(prefix)) return label;
+      if (pathname.startsWith(prefix)) return label;
     }
 
-    return path === "/" ? "Accueil" : "Riveltime";
-  }, [path, userData]);
-
-  // Avatar visible uniquement sur la page profil
-  const showAvatar = ["/client/profil", "/vendeur/profil", "/livreur/profil"].includes(path);
+    return pathname === "/" ? "Accueil" : "Riveltime";
+  }, [pathname, userData]);
 
   return (
     <div className={`min-h-screen pb-28 ${bgColor}`}>
@@ -58,10 +54,10 @@ export default function Layout() {
         title={title}
         showBack={false}
         color={color}
-        avatarUrl={showAvatar && userData?.avatarUrl ? userData.avatarUrl : "/src/assets/avatar-default.png"}
-        showSubtitle={showAvatar ? userData?.role : null}
+        avatarUrl={isProfilePage ? (userData?.avatarUrl || "/src/assets/avatar-default.png") : undefined}
+        showSubtitle={isProfilePage ? userData?.role : null}
       />
-      <main className="p-4 max-w-md mx-auto">
+      <main className={`${isProfilePage ? "pt-36" : "pt-20"} p-4 max-w-md mx-auto`}>
         <Outlet />
       </main>
       <BottomNav />

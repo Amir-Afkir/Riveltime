@@ -24,29 +24,38 @@ export default function UserForm({ role, initialData = {}, onSubmit }) {
 
   const [formData, setFormData] = useState(getDefaultFormData());
 
-  // Adresse autocomplete states for vendeur
-  const [adresseQuery, setAdresseQuery] = useState(formData.infosVendeur.adresseComplete || "");
+  // Adresse autocomplete states for vendeur and client
+  const [adresseQuery, setAdresseQuery] = useState("");
   const [adresseSuggestions, setAdresseSuggestions] = useState([]);
   const [adresseError, setAdresseError] = useState("");
+  const [adresseScope, setAdresseScope] = useState(null);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (adresseQuery.length > 2) {
-        fetch(`/api/address/search?q=${encodeURIComponent(adresseQuery)}`)
-          .then((res) => res.json())
-          .then((results) => {
-            setAdresseSuggestions(results);
-            setAdresseError(results.length ? '' : 'Aucune suggestion trouvée');
-          })
-          .catch((err) => {
-            console.error(err);
-            setAdresseError('Erreur de recherche');
-          });
-      }
-    }, 500); // 500ms de délai
-  
-    return () => clearTimeout(timeout);
-  }, [adresseQuery]);
+useEffect(() => {
+  if (!adresseScope) {
+    setAdresseSuggestions([]);
+    setAdresseError("");
+    return;
+  }
+  const timeout = setTimeout(() => {
+    if (adresseQuery.length > 2) {
+      fetch(`/api/address/search?q=${encodeURIComponent(adresseQuery)}`)
+        .then((res) => res.json())
+        .then((results) => {
+          setAdresseSuggestions(results);
+          setAdresseError(results.length ? '' : 'Aucune suggestion trouvée');
+        })
+        .catch((err) => {
+          console.error(err);
+          setAdresseError('Erreur de recherche');
+        });
+    } else {
+      setAdresseSuggestions([]);
+      setAdresseError("");
+    }
+  }, 500); // 500ms de délai
+
+  return () => clearTimeout(timeout);
+}, [adresseQuery, adresseScope]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,14 +74,15 @@ export default function UserForm({ role, initialData = {}, onSubmit }) {
     }
   };
 
-  // Adresse autocomplete handlers for vendeur
-  const handleAdresseChange = (e) => {
+  // Adresse autocomplete handlers for vendeur and client
+  const handleAdresseChange = (e, scope) => {
     const value = e.target.value;
     setAdresseQuery(value);
+    setAdresseScope(scope);
     setFormData((prev) => ({
       ...prev,
-      infosVendeur: {
-        ...prev.infosVendeur,
+      [scope]: {
+        ...prev[scope],
         adresseComplete: value,
         latitude: null,
         longitude: null,
@@ -81,13 +91,14 @@ export default function UserForm({ role, initialData = {}, onSubmit }) {
   };
 
   const handleSelectAdresse = (suggestion) => {
+    if (!adresseScope) return;
     setAdresseQuery(suggestion.display_name);
     setAdresseSuggestions([]);
     setAdresseError("");
     setFormData((prev) => ({
       ...prev,
-      infosVendeur: {
-        ...prev.infosVendeur,
+      [adresseScope]: {
+        ...prev[adresseScope],
         adresseComplete: suggestion.display_name,
         latitude: parseFloat(suggestion.lat),
         longitude: parseFloat(suggestion.lon),
@@ -119,12 +130,32 @@ export default function UserForm({ role, initialData = {}, onSubmit }) {
 
         {role === "client" && (
           <>
-            <Input
-              label="Adresse complète"
-              name="infosClient.adresseComplete"
-              value={formData.infosClient.adresseComplete}
-              onChange={handleChange}
-            />
+            <div className="mb-4 relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Adresse complète</label>
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded px-2 py-1"
+                value={adresseScope === "infosClient" ? adresseQuery : formData.infosClient.adresseComplete}
+                onChange={(e) => handleAdresseChange(e, "infosClient")}
+                placeholder="Saisissez une adresse"
+              />
+              {adresseScope === "infosClient" && adresseSuggestions.length > 0 && (
+                <ul className="absolute z-10 w-full border rounded bg-white shadow mt-1 max-h-40 overflow-y-auto text-sm">
+                  {adresseSuggestions.map((s, i) => (
+                    <li
+                      key={i}
+                      onClick={() => handleSelectAdresse(s)}
+                      className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {s.display_name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {adresseScope === "infosClient" && adresseError && (
+                <p className="text-red-500 text-sm mt-1">{adresseError}</p>
+              )}
+            </div>
           </>
         )}
 
@@ -154,11 +185,11 @@ export default function UserForm({ role, initialData = {}, onSubmit }) {
               <input
                 type="text"
                 className="w-full border border-gray-300 rounded px-2 py-1"
-                value={adresseQuery}
-                onChange={handleAdresseChange}
+                value={adresseScope === "infosVendeur" ? adresseQuery : formData.infosVendeur.adresseComplete}
+                onChange={(e) => handleAdresseChange(e, "infosVendeur")}
                 placeholder="Saisissez une adresse"
               />
-              {adresseSuggestions.length > 0 && (
+              {adresseScope === "infosVendeur" && adresseSuggestions.length > 0 && (
                 <ul className="absolute z-10 w-full border rounded bg-white shadow mt-1 max-h-40 overflow-y-auto text-sm">
                   {adresseSuggestions.map((s, i) => (
                     <li
@@ -171,7 +202,7 @@ export default function UserForm({ role, initialData = {}, onSubmit }) {
                   ))}
                 </ul>
               )}
-              {adresseError && <p className="text-red-500 text-sm mt-1">{adresseError}</p>}
+              {adresseScope === "infosVendeur" && adresseError && <p className="text-red-500 text-sm mt-1">{adresseError}</p>}
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Moyens de paiement</label>
