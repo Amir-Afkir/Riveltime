@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useUser } from "../../context/UserContext";
 import Section from "../ui/Section";
 import Title from "../ui/Title";
 import Button from "../ui/Button";
@@ -7,9 +8,10 @@ import UserForm from "../logic/UserForm";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
-export default function UserProfileSections({ user: passedUser, setUser }) {
+export default function UserProfileSections({ user: passedUser }) {
   const [modalOpen, setModalOpen] = useState(false);
   const user = passedUser;
+  const { refreshUser } = useUser();
   const navigate = useNavigate();
   const { logout, user: auth0User, getAccessTokenSilently } = useAuth0();
 
@@ -153,8 +155,8 @@ export default function UserProfileSections({ user: passedUser, setUser }) {
 
               if (!res.ok) throw new Error("Erreur lors de la mise à jour");
 
-              const updatedUser = await res.json();
-              setUser(updatedUser); // ✅ met à jour localement sans reload
+              await res.json();
+              await refreshUser(); // ✅ recharge depuis la base et met à jour globalement
               alert("Profil mis à jour !");
               setModalOpen(false);
             } catch (err) {
