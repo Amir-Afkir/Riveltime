@@ -1,4 +1,3 @@
-// ✅ 3. src/components/layout/Layout.jsx
 import { Outlet, useLocation } from "react-router-dom";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
@@ -14,14 +13,13 @@ export default function Layout() {
     path.startsWith("/livreur") ? "orange" : "blue";
 
   const color = getColor(location.pathname);
+  const path = location.pathname;
 
   const bgColor = {
     blue: "bg-blue-50",
     green: "bg-green-50",
     orange: "bg-orange-50",
   }[color] || "bg-gray-50";
-
-  const path = location.pathname;
 
   const title = useMemo(() => {
     if (["/client/profil", "/vendeur/profil", "/livreur/profil"].some(p => path.startsWith(p))) {
@@ -51,9 +49,18 @@ export default function Layout() {
     return path === "/" ? "Accueil" : "Riveltime";
   }, [path, userData]);
 
+  // Avatar visible uniquement sur la page profil
+  const showAvatar = ["/client/profil", "/vendeur/profil", "/livreur/profil"].includes(path);
+
   return (
     <div className={`min-h-screen pb-28 ${bgColor}`}>
-      <Header title={title} showBack={false} color={color} />
+      <Header
+        title={title}
+        showBack={false}
+        color={color}
+        avatarUrl={showAvatar && userData?.avatarUrl ? userData.avatarUrl : "/src/assets/avatar-default.png"}
+        showSubtitle={showAvatar ? userData?.role : null}
+      />
       <main className="p-4 max-w-md mx-auto">
         <Outlet />
       </main>
