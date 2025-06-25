@@ -141,13 +141,13 @@ export default function ProfilCommun() {
           )}
         </InfoCard>
 
-        <InfoCard title="Notifications">
-          <ToggleSwitch label="Email Alerts" checked={notifications ?? false} />
+        <InfoCard
+            title="Notifications"
+            action={<ToggleSwitch checked={notifications ?? false} />}>
+            Email Alerts
         </InfoCard>
 
-        {!isProfilIncomplet() && (
-          <>
-            {role === "vendeur" && (
+        {!isProfilIncomplet() && role === "vendeur" && (
           <InfoCard
             title="Moyens de paiement"
             action={
@@ -165,20 +165,24 @@ export default function ProfilCommun() {
               <p className="text-gray-500 italic">Aucun moyen de paiement renseigné</p>
             )}
           </InfoCard>
-            )}
-
-            <InfoCard title="Sécurité">
-              <div className="space-y-2">
-                <Button variant="link" className="text-red-600" onClick={() => logout({ returnTo: window.location.origin })}>
-                  Se déconnecter
-                </Button>
-                <Button variant="link" className="text-red-600" onClick={handleDeleteAccount}>
-                  Supprimer mon compte
-                </Button>
-              </div>
-            </InfoCard>
-          </>
         )}
+
+        <InfoCard title="Sécurité">
+          <div className="flex justify-between items-center w-full">
+            <button
+              className="text-sm text-red-600 hover:underline"
+              onClick={() => logout({ returnTo: window.location.origin })}
+            >
+              Se déconnecter
+            </button>
+            <button
+              className="text-sm text-red-600 hover:underline"
+              onClick={handleDeleteAccount}
+            >
+              Supprimer mon compte
+            </button>
+          </div>
+        </InfoCard>
       </div>
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Modifier mes informations">
         <UserForm
