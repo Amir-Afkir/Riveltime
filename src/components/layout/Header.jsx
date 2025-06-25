@@ -7,7 +7,7 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
   const isProfile = avatarUrl && showSubtitle;
   const headerClass =
     `fixed top-0 left-0 right-0 z-50 px-4 bg-${color}-600 text-white shadow-md ` +
-    (isProfile ? "h-auto py-4" : "h-16 flex items-center justify-center");
+    (isProfile ? "py-4" : "h-16 flex items-center justify-center");
 
   return (
     <header className={headerClass}>

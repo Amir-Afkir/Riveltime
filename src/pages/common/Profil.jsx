@@ -9,11 +9,13 @@ import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import UserForm from "../../components/logic/UserForm";
 import { useAuth0 } from "@auth0/auth0-react";
+import MoyenPaiementForm from "../../components/profile/MoyenPaiementForm";
 
 export default function ProfilCommun() {
   const { userData, loadingUser } = useUser();
   const { logout, user: auth0User, getAccessTokenSilently } = useAuth0();
   const [modalOpen, setModalOpen] = useState(false);
+  const [paiementModalOpen, setPaiementModalOpen] = useState(false);
 
   const handleDeleteAccount = async () => {
     if (!window.confirm("⚠️ Cette action est irréversible. Supprimer votre compte ?")) return;
@@ -93,62 +95,91 @@ export default function ProfilCommun() {
   };
 
   return (
-    <div className="space-y-6">
-      {isProfilIncomplet() && (
-        <InfoCard title="🔔 Profil incomplet" className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800">
-          <p>Veuillez compléter votre profil pour bénéficier de toutes les fonctionnalités.</p>
-          <Button className="mt-2" onClick={() => setModalOpen(true)}>
-            Compléter mes informations
-          </Button>
+    <>
+      <div className="space-y-6">
+        <InfoCard
+          title="Mes informations"
+          className={isProfilIncomplet() ? "bg-yellow-50 border-l-4 border-yellow-400" : ""}
+          action={
+            <button
+              onClick={() => setModalOpen(true)}
+              className={`inline-flex items-center text-sm font-medium ${
+                isProfilIncomplet()
+                  ? "text-yellow-600 hover:text-yellow-700"
+                  : role === "client"
+                    ? "text-blue-600 hover:text-blue-700"
+                    : role === "vendeur"
+                      ? "text-green-600 hover:text-green-700"
+                      : role === "livreur"
+                        ? "text-orange-600 hover:text-orange-700"
+                        : "text-gray-600 hover:text-gray-700"
+              }`}
+            >
+              {isProfilIncomplet() ? "Compléter" : "Modifier"}
+            </button>
+          }
+        >
+          {isProfilIncomplet() && (
+            <p className="text-yellow-800 mb-2">Votre profil est incomplet. Veuillez le compléter.</p>
+          )}
+
+          {!isProfilIncomplet() && (
+            <>
+              <IconRow label="Nom" value={fullname} />
+              {email && <IconRow label="Email" value={email} />}
+              <IconRow label="Téléphone" value={phone} />
+              {role === "client" && infosClient?.adresseComplete && (
+                <IconRow label="Adresse" value={infosClient.adresseComplete} />
+              )}
+              {role === "vendeur" && infosVendeur?.adresseComplete && (
+                <IconRow label="Adresse" value={infosVendeur.adresseComplete} />
+              )}
+              {role === "livreur" && infosLivreur?.zone && (
+                <IconRow label="Zone" value={infosLivreur.zone} />
+              )}
+            </>
+          )}
         </InfoCard>
-      )}
 
-      {!isProfilIncomplet() && role === "client" && (
-        <InfoCard title="Mes informations">
-          <IconRow label="Nom" value={fullname} />
-          <IconRow label="Email" value={email} />
-          <IconRow label="Téléphone" value={phone} />
-          <Button className="mt-4" onClick={() => setModalOpen(true)}>Modifier mes informations</Button>
+        <InfoCard title="Notifications">
+          <ToggleSwitch label="Email Alerts" checked={notifications ?? false} />
         </InfoCard>
-      )}
 
-      {!isProfilIncomplet() && role === "vendeur" && infosVendeur && (
-        <InfoCard title="Boutique">
-          <IconRow label="Nom" value={fullname} />
-          <IconRow label="Téléphone" value={phone} />
-          <IconRow label="Catégorie" value={infosVendeur.categorie} />
-          <IconRow label="Adresse" value={infosVendeur.adresseComplete} />
-          <IconRow label="Paiements" value={infosVendeur.moyensPaiement?.join(", ") || "Non spécifiés"} />
-          <Button className="mt-4" onClick={() => setModalOpen(true)}>Modifier mes informations</Button>
-        </InfoCard>
-      )}
+        {!isProfilIncomplet() && (
+          <>
+            {role === "vendeur" && (
+          <InfoCard
+            title="Moyens de paiement"
+            action={
+              <button
+                onClick={() => setPaiementModalOpen(true)}
+                className="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-700"
+              >
+                Modifier
+              </button>
+            }
+          >
+            {infosVendeur?.moyensPaiement?.length > 0 ? (
+              <p>{infosVendeur.moyensPaiement.join(", ")}</p>
+            ) : (
+              <p className="text-gray-500 italic">Aucun moyen de paiement renseigné</p>
+            )}
+          </InfoCard>
+            )}
 
-      {!isProfilIncomplet() && role === "livreur" && infosLivreur && (
-        <InfoCard title="Société de livraison">
-          <IconRow label="Nom" value={fullname} />
-          <IconRow label="Email" value={email} />
-          <IconRow label="Téléphone" value={phone} />
-          <IconRow label="SIRET" value={infosLivreur.siret} />
-          <IconRow label="Zone" value={infosLivreur.zone} />
-          <Button className="mt-4" onClick={() => setModalOpen(true)}>Modifier mes informations</Button>
-        </InfoCard>
-      )}
-
-      <InfoCard title="Préférences">
-        <ToggleSwitch label="Notifications" checked={notifications ?? false} />
-      </InfoCard>
-
-      <InfoCard title="Sécurité">
-        <div className="space-y-2">
-          <Button variant="link" className="text-red-600" onClick={() => logout({ returnTo: window.location.origin })}>
-            Se déconnecter
-          </Button>
-          <Button variant="link" className="text-red-600" onClick={handleDeleteAccount}>
-            Supprimer mon compte
-          </Button>
-        </div>
-      </InfoCard>
-
+            <InfoCard title="Sécurité">
+              <div className="space-y-2">
+                <Button variant="link" className="text-red-600" onClick={() => logout({ returnTo: window.location.origin })}>
+                  Se déconnecter
+                </Button>
+                <Button variant="link" className="text-red-600" onClick={handleDeleteAccount}>
+                  Supprimer mon compte
+                </Button>
+              </div>
+            </InfoCard>
+          </>
+        )}
+      </div>
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Modifier mes informations">
         <UserForm
           role={role}
@@ -159,6 +190,22 @@ export default function ProfilCommun() {
           }}
         />
       </Modal>
-    </div>
+
+      <Modal open={paiementModalOpen} onClose={() => setPaiementModalOpen(false)} title="Modifier les moyens de paiement">
+        <MoyenPaiementForm
+          moyensPaiement={infosVendeur?.moyensPaiement || []}
+          onSubmit={async (updatedPaiements) => {
+            await handleUpdate({
+              ...userData,
+              infosVendeur: {
+                ...infosVendeur,
+                moyensPaiement: updatedPaiements,
+              },
+            });
+            setPaiementModalOpen(false);
+          }}
+        />
+      </Modal>
+    </>
   );
 }
