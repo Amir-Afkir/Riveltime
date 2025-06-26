@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export default defineConfig({
-  base: "/", // pour permettre un déploiement propre sur Netlify
+  base: "/",
   plugins: [react()],
   resolve: {
     alias: {
@@ -18,7 +18,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000', // backend local
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       },
