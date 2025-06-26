@@ -128,7 +128,14 @@ useEffect(() => {
               label="Téléphone"
               name="phone"
               value={formData.phone}
-              onChange={handleChange}
+              onChange={(e) => {
+                const onlyNumbers = e.target.value.replace(/[^\d+]/g, "");
+                handleChange({ target: { name: "phone", value: onlyNumbers } });
+              }}
+              required
+              type="tel"
+              pattern="^\+?[0-9]{7,15}$"
+              title="Entrez un numéro de téléphone valide (7 à 15 chiffres)"
             />
           </div>
 
@@ -214,61 +221,29 @@ useEffect(() => {
           {role === "livreur" && (
             <>
               <div className="mb-4">
-                <Input
-                  label="Type de transport"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type de transport</label>
+                <select
                   name="infosLivreur.typeDeTransport"
                   value={formData.infosLivreur.typeDeTransport}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="mb-4">
-                <Input
-                  label="Raison sociale"
-                  name="raisonSociale"
-                  value={formData.raisonSociale}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="mb-4">
-                <Input
-                  label="Extrait Kbis"
-                  name="kbis"
-                  value={formData.kbis}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="mb-4">
-                <Input
-                  label="SIRET"
-                  name="infosLivreur.siret"
-                  value={formData.infosLivreur.siret}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="mb-4">
-                <Input
-                  label="Zone de livraison"
-                  name="infosLivreur.zone"
-                  value={formData.infosLivreur.zone}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="mb-4 flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="infosLivreur.disponible"
-                  checked={formData.infosLivreur.disponible}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       infosLivreur: {
                         ...prev.infosLivreur,
-                        disponible: e.target.checked,
+                        typeDeTransport: e.target.value,
                       },
                     }))
                   }
-                />
-                <span className="text-sm">Profil visible</span>
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  required
+                >
+                  <option value="">-- Choisissez un transport --</option>
+                  <option value="vélo">Vélo</option>
+                  <option value="scooter">Scooter</option>
+                  <option value="voiture">Voiture</option>
+                  <option value="camion">Camion</option>
+                  <option value="à pied">À pied</option>
+                </select>
               </div>
             </>
           )}

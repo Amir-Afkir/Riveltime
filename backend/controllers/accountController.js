@@ -37,3 +37,21 @@ exports.deleteMyAccount = async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 };
+
+exports.requestPasswordReset = async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email requis" });
+
+  try {
+    await axios.post(`https://${process.env.AUTH0_DOMAIN}/dbconnections/change_password`, {
+      client_id: process.env.AUTH0_CLIENT_ID,
+      email,
+      connection: 'Username-Password-Authentication', // à adapter si différent
+    });
+
+    res.status(200).json({ message: '📧 Email de réinitialisation envoyé' });
+  } catch (err) {
+    console.error('❌ Erreur envoi reset password :', err?.response?.data || err.message);
+    res.status(500).json({ error: 'Erreur lors de la demande de réinitialisation' });
+  }
+};

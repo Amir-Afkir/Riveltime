@@ -15,6 +15,10 @@ export default function ProfilCommun() {
   const [modalOpen, setModalOpen] = useState(false);
   const [paiementModalOpen, setPaiementModalOpen] = useState(false);
 
+  const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN;
+  const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
+  const resetPasswordUrl = `https://${auth0Domain}/lo/reset?client_id=${clientId}`;
+
   const handleDeleteAccount = async () => {
     if (!window.confirm("⚠️ Cette action est irréversible. Supprimer votre compte ?")) return;
 
@@ -70,9 +74,15 @@ export default function ProfilCommun() {
   const { fullname, email, phone, role, avatarUrl, notifications, infosClient, infosVendeur, infosLivreur } = userData;
 
   const isProfilIncomplet = () => {
-    if (role === "client") return !fullname || !email || !phone || !infosClient?.adresseComplete;
-    if (role === "vendeur") return !fullname || !phone || !infosVendeur?.categorie || !infosVendeur?.adresseComplete;
-    if (role === "livreur") return !fullname || !email || !phone || !infosLivreur?.siret || !infosLivreur?.zone;
+    if (role === "client") {
+      return !fullname || !phone || !infosClient?.adresseComplete;
+    }
+    if (role === "vendeur") {
+      return !fullname || !phone || !infosVendeur?.categorie || !infosVendeur?.adresseComplete;
+    }
+    if (role === "livreur") {
+      return !fullname || !phone || !infosLivreur?.typeDeTransport;
+    }
     return false;
   };
 
@@ -114,8 +124,12 @@ export default function ProfilCommun() {
               {role === "vendeur" && infosVendeur?.adresseComplete && (
                 <IconRow label="Adresse" value={infosVendeur.adresseComplete} />
               )}
-              {role === "livreur" && infosLivreur?.zone && (
-                <IconRow label="Zone" value={infosLivreur.zone} />
+              {role === "livreur" && (
+                <>
+                  {infosLivreur?.typeDeTransport && (
+                    <IconRow label="Transport" value={infosLivreur.typeDeTransport} />
+                  )}
+                </>
               )}
             </>
           )}
@@ -147,19 +161,46 @@ export default function ProfilCommun() {
         )}
 
         <InfoCard title="Sécurité" className="bg-gray-50 shadow-md">
-          <div className="flex justify-between items-center w-full pt-1">
-            <button
-              className="text-sm text-red-600 hover:underline"
-              onClick={() => logout({ returnTo: window.location.origin })}
-            >
-              Se déconnecter
-            </button>
-            <button
-              className="text-sm text-red-600 hover:underline"
-              onClick={handleDeleteAccount}
-            >
-              Supprimer mon compte
-            </button>
+          <div className="flex flex-col space-y-4 pt-1">
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/account/password-reset', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: auth0User?.email }),
+                });
+
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || "Erreur");
+
+                alert(result.message || "Un email de réinitialisation a été envoyé à votre adresse.");
+              } catch (err) {
+                console.error("❌", err);
+                alert("Erreur lors de l'envoi de l’email");
+              }
+            }}
+            className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+          >
+            🔒 <span className="ml-1">Modifier mon mot de passe</span>
+          </button>
+
+            <hr className="border-gray-200" />
+
+            <div className="flex justify-between">
+              <button
+                className="text-sm text-gray-700 hover:text-gray-900"
+                onClick={() => logout({ returnTo: window.location.origin })}
+              >
+                Se déconnecter
+              </button>
+              <button
+                className="text-sm text-red-700 font-semibold hover:underline"
+                onClick={handleDeleteAccount}
+              >
+                Supprimer mon compte
+              </button>
+            </div>
           </div>
         </InfoCard>
       </div>

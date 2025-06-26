@@ -38,10 +38,10 @@ const formatUserProfile = (user) => {
         role: 'livreur',
         fullname: user.fullname,
         phone: user.phone,
-        raisonSociale: user.raisonSociale,
-        kbis: user.kbis,
         notifications: user.notifications,
-        infosLivreur: user.infosLivreur,
+        infosLivreur: {
+          typeDeTransport: user.infosLivreur?.typeDeTransport || "",
+        },
       };
     default:
       return null;
@@ -65,6 +65,8 @@ exports.getMyProfile = async (req, res) => {
 
 exports.updateMyProfile = async (req, res) => {
   try {
+    console.log("🔄 Données reçues:", req.body);
+
     const dbUser = req.dbUser;
     if (!dbUser) {
       return res.status(404).json({ error: 'Utilisateur introuvable' });
@@ -78,6 +80,10 @@ exports.updateMyProfile = async (req, res) => {
     const { fullname, phone, notifications, infosClient, infosVendeur, infosLivreur, raisonSociale, kbis } = req.body;
 
     if (fullname) dbUser.fullname = fullname;
+    const phoneRegex = /^\+?[0-9]{7,15}$/;
+    if (phone && !phoneRegex.test(phone)) {
+      return res.status(400).json({ error: "Numéro de téléphone invalide" });
+    }
     if (phone) dbUser.phone = phone;
     if (typeof notifications === 'boolean') dbUser.notifications = notifications;
     if (raisonSociale) dbUser.raisonSociale = raisonSociale;
@@ -92,7 +98,15 @@ exports.updateMyProfile = async (req, res) => {
       dbUser.infosClient = null;
       dbUser.infosLivreur = null;
     } else if (role === 'livreur') {
-      dbUser.infosLivreur = { ...livreurDefaults, ...dbUser.infosLivreur, ...infosLivreur };
+      if (!infosLivreur || typeof infosLivreur.typeDeTransport !== 'string' || infosLivreur.typeDeTransport.trim() === '') {
+        return res.status(400).json({ error: "Type de transport manquant ou invalide" });
+      }
+
+      dbUser.infosLivreur = {
+        ...livreurDefaults,
+        ...dbUser.infosLivreur,
+        typeDeTransport: infosLivreur.typeDeTransport.trim(),
+      };
       dbUser.infosClient = null;
       dbUser.infosVendeur = null;
     }

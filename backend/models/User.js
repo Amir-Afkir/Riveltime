@@ -1,38 +1,41 @@
 const mongoose = require('mongoose');
 
 const infosClientSchema = new mongoose.Schema({
-  adresseComplete: String,
+  adresseComplete: { type: String, trim: true },
   latitude: Number,
   longitude: Number,
 }, { _id: false });
 
 const infosVendeurSchema = new mongoose.Schema({
-  categorie: String,
-  adresseComplete: String,
+  categorie: { type: String, trim: true },
+  adresseComplete: { type: String, trim: true },
   latitude: Number,
   longitude: Number,
   moyensPaiement: [String],
 }, { _id: false });
 
 const infosLivreurSchema = new mongoose.Schema({
-  siret: String,
-  zone: String,
-  typeDeTransport: String,
+  typeDeTransport: { type: String, trim: true },
 }, { _id: false });
 
 const userSchema = new mongoose.Schema({
   auth0Id: { type: String, required: true, unique: true },
   email: { type: String, required: true },
-  fullname: { type: String, default: 'Utilisateur' },
-  phone: { type: String },
+  fullname: { type: String, default: 'Utilisateur', trim: true },
+  phone: {
+    type: String,
+    validate: {
+      validator: (v) => /^\+?[0-9]{7,15}$/.test(v),
+      message: "Numéro de téléphone invalide",
+    },
+    trim: true,
+  },
   avatarUrl: { type: String },
-  raisonSociale: String,
-  kbis: String,
   role: { type: String, enum: ['client', 'vendeur', 'livreur'], default: 'client' },
 
-  infosClient: { type: infosClientSchema, default: null },
-  infosVendeur: { type: infosVendeurSchema, default: null },
-  infosLivreur: { type: infosLivreurSchema, default: null },
+  infosClient: { type: infosClientSchema, default: () => ({}) },
+  infosVendeur: { type: infosVendeurSchema, default: () => ({}) },
+  infosLivreur: { type: infosLivreurSchema, default: () => ({}) },
 
   notifications: { type: Boolean, default: true },
 }, { timestamps: true });

@@ -5,7 +5,6 @@
     "longitude": null
   },
   "vendeurDefaults": {
-    "siret": "",
     "categorie": "",
     "adresseComplete": "",
     "latitude": null,
@@ -13,9 +12,6 @@
     "moyensPaiement": []
   },
   "livreurDefaults": {
-    "siret": "",
-    "zone": "",
-    "disponible": true,
     "typeDeTransport": ""
   }
 }

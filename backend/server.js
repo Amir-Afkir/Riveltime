@@ -48,6 +48,7 @@ app.use((req, res, next) => {
 // 🌍 Routes publiques
 app.use('/api/address', addressRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/account', accountRoutes); // ✅ Route déplacée ici pour exposer password-reset publiquement
 
 // 🔐 Middleware Auth0 commun
 app.use(jwtCheck, injectUser, createUserIfNotExists);
@@ -55,7 +56,6 @@ app.use(jwtCheck, injectUser, createUserIfNotExists);
 // 📦 Routes API sécurisées
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/account', accountRoutes); // ✅ Route centralisée pour la suppression de compte
 
 // ✅ Route de test sécurisée
 app.get('/authorized', (req, res) => {
