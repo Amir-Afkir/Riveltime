@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "dev": "node backend/server.js"
   },
   "keywords": [],
@@ -10,7 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@auth0/auth0-react": "^2.3.0",
+    "axios": "^1.10.0",
     "cloudinary": "^2.6.1",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
@@ -22,8 +23,6 @@
     "mongoose": "^8.15.1",
     "multer": "^2.0.1",
     "node-fetch": "^3.3.2",
-    "react": "^19.1.0",
-    "react-router-dom": "^7.6.2",
     "streamifier": "^0.1.1"
   }
 }
