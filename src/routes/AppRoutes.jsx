@@ -1,27 +1,27 @@
 // src/routes/AppRoutes.jsx
 import { Routes, Route } from 'react-router-dom';
-import Home from '../pages/common/Home';
+import Home from '../pages/common/Home.jsx';
 import Layout from '../components/layout/Layout.jsx';
-import ProfilCommun from '../pages/common/Profil';
+import ProfilCommun from '../pages/common/Profil.jsx';
 
 // Client
-import ClientAccueil from '../pages/client/Accueil';
-import Vitrine from '../pages/client/Vitrine';
-import Panier from '../pages/client/Panier';
-import CommandesClient from '../pages/client/Commandes';
-import MessagesClient from '../pages/client/Messages';
+import ClientAccueil from '../pages/client/Accueil.jsx';
+import Vitrine from '../pages/client/Vitrine.jsx';
+import Panier from '../pages/client/Panier.jsx';
+import CommandesClient from '../pages/client/Commandes.jsx';
+import MessagesClient from '../pages/client/Messages.jsx';
 
 // Vendeur
-import DashboardVendeur from '../pages/vendeur/Dashboard';
-import Produits from '../pages/vendeur/Produits';
-import CommandesVendeur from '../pages/vendeur/Commandes';
-import MessagesVendeur from '../pages/vendeur/Messages';
+import DashboardVendeur from '../pages/vendeur/Dashboard.jsx';
+import Produits from '../pages/vendeur/Produits.jsx';
+import CommandesVendeur from '../pages/vendeur/Commandes.jsx';
+import MessagesVendeur from '../pages/vendeur/Messages.jsx';
 
 // Livreur
-import DashboardLivreur from '../pages/livreur/Dashboard';
-import Courses from '../pages/livreur/Courses';
-import Historique from '../pages/livreur/Historique';
-import MessagesLivreur from '../pages/livreur/Messages';
+import DashboardLivreur from '../pages/livreur/Dashboard.jsx';
+import Courses from '../pages/livreur/Courses.jsx';
+import Historique from '../pages/livreur/Historique.jsx';
+import MessagesLivreur from '../pages/livreur/Messages.jsx';
 
 const clientRoutes = [
   { path: "/client/accueil", element: <ClientAccueil /> },
