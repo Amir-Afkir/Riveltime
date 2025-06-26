@@ -1,3 +1,4 @@
+// ✅ Layout.jsx
 import { Outlet, useLocation } from "react-router-dom";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
@@ -8,7 +9,6 @@ export default function Layout() {
   const { pathname } = useLocation();
   const { userData } = useUser();
 
-  // Utilitaire combiné pour couleur et background
   const getTheme = (path) => {
     if (path.startsWith("/vendeur")) return { color: "green", bgColor: "bg-green-50" };
     if (path.startsWith("/livreur")) return { color: "orange", bgColor: "bg-orange-50" };
@@ -17,13 +17,10 @@ export default function Layout() {
 
   const { color, bgColor } = getTheme(pathname);
 
-  // Profil: regrouper logique avatar et sous-titre
   const isProfilePage = ["/client/profil", "/vendeur/profil", "/livreur/profil"].includes(pathname);
 
   const title = useMemo(() => {
-    if (isProfilePage) {
-      return userData?.fullname?.trim() || "Mon profil";
-    }
+    if (isProfilePage) return userData?.fullname?.trim() || "Mon profil";
 
     const rules = [
       ["/client/accueil", "Accueil"],
@@ -48,13 +45,18 @@ export default function Layout() {
     return pathname === "/" ? "Accueil" : "Riveltime";
   }, [pathname, userData]);
 
+    const avatarUrl =
+    isProfilePage && userData?.avatarUrl?.startsWith("http")
+      ? `${userData.avatarUrl}?v=${Date.now()}`
+      : "/src/assets/avatar-default.png";
+
   return (
     <div className={`min-h-screen pb-28 ${bgColor}`}>
       <Header
         title={title}
         showBack={false}
         color={color}
-        avatarUrl={isProfilePage ? (userData?.avatarUrl || "/src/assets/avatar-default.png") : undefined}
+        avatarUrl={avatarUrl}
         showSubtitle={isProfilePage ? userData?.role : null}
       />
       <main className={`${isProfilePage ? "pt-28" : "pt-20"} p-4 max-w-md mx-auto`}>

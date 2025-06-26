@@ -3,7 +3,7 @@ import React from "react";
 
 export default function InfoCard({ title, children, action }) {
     return (
-      <div className="bg-white rounded-xl shadow p-4 mb-4">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 mb-4">
         {(title || action) && (
           <>
             <div className="flex justify-between items-center mb-2">

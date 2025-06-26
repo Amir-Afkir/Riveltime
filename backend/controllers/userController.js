@@ -1,3 +1,5 @@
+const cloudinary = require('../config/cloudinary');
+const streamifier = require('streamifier');
 // backend/controllers/userController.js
 
 const fs = require('fs');
@@ -54,7 +56,7 @@ exports.getMyProfile = async (req, res) => {
     const formatted = formatUserProfile(dbUser);
     if (!formatted) return res.status(400).json({ error: 'Rôle utilisateur inconnu' });
 
-    return res.json(formatted);
+    return res.json({ ...formatted, avatarUrl: dbUser.avatarUrl });
   } catch (err) {
     console.error('❌ Erreur lors de la récupération du profil :', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -99,6 +101,66 @@ exports.updateMyProfile = async (req, res) => {
     res.json(dbUser);
   } catch (err) {
     console.error('❌ Erreur lors de la mise à jour du profil :', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+
+exports.uploadAvatar = async (req, res) => {
+  try {
+    const dbUser = req.dbUser;
+    if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
+
+    const folder = `riveltime/${dbUser.auth0Id}/profil`;
+
+    // Supprimer l’ancien avatar
+    if (dbUser.avatarUrl) {
+      const parts = dbUser.avatarUrl.split('/');
+      const publicId = parts[parts.length - 1].split('.')[0];
+      await cloudinary.uploader.destroy(`${folder}/${publicId}`);
+    }
+
+    // Upload du nouvel avatar
+    const streamUpload = () => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder, public_id: "avatar", overwrite: true },
+          (error, result) => {
+            if (result) resolve(result);
+            else reject(error);
+          }
+        );
+        streamifier.createReadStream(req.file.buffer).pipe(stream);
+      });
+    };
+
+    const result = await streamUpload();
+    dbUser.avatarUrl = result.secure_url;
+    await dbUser.save();
+
+    res.json({ message: '✅ Avatar mis à jour', avatarUrl: dbUser.avatarUrl });
+  } catch (err) {
+    console.error('❌ Upload avatar :', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+exports.deleteAvatar = async (req, res) => {
+  try {
+    const dbUser = req.dbUser;
+    if (!dbUser.avatarUrl) return res.status(400).json({ error: 'Aucun avatar à supprimer' });
+
+    const folder = `riveltime/${dbUser.auth0Id}/profil`;
+    const parts = dbUser.avatarUrl.split('/');
+    const publicId = parts[parts.length - 1].split('.')[0];
+
+    await cloudinary.uploader.destroy(`${folder}/${publicId}`);
+    dbUser.avatarUrl = undefined;
+    await dbUser.save();
+
+    res.json({ message: '✅ Avatar supprimé' });
+  } catch (err) {
+    console.error('❌ Suppression avatar :', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 };

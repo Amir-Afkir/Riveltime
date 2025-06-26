@@ -12,19 +12,16 @@ export function UserProvider({ children }) {
   const fetchUser = async () => {
     try {
       setLoadingUser(true);
-      console.log("🔐 Tentative de récupération du token...");
       const token = await getAccessTokenSilently();
-      console.log("✅ Token récupéré");
-      console.log("📡 Envoi de la requête à /api/users/me");
       const response = await fetch("/api/users/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Échec récupération utilisateur");
-      const data = await response.json();
-      console.log("📥 Données utilisateur reçues :", data);
-      setUserData(data);
+
+      const raw = await response.text();
+      const data = JSON.parse(raw);
+      setUserData(data.user || data);
     } catch (error) {
-      console.error("❌ Erreur lors du chargement du contexte utilisateur :", error);
       setUserData(null);
     } finally {
       setLoadingUser(false);
@@ -32,13 +29,11 @@ export function UserProvider({ children }) {
   };
 
   useEffect(() => {
-    console.log("🔄 Auth0 loading:", auth0Loading, "| Auth0 user:", auth0User);
     if (!auth0Loading && auth0User) {
       fetchUser();
     }
   }, [auth0Loading, auth0User]);
 
-  console.log("📦 Contexte utilisateur fourni :", { userData, loadingUser });
   return (
     <UserContext.Provider value={{ userData, setUserData, refreshUser: fetchUser, loadingUser }}>
       {children}

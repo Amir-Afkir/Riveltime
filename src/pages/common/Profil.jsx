@@ -96,7 +96,7 @@ export default function ProfilCommun() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-3">
         <InfoCard
           title="Mes informations"
           className={isProfilIncomplet() ? "bg-yellow-50 border-l-4 border-yellow-400" : ""}

@@ -32,7 +32,7 @@ exports.createProduct = async (req, res) => {
       const streamUpload = () => {
         return new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
-            { folder: 'riveltime' },
+            { folder: `riveltime/${sellerId}/vitrine` },
             (error, result) => {
               if (result) resolve(result);
               else reject(error);
@@ -138,7 +138,7 @@ exports.updateProduct = async (req, res) => {
       const streamUpload = () => {
         return new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
-            { folder: 'riveltime' },
+            { folder: `riveltime/${sellerId}/vitrine` },
             (error, result) => {
               if (result) resolve(result);
               else reject(error);

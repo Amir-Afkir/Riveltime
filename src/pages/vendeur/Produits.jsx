@@ -18,7 +18,7 @@ export default function Produits() {
     description: "",
     image: null
   });
-  const { getAccessTokenSilently } = useAuth0();
+  const { getAccessTokenSilently, user } = useAuth0();
 
   useEffect(() => {
     const fetchProduits = async () => {
@@ -66,6 +66,9 @@ export default function Produits() {
       formData.append("description", nouveauProduit.description);
       if (nouveauProduit.image) {
         formData.append("image", nouveauProduit.image);
+        if (user?.sub) {
+          formData.append("uploaderId", user.sub);
+        }
       }
 
       const url = nouveauProduit._id
