@@ -50,6 +50,9 @@ app.use('/api/address', addressRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/account', accountRoutes); // ✅ Route déplacée ici pour exposer password-reset publiquement
 
+// 🚫 Ignore les requêtes vers favicon.ico pour éviter les erreurs 401 inutiles
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // 🔐 Middleware Auth0 commun
 app.use(jwtCheck, injectUser, createUserIfNotExists);
 
