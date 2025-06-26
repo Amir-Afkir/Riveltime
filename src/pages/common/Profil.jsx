@@ -49,7 +49,7 @@ export default function ProfilCommun() {
         authorizationParams: { scope: "openid profile email" },
       });
 
-      const res = await fetch("${import.meta.env.VITE_API_URL}/api/users/me", {
+      const res = await fetch("/api/users/me", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
