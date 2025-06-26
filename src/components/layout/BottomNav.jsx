@@ -1,6 +1,30 @@
 // ✅ src/components/BottomNav.jsx
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
+import { Home, ShoppingCart, Package, User, Store, FileText, Bike, Mail, Scroll } from "lucide-react";
+
+function BottomNavItem({ label, path, icon: Icon, isActive, onClick, color, badge }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-current={isActive ? "page" : undefined}
+      aria-label={label}
+      className={`group flex flex-col items-center justify-center gap-1 transition-all duration-200 ease-in-out
+        ${isActive ? `${color} font-bold` : "text-gray-400 hover:text-gray-600 group-hover:scale-105 group-hover:-translate-y-0.5"} active:scale-95`}
+    >
+      <div className="relative">
+        <Icon className={`transition-transform duration-300 ${isActive ? 'w-7 h-7' : 'w-6 h-6'} group-hover:scale-110`} />
+        {badge > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+            {badge}
+          </span>
+        )}
+      </div>
+      {isActive && <span className={`mt-1 w-1.5 h-1.5 rounded-full ${color} animate-pulse`} />}
+      <span className={`text-xs ${isActive ? 'font-bold' : ''}`}>{label}</span>
+    </button>
+  );
+}
 
 export default function BottomNav() {
   const navigate = useNavigate();
@@ -9,68 +33,54 @@ export default function BottomNav() {
 
   const totalQuantity = cart?.reduce?.((sum, item) => sum + item.quantity, 0) || 0;
 
-  // Déterminer le rôle à partir de l'URL
   const path = location.pathname;
   let navItems = [];
+  let color = "text-blue-600";
 
   if (path.startsWith("/client") || path.startsWith("/vitrine")) {
     navItems = [
-      { label: "Accueil", path: "/client/accueil", emoji: "🏠" },
-      {
-        label: "Panier",
-        path: "/client/panier",
-        emoji: (
-          <span className="relative inline-block">
-            🛒
-            {totalQuantity > 0 && (
-              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {totalQuantity}
-              </span>
-            )}
-          </span>
-        ),
-      },
-      { label: "Commandes", path: "/client/commandes", emoji: "📦" },
-      { label: "Profil", path: "/client/profil", emoji: "👤" },
+      { label: "Accueil", path: "/client/accueil", icon: Home },
+      { label: "Panier", path: "/client/panier", icon: ShoppingCart },
+      { label: "Commandes", path: "/client/commandes", icon: Package },
+      { label: "Profil", path: "/client/profil", icon: User },
     ];
   } else if (path.startsWith("/vendeur")) {
     navItems = [
-      { label: "Dashboard", path: "/vendeur/dashboard", emoji: "🏪" },
-      { label: "Produits", path: "/vendeur/produits", emoji: "📦" },
-      { label: "Commandes", path: "/vendeur/commandes", emoji: "🧾" },
-      { label: "Profil", path: "/vendeur/profil", emoji: "👤" },
+      { label: "Dashboard", path: "/vendeur/dashboard", icon: Store },
+      { label: "Produits", path: "/vendeur/produits", icon: Package },
+      { label: "Commandes", path: "/vendeur/commandes", icon: FileText },
+      { label: "Profil", path: "/vendeur/profil", icon: User },
     ];
+    color = "text-green-600";
   } else if (path.startsWith("/livreur")) {
     navItems = [
-      { label: "Dashboard", path: "/livreur/dashboard", emoji: "🚴" },
-      { label: "Courses", path: "/livreur/courses", emoji: "📬" },
-      { label: "Historique", path: "/livreur/historique", emoji: "📜" },
-      { label: "Profil", path: "/livreur/profil", emoji: "👤" },
+      { label: "Dashboard", path: "/livreur/dashboard", icon: Bike },
+      { label: "Courses", path: "/livreur/courses", icon: Mail },
+      { label: "Historique", path: "/livreur/historique", icon: Scroll },
+      { label: "Profil", path: "/livreur/profil", icon: User },
     ];
+    color = "text-orange-600";
   }
 
-  const activeColor =
-    path.startsWith("/vendeur") ? "text-green-600" :
-    path.startsWith("/livreur") ? "text-orange-600" :
-    "text-blue-600";
-
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-md border-t border-gray-200">
-      <ul className="flex justify-around text-sm">
-        {navItems.map((item) => (
-          <li key={item.path}>
-            <button
-              onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center px-4 py-2 w-full ${
-                location.pathname === item.path ? `${activeColor} font-semibold` : "text-gray-500"
-              }`}
-            >
-              <span>{item.emoji}</span>
-              <span>{item.label}</span>
-            </button>
-          </li>
-        ))}
+    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md shadow-t-md border-t border-gray-200 rounded-t-2xl">
+      <ul className="flex justify-around items-center h-16">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <li key={item.path}>
+              <BottomNavItem
+                label={item.label}
+                path={item.path}
+                icon={item.icon}
+                isActive={isActive}
+                color={color}
+                badge={item.label === "Panier" ? totalQuantity : 0}
+                onClick={() => navigate(item.path)}
+              />
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );

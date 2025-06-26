@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { useAuth0 } from '@auth0/auth0-react';
@@ -7,27 +7,35 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
   const navigate = useNavigate();
   const location = useLocation();
   const { getAccessTokenSilently } = useAuth0();
-  const { userData, refreshUser } = useUser();
+  const { refreshUser } = useUser();
 
   const fileInputRef = useRef();
   const [modalOpen, setModalOpen] = useState(false);
+  const [avatarVersion, setAvatarVersion] = useState(0);
 
   const isProfilePage = Boolean(avatarUrl && showSubtitle);
   const isCloudinaryImage = avatarUrl?.startsWith('https://res.cloudinary.com/') ?? false;
 
   const getToken = () => getAccessTokenSilently();
 
+  const displayedAvatarUrl = useMemo(() => {
+    if (!avatarUrl) return "/src/assets/avatar-default.png";
+    if (avatarUrl.startsWith("https://res.cloudinary.com/")) {
+      const optimized = avatarUrl.replace("/upload/", "/upload/f_auto,q_auto,w_160,h_160,c_thumb,g_face,r_max/");
+      return avatarVersion > 0 ? `${optimized}?v=${avatarVersion}` : optimized;
+    }
+    return avatarUrl;
+  }, [avatarUrl, avatarVersion]);
+
   const handleClickAvatar = () => {
     if (!location.pathname.includes("/profil")) return;
-    if (isCloudinaryImage) setModalOpen(true);
-    else fileInputRef.current?.click();
+    isCloudinaryImage ? setModalOpen(true) : fileInputRef.current?.click();
   };
 
-  const handleUploadAvatar = async (file) => {
+  const handleAvatarUpload = async (file) => {
     if (!file) return;
     const formData = new FormData();
     formData.append("avatar", file);
-
     try {
       const token = await getToken();
       const res = await fetch("/api/users/me/avatar", {
@@ -37,6 +45,7 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
       });
       if (!res.ok) throw new Error("Upload échoué");
       await refreshUser();
+      setAvatarVersion(Date.now());
       setModalOpen(false);
     } catch {
       alert("❌ Échec de l’upload de l’avatar");
@@ -53,20 +62,25 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
       });
       if (!res.ok) throw new Error("Suppression échouée");
       await refreshUser();
+      setAvatarVersion(Date.now());
       setModalOpen(false);
     } catch {
       alert("❌ Échec de la suppression de l’avatar");
     }
   };
 
-  const headerClass = [
-    "fixed top-0 left-0 right-0 z-50 px-4 bg-" + color + "-600 text-white shadow-md",
-    isProfilePage ? "py-4" : "h-16 flex items-center justify-center"
-  ].join(' ');
+  const colorClasses = {
+    blue: "bg-blue-600/80 backdrop-blur-sm",
+    green: "bg-green-600/80 backdrop-blur-sm",
+    orange: "bg-orange-600/80 backdrop-blur-sm",
+  };
 
-  const displayedAvatarUrl = avatarUrl?.startsWith("http")
-    ? `${avatarUrl}?v=${Date.now()}`
-    : "/src/assets/avatar-default.png";
+  const headerClass = [
+    "fixed top-0 left-0 right-0 z-50 px-4",
+    colorClasses[color] || colorClasses.blue,
+    "text-white shadow-[0_2px_4px_-1px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out",
+    isProfilePage ? "py-6" : "py-4"
+  ].join(" ");
 
   return (
     <>
@@ -85,14 +99,7 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
                   e.target.onerror = null;
                   e.target.src = "/src/assets/avatar-default.png";
                 }}
-                className="w-full h-full object-cover rounded-full border-2 border-white shadow-md"
-              />
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                ref={fileInputRef}
-                onChange={e => handleUploadAvatar(e.target.files[0])}
+                className="w-full h-full object-cover rounded-full border-2 border-white shadow-md animate-avatarFadeIn"
               />
             </div>
             <div>
@@ -115,6 +122,14 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
           </div>
         )}
       </header>
+
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        ref={fileInputRef}
+        onChange={e => handleAvatarUpload(e.target.files[0])}
+      />
 
       {modalOpen && (
         <div
@@ -153,13 +168,6 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
                 Supprimer
               </button>
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={e => handleUploadAvatar(e.target.files[0])}
-            />
           </div>
         </div>
       )}

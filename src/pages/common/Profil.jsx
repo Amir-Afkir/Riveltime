@@ -1,11 +1,9 @@
-// ✅ src/pages/common/Profil.jsx
+// ✅ ProfilCommun.jsx
 import { useState } from "react";
 import { useUser } from "../../context/UserContext";
-import AvatarHeader from "../../components/profile/AvatarHeader";
 import InfoCard from "../../components/profile/InfoCard";
 import IconRow from "../../components/profile/IconRow";
 import ToggleSwitch from "../../components/profile/ToggleSwitch";
-import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import UserForm from "../../components/logic/UserForm";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -20,28 +18,19 @@ export default function ProfilCommun() {
   const handleDeleteAccount = async () => {
     if (!window.confirm("⚠️ Cette action est irréversible. Supprimer votre compte ?")) return;
 
-    if (!auth0User) {
-      alert("Utilisateur non connecté");
-      return;
-    }
+    if (!auth0User) return alert("Utilisateur non connecté");
 
     try {
       const token = await getAccessTokenSilently({
-        authorizationParams: {
-          scope: 'openid profile email',
-        },
+        authorizationParams: { scope: "openid profile email" },
       });
 
       const response = await fetch("/api/account/delete/me", {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) {
-        throw new Error("Erreur serveur");
-      }
+      if (!response.ok) throw new Error("Erreur serveur");
 
       logout({ returnTo: window.location.origin });
     } catch (err) {
@@ -68,7 +57,7 @@ export default function ProfilCommun() {
       if (!res.ok) throw new Error("Erreur lors de la mise à jour");
 
       alert("Profil mis à jour !");
-      window.location.reload(); // Pour recharger les infos
+      window.location.reload();
     } catch (err) {
       console.error("❌", err);
       alert("Échec de la mise à jour");
@@ -80,49 +69,40 @@ export default function ProfilCommun() {
 
   const { fullname, email, phone, role, avatarUrl, notifications, infosClient, infosVendeur, infosLivreur } = userData;
 
-  // Fonction pour vérifier si le profil est incomplet
   const isProfilIncomplet = () => {
-    if (role === "client") {
-      return !fullname || !email || !phone || !infosClient?.adresseComplete;
-    }
-    if (role === "vendeur") {
-      return !fullname || !phone || !infosVendeur?.categorie || !infosVendeur?.adresseComplete;
-    }
-    if (role === "livreur") {
-      return !fullname || !email || !phone || !infosLivreur?.siret || !infosLivreur?.zone;
-    }
+    if (role === "client") return !fullname || !email || !phone || !infosClient?.adresseComplete;
+    if (role === "vendeur") return !fullname || !phone || !infosVendeur?.categorie || !infosVendeur?.adresseComplete;
+    if (role === "livreur") return !fullname || !email || !phone || !infosLivreur?.siret || !infosLivreur?.zone;
     return false;
   };
 
   return (
-    <>
-      <div className="space-y-3">
+    <div className="space-y-4 pb-20">
+      <div className="space-y-4 px-4">
         <InfoCard
           title="Mes informations"
-          className={isProfilIncomplet() ? "bg-yellow-50 border-l-4 border-yellow-400" : ""}
+          className={`bg-gray-50 shadow-md ${isProfilIncomplet() ? "border-l-4 border-yellow-400 bg-yellow-50" : ""}`}
           action={
             <button
               onClick={() => setModalOpen(true)}
-              className={`inline-flex items-center text-sm font-medium ${
-                isProfilIncomplet()
+              className={`inline-flex items-center text-sm font-medium transition-colors duration-200
+                ${isProfilIncomplet()
                   ? "text-yellow-600 hover:text-yellow-700"
                   : role === "client"
-                    ? "text-blue-600 hover:text-blue-700"
-                    : role === "vendeur"
-                      ? "text-green-600 hover:text-green-700"
-                      : role === "livreur"
-                        ? "text-orange-600 hover:text-orange-700"
-                        : "text-gray-600 hover:text-gray-700"
-              }`}
+                  ? "text-blue-600 hover:text-blue-700"
+                  : role === "vendeur"
+                  ? "text-green-600 hover:text-green-700"
+                  : role === "livreur"
+                  ? "text-orange-600 hover:text-orange-700"
+                  : "text-gray-600 hover:text-gray-700"}`}
             >
               {isProfilIncomplet() ? "Compléter" : "Modifier"}
             </button>
           }
         >
           {isProfilIncomplet() && (
-            <p className="text-yellow-800 mb-2">Votre profil est incomplet. Veuillez le compléter.</p>
+            <p className="text-yellow-800 mb-2 text-sm">Votre profil est incomplet. Veuillez le compléter.</p>
           )}
-
           {!isProfilIncomplet() && (
             <>
               <IconRow label="Nom" value={fullname} />
@@ -141,15 +121,14 @@ export default function ProfilCommun() {
           )}
         </InfoCard>
 
-        <InfoCard
-            title="Notifications"
-            action={<ToggleSwitch checked={notifications ?? false} />}>
-            Email Alerts
+        <InfoCard title="Notifications" className="bg-gray-50 shadow-md">
+          <ToggleSwitch label="Email Alerts" checked={notifications ?? false} role={role} />
         </InfoCard>
 
         {!isProfilIncomplet() && role === "vendeur" && (
           <InfoCard
             title="Moyens de paiement"
+            className="bg-gray-50 shadow-md"
             action={
               <button
                 onClick={() => setPaiementModalOpen(true)}
@@ -167,8 +146,8 @@ export default function ProfilCommun() {
           </InfoCard>
         )}
 
-        <InfoCard title="Sécurité">
-          <div className="flex justify-between items-center w-full">
+        <InfoCard title="Sécurité" className="bg-gray-50 shadow-md">
+          <div className="flex justify-between items-center w-full pt-1">
             <button
               className="text-sm text-red-600 hover:underline"
               onClick={() => logout({ returnTo: window.location.origin })}
@@ -184,6 +163,7 @@ export default function ProfilCommun() {
           </div>
         </InfoCard>
       </div>
+
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Modifier mes informations">
         <UserForm
           role={role}
@@ -210,6 +190,6 @@ export default function ProfilCommun() {
           }}
         />
       </Modal>
-    </>
+    </div>
   );
 }

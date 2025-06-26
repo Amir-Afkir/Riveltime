@@ -59,7 +59,7 @@ export default function Layout() {
         avatarUrl={avatarUrl}
         showSubtitle={isProfilePage ? userData?.role : null}
       />
-      <main className={`${isProfilePage ? "pt-28" : "pt-20"} p-4 max-w-md mx-auto`}>
+      <main className={`${isProfilePage ? "pt-32" : "pt-20"} p-4 max-w-md mx-auto`}>
         <Outlet />
       </main>
       <BottomNav />
