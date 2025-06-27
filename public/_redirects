@@ -1,8 +1,8 @@
-# 1️⃣ Redirige tout le trafic www vers non-www (important pour SSL)
+# Redirection www vers domaine apex
 https://www.riveltime.app/*  https://riveltime.app/:splat  301!
 
-# 2️⃣ Proxy des appels API vers le backend
+# Proxy API
 /api/*  https://api.riveltime.app/api/:splat  200
 
-# 3️⃣ Catch-all pour le client-side routing (React Router)
+# Redirection React SPA
 /*    /index.html   200
