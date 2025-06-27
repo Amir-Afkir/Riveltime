@@ -30,7 +30,7 @@ const createUserIfNotExists = async (req, res, next) => {
     }
 
     const safeEmail = email || `${auth0Id}@no-email.local`;
-    const role = req.user['https://riveltime/api/role'] || 'client';
+    const role = req.user['https://api.riveltime.app/role'] || 'client';
     console.log("🧪 Rôle détecté :", role);
 
     let user = await User.findOne({ auth0Id });
