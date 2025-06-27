@@ -29,7 +29,7 @@ export default function ProfilCommun() {
         authorizationParams: { scope: "openid profile email" },
       });
 
-      const response = await fetch("/api/account/delete/me", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/account/delete/me`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -49,7 +49,7 @@ export default function ProfilCommun() {
         authorizationParams: { scope: "openid profile email" },
       });
 
-      const res = await fetch("/api/users/me", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -165,7 +165,7 @@ export default function ProfilCommun() {
           <button
             onClick={async () => {
               try {
-                const response = await fetch('/api/account/password-reset', {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/account/password-reset`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ email: auth0User?.email }),
