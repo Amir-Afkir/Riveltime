@@ -15,6 +15,8 @@ const userRoutes = require('./routes/userRoutes.js');
 const addressRoutes = require('./routes/addressRoutes.js');
 const accountRoutes = require('./routes/accountRoutes.js'); // ✅ Ajouté
 
+const testRoutes = require('./routes/testRoutes');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -46,13 +48,10 @@ app.use((req, res, next) => {
 });
 
 // 🌍 Routes publiques (déclarées avant jwtCheck)
-app.use('/api/health', require('./routes/testRoutes'));
+app.get('/api/health', testRoutes);
 app.use('/api/account', accountRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/address', addressRoutes);
-
-// 🚫 Ignore les requêtes vers favicon.ico pour éviter les erreurs 401 inutiles
-app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // 🔐 Middleware Auth0 commun
 app.use(jwtCheck, injectUser, createUserIfNotExists);
@@ -60,6 +59,9 @@ app.use(jwtCheck, injectUser, createUserIfNotExists);
 // 📦 Routes API sécurisées
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// 🚫 Ignore les requêtes vers favicon.ico pour éviter les erreurs 401 inutiles
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // ✅ Route de test sécurisée
 app.get('/authorized', (req, res) => {
