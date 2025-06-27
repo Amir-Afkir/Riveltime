@@ -191,8 +191,11 @@ export default function ProfilCommun() {
             <div className="flex justify-between">
               <button
                 className="text-sm text-gray-700 hover:text-gray-900"
-                onClick={() => logout({returnTo: import.meta.env.VITE_BASE_URL})}
-              > console.log("🔁 redirect to:", import.meta.env.VITE_BASE_URL);
+                onClick={() => {
+                  console.log("🔁 redirect to:", import.meta.env.VITE_BASE_URL);
+                  logout({returnTo: import.meta.env.VITE_BASE_URL});
+                }}
+              >
                 Se déconnecter
               </button>
               <button
