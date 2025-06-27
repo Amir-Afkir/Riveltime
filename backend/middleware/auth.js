@@ -22,7 +22,6 @@ const injectUser = (req, res, next) => {
 
 // 3️⃣ Crée automatiquement un utilisateur Mongo si absent
 const createUserIfNotExists = async (req, res, next) => {
-  console.log("🔐 createUserIfNotExists → req.user:", req.user);
   try {
     const { sub: auth0Id, email, name, picture } = req.user;
     if (!auth0Id) {
