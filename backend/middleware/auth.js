@@ -16,6 +16,7 @@ const jwtCheck = auth({
 // 2️⃣ Injecte le payload dans req.user
 const injectUser = (req, res, next) => {
   req.user = req.auth?.payload || {};
+  console.log('🔐 Payload JWT reçu :', req.user); // ✅ Ajouté pour debug
   next();
 };
 
