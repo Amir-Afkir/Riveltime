@@ -37,7 +37,6 @@ export default function ProfilCommun() {
       if (!response.ok) throw new Error("Erreur serveur");
 
       logout({ returnTo: import.meta.env.VITE_BASE_URL});
-      console.log("🔁 redirect to:", import.meta.env.VITE_BASE_URL);
     } catch (err) {
       console.error("❌ Erreur lors de la suppression :", err);
       alert("La suppression du compte a échoué.");
