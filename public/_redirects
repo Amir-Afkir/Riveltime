@@ -2,7 +2,7 @@
 https://www.riveltime.app/*  https://riveltime.app/:splat  301!
 
 # Proxy API (correct)
-/api/*  https://api.riveltime.app/api/:splat  200
+/api/*  https://api.riveltime.app/:splat  200
 
 # Redirection React SPA
 /*    /index.html   200
