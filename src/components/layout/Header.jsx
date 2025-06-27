@@ -38,7 +38,7 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
     formData.append("avatar", file);
     try {
       const token = await getToken();
-      const res = await fetch("/api/users/me/avatar", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me/avatar`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -56,7 +56,7 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
     if (!window.confirm("Supprimer votre avatar ?")) return;
     try {
       const token = await getToken();
-      const res = await fetch("/api/users/me/avatar", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me/avatar`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

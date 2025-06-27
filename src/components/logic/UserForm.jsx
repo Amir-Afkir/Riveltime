@@ -37,7 +37,7 @@ useEffect(() => {
   }
   const timeout = setTimeout(() => {
     if (adresseQuery.length > 2) {
-      fetch(`/api/address/search?q=${encodeURIComponent(adresseQuery)}`)
+      fetch(`${import.meta.env.VITE_API_URL}/address/search?q=${encodeURIComponent(adresseQuery)}`)
         .then((res) => res.json())
         .then((results) => {
           setAdresseSuggestions(results);

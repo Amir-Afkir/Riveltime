@@ -13,7 +13,7 @@ export function UserProvider({ children }) {
     try {
       setLoadingUser(true);
       const token = await getAccessTokenSilently();
-      const response = await fetch("/api/users/me", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Échec récupération utilisateur");

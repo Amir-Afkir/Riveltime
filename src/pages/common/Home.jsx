@@ -10,7 +10,7 @@ export default function Home() {
   const [userRole, setUserRole] = useState("");
 
 // Audience déclarée dans Auth0 → Applications > API
-const AUTH0_AUDIENCE = "https://riveltime/api";
+const AUTH0_AUDIENCE = import.meta.env.VITE_AUTH0_AUDIENCE;
 
   useEffect(() => {
     const fetchRole = async () => {
