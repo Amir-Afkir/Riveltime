@@ -16,7 +16,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       clientId="LgbGjKYPe3klaxWN6NNkAeaAziOVW3tk"
       authorizationParams={{
         redirect_uri: window.location.origin,
-        audience: "https://riveltime/api",
+        audience: "https://api.riveltime.app",
       }}
     >
       <BrowserRouter>
