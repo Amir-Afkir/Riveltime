@@ -35,12 +35,7 @@ export default function ProfilCommun() {
       });
 
       if (!response.ok) throw new Error("Erreur serveur");
-      logout({
-        returnTo:
-          import.meta.env.MODE === "production"
-            ? "https://riveltime.app"
-            : window.location.origin,
-      });
+      logout({ returnTo: "/" });
     } catch (err) {
       console.error("❌ Erreur lors de la suppression :", err);
       alert("La suppression du compte a échoué.");
@@ -194,12 +189,7 @@ export default function ProfilCommun() {
             <div className="flex justify-between">
               <button
                 className="text-sm text-gray-700 hover:text-gray-900"
-                onClick={() => logout({
-                    returnTo:
-                      import.meta.env.MODE === "production"
-                        ? "https://riveltime.app"
-                        : window.location.origin,
-                  })}
+                onClick={() => logout({ returnTo: "/" })}
               >
                 Se déconnecter
               </button>
