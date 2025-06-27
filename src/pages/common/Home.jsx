@@ -1,3 +1,5 @@
+// Centraliser l'URL de base de l'API si besoin dans un fichier config.js ou ici :
+// const API_BASE_URL = "https://api.riveltime.app/api";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from "react";
