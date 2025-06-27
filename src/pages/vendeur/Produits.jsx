@@ -72,8 +72,8 @@ export default function Produits() {
       }
 
       const url = nouveauProduit._id
-        ? `http://localhost:5000/api/products/${nouveauProduit._id}`
-        : "http://localhost:5000/api/products";
+        ? `http://localhost:5000/products/${nouveauProduit._id}`
+        : "http://localhost:5000/products";
 
       const method = nouveauProduit._id ? "PUT" : "POST";
 
@@ -113,7 +113,7 @@ export default function Produits() {
   const supprimerProduit = async (id) => {
     try {
       const token = await getAccessTokenSilently({
-        audience: "https://api.riveltime.app/api",
+        audience: "https://api.riveltime.app",
       });
       const res = await fetch(`http://localhost:5000/api/products/${id}`, {
         method: "DELETE",

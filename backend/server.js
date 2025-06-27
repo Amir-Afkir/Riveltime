@@ -50,15 +50,15 @@ app.use((req, res, next) => {
 // 🌍 Routes publiques (déclarées avant jwtCheck)
 app.use('/api', require('./routes/testRoutes'));
 app.use('/api/account', accountRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/address', addressRoutes);
+app.use('/products', productRoutes);
+app.use('/address', addressRoutes);
 
 // 🔐 Middleware Auth0 commun
 app.use(jwtCheck, injectUser, createUserIfNotExists);
 
 // 📦 Routes API sécurisées
-app.use('/api/users', userRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/users', userRoutes);
+app.use('/notifications', notificationRoutes);
 
 // 🚫 Ignore les requêtes vers favicon.ico pour éviter les erreurs 401 inutiles
 app.get('/favicon.ico', (req, res) => res.status(204).end());
