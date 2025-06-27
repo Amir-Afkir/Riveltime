@@ -45,11 +45,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// 🌍 Routes publiques
-app.use('/api', require('./routes/testRoutes'));
-app.use('/api/address', addressRoutes);
+// 🌍 Routes publiques (déclarées avant jwtCheck)
+app.use('/api/health', require('./routes/testRoutes'));
+app.use('/api/account', accountRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/account', accountRoutes); // ✅ Route déplacée ici pour exposer password-reset publiquement
+app.use('/api/address', addressRoutes);
 
 // 🚫 Ignore les requêtes vers favicon.ico pour éviter les erreurs 401 inutiles
 app.get('/favicon.ico', (req, res) => res.status(204).end());
