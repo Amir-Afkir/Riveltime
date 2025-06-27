@@ -46,6 +46,7 @@ app.use((req, res, next) => {
 });
 
 // 🌍 Routes publiques
+app.use('/api', require('./routes/testRoutes'));
 app.use('/api/address', addressRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/account', accountRoutes); // ✅ Route déplacée ici pour exposer password-reset publiquement
