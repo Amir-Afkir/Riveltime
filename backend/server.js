@@ -48,7 +48,7 @@ app.use((req, res, next) => {
 });
 
 // 🌍 Routes publiques (déclarées avant jwtCheck)
-app.get('/api/health', testRoutes);
+app.use('/api', require('./routes/testRoutes'));
 app.use('/api/account', accountRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/address', addressRoutes);
