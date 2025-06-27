@@ -14,34 +14,39 @@ const AUTH0_AUDIENCE = import.meta.env.VITE_AUTH0_AUDIENCE;
 
   useEffect(() => {
     const fetchRole = async () => {
-      if (isAuthenticated) {
-        try {
-          const accessToken = await getAccessTokenSilently({
-            audience: AUTH0_AUDIENCE,
-            scope: "openid profile email",
-          });
-          const decoded = jwtDecode(accessToken);
-          console.log("✅ AccessToken decoded:", decoded);
+      if (!isAuthenticated) return;
 
-          const role = decoded["https://api.riveltime.app/role"];
-          if (role) {
-            setUserRole(role);
-            if (role === "client") navigate("/client/accueil");
-            else if (role === "vendeur") navigate("/vendeur/dashboard");
-            else if (role === "livreur") navigate("/livreur/dashboard");
-          } else {
-            console.warn("⚠️ Aucun rôle trouvé dans le token.");
-          }
-        } catch (e) {
-          console.error("❌ Erreur lors de la récupération du rôle :", e);
-          setUserRole("");
+      try {
+        const accessToken = await getAccessTokenSilently({
+          audience: AUTH0_AUDIENCE,
+          scope: "openid profile email",
+        });
+        const decoded = jwtDecode(accessToken);
+        console.log("✅ AccessToken decoded:", decoded);
+
+        const role = decoded["https://api.riveltime.app/role"];
+        if (role) {
+          setUserRole(role);
+          if (role === "client") navigate("/client/accueil");
+          else if (role === "vendeur") navigate("/vendeur/dashboard");
+          else if (role === "livreur") navigate("/livreur/dashboard");
+        } else {
+          console.warn("⚠️ Aucun rôle trouvé dans le token.");
         }
-      } else {
+      } catch (e) {
+        console.error("❌ Erreur lors de la récupération du rôle :", e);
+
+        if (e.error === "login_required" || e.error === "consent_required") {
+          console.warn("🔁 Redirection vers Auth0...");
+          loginWithRedirect();
+        }
+
         setUserRole("");
       }
     };
+
     fetchRole();
-  }, [isAuthenticated, getAccessTokenSilently, navigate]);
+  }, [isAuthenticated, getAccessTokenSilently, navigate, loginWithRedirect]);
 
   const handleRoleClick = (role) => {
     if (isAuthenticated) {
