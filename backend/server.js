@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { jwtCheck, injectUser, createUserIfNotExists } = require('./middleware/auth');
+console.log("🔐 createUserIfNotExists → req.user:", req.user);
 const User = require('./models/User');
 
 const notificationRoutes = require('./routes/notificationRoutes');
