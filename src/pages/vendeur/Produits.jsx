@@ -24,7 +24,7 @@ export default function Produits() {
     const fetchProduits = async () => {
       try {
         const token = await getAccessTokenSilently({
-          audience: "https://api.riveltime.app",
+          audience: "https://api.riveltime.app/api",
         });
         const res = await fetch("http://localhost:5000/api/products/mine", {
           headers: {
@@ -57,7 +57,7 @@ export default function Produits() {
     }
     try {
       const token = await getAccessTokenSilently({
-        audience: "https://api.riveltime.app",
+        audience: "https://api.riveltime.app/api",
       });
       const formData = new FormData();
       formData.append("name", nouveauProduit.name);
@@ -113,7 +113,7 @@ export default function Produits() {
   const supprimerProduit = async (id) => {
     try {
       const token = await getAccessTokenSilently({
-        audience: "https://api.riveltime.app",
+        audience: "https://api.riveltime.app/api",
       });
       const res = await fetch(`http://localhost:5000/api/products/${id}`, {
         method: "DELETE",
