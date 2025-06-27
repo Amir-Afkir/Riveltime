@@ -5,19 +5,18 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-const { jwtCheck, injectUser, createUserIfNotExists } = require('../middleware/auth');
 const { getMyProfile, updateMyProfile, uploadAvatar, deleteAvatar } = require('../controllers/userController');
 
 // ✅ Route protégée pour récupérer son profil
-router.get('/me', jwtCheck, injectUser, createUserIfNotExists, getMyProfile);
+router.get('/me', getMyProfile);
 
 // ✅ Route protégée pour mettre à jour son profil
-router.put('/me', jwtCheck, injectUser, createUserIfNotExists, updateMyProfile);
+router.put('/me', updateMyProfile);
 
 // ✅ Route protégée pour uploader un avatar
-router.put('/me/avatar', jwtCheck, injectUser, createUserIfNotExists, upload.single("avatar"), uploadAvatar);
+router.put('/me/avatar', upload.single("avatar"), uploadAvatar);
 
 // ✅ Route protégée pour supprimer un avatar
-router.delete('/me/avatar', jwtCheck, injectUser, createUserIfNotExists, deleteAvatar);
+router.delete('/me/avatar', deleteAvatar);
 
 module.exports = router;
