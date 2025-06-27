@@ -23,7 +23,7 @@ const AUTH0_AUDIENCE = import.meta.env.VITE_AUTH0_AUDIENCE;
           const decoded = jwtDecode(accessToken);
           console.log("✅ AccessToken decoded:", decoded);
 
-          const role = decoded["https://riveltime/api/role"];
+          const role = decoded["https://api.riveltime.app/role"];
           if (role) {
             setUserRole(role);
             if (role === "client") navigate("/client/accueil");
