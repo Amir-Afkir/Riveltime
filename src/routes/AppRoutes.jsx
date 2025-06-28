@@ -4,69 +4,74 @@ import Home from '../pages/common/Home.jsx';
 import Layout from '../components/layout/Layout.jsx';
 import AccessGuard from '../components/logic/AccessGuard.jsx';
 
-// 📦 Auto-importation des pages
+// 🔁 Auto-importe toutes les pages
 const pageModules = import.meta.glob("../pages/**/*.jsx", { eager: true });
 
+// 🔧 Mapping des composants
 const pages = {};
 for (const path in pageModules) {
   const cleanedPath = path
-    .replace("../pages/", "")
-    .replace(".jsx", "");
+    .replace("../pages/", "")    // ex: client/Accueil.jsx
+    .replace(".jsx", "");        // ex: client/Accueil
   pages[cleanedPath] = pageModules[path].default;
 }
 
-// 🔐 Définition centralisée des routes selon le rôle et le chemin
+// 🗺️ Configuration centralisée des routes
 const routesConfig = {
   client: [
-    { key: "client/Accueil", path: "/client/accueil" },
-    { key: "client/Vitrine", path: "/vitrine/:id" },
-    { key: "client/Panier", path: "/client/panier" },
-    { key: "client/Commandes", path: "/client/commandes" },
-    { key: "client/Profil", path: "/client/profil" },
-    { key: "client/Messages", path: "/client/messages" },
+    { path: "/client/accueil", key: "client/Accueil" },
+    { path: "/vitrine/:id", key: "client/Vitrine" },
+    { path: "/client/panier", key: "client/Panier" },
+    { path: "/client/commandes", key: "client/Commandes" },
+    { path: "/client/profil", key: "common/Profil" },
+    { path: "/client/messages", key: "client/Messages" },
   ],
   vendeur: [
-    { key: "vendeur/Dashboard", path: "/vendeur/dashboard" },
-    { key: "vendeur/Produits", path: "/vendeur/produits" },
-    { key: "vendeur/Commandes", path: "/vendeur/commandes" },
-    { key: "vendeur/Profil", path: "/vendeur/profil" },
-    { key: "vendeur/Messages", path: "/vendeur/messages" },
+    { path: "/vendeur/dashboard", key: "vendeur/Dashboard" },
+    { path: "/vendeur/produits", key: "vendeur/Produits" },
+    { path: "/vendeur/commandes", key: "vendeur/Commandes" },
+    { path: "/vendeur/profil", key: "common/Profil" },
+    { path: "/vendeur/messages", key: "vendeur/Messages" },
   ],
   livreur: [
-    { key: "livreur/Dashboard", path: "/livreur/dashboard" },
-    { key: "livreur/Courses", path: "/livreur/courses" },
-    { key: "livreur/Historique", path: "/livreur/historique" },
-    { key: "livreur/Profil", path: "/livreur/profil" },
-    { key: "livreur/Messages", path: "/livreur/messages" },
+    { path: "/livreur/dashboard", key: "livreur/Dashboard" },
+    { path: "/livreur/courses", key: "livreur/Courses" },
+    { path: "/livreur/historique", key: "livreur/Historique" },
+    { path: "/livreur/profil", key: "common/Profil" },
+    { path: "/livreur/messages", key: "livreur/Messages" },
   ],
 };
 
-// 🛣️ Construction des routes protégées
+// 🔐 Génère dynamiquement les routes protégées
 const protectedRoutes = Object.entries(routesConfig).flatMap(([role, routes]) =>
-  routes.map(({ key, path }) => {
+  routes.map(({ path, key }) => {
     const Component = pages[key];
     if (!Component) {
       console.warn(`⚠️ Composant non trouvé pour : ${key}`);
       return null;
     }
-
     return (
       <Route
         key={path}
         path={path}
-        element={<AccessGuard allowedRoles={[role]}><Component /></AccessGuard>}
+        element={
+          <AccessGuard allowedRoles={[role]}>
+            <Component />
+          </AccessGuard>
+        }
       />
     );
   }).filter(Boolean)
 );
 
+// 🧭 Routes globales
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* 🏠 Page d'accueil publique (hors layout) */}
+      {/* 🏠 Page publique */}
       <Route path="/" element={<Home />} />
 
-      {/* 🧱 Routes utilisateur avec layout commun */}
+      {/* 🧱 Layout et routes protégées */}
       <Route element={<Layout />}>
         {protectedRoutes}
       </Route>
