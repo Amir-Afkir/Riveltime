@@ -162,24 +162,43 @@ export default function ProfilCommun() {
               ]
             : []),
         ].map((section, index) => {
-          const baseDelay = 120;
-          const stagger = 80;
+          // Nouveau style d'animation plus fluide et aspect iOS moderne
+          const baseDelay = 80;
+          const stagger = 100;
           const delay = baseDelay + index * stagger;
-
+          // Ajout du style pour l'animation
+          const animationStyle = {
+            animationTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            animationDuration: '480ms',
+          };
           return (
             <InfoCard
               key={section.key}
               title={section.title}
               action={section.action}
               delay={delay}
-              className={section.cardClass || "bg-gray-50 shadow-md"}
+              className={
+                // Ajout d'un effet visuel évoquant iOS (arrondi, ombre douce, fond blanc, légère bordure)
+                (section.cardClass ||
+                  "bg-white shadow-lg rounded-2xl border border-gray-100") +
+                " transition-all duration-500"
+              }
+              style={animationStyle}
             >
               {section.content}
             </InfoCard>
           );
         })}
 
-        <InfoCard title="Sécurité" className="bg-gray-50 shadow-md" delay={120 + 3 * 80}>
+        <InfoCard
+          title="Sécurité"
+          className="bg-white shadow-lg rounded-2xl border border-gray-100 transition-all duration-500"
+          delay={80 + 4 * 100}
+          style={{
+            animationTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            animationDuration: '480ms',
+          }}
+        >
           <div className="flex flex-col space-y-4 pt-1">
           <button
             onClick={async () => {
