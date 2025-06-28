@@ -163,13 +163,13 @@ export default function ProfilCommun() {
             : []),
         ].map((section, index) => {
           // Nouveau style d'animation plus fluide et aspect iOS moderne
-          const baseDelay = 80;
-          const stagger = 100;
+          const baseDelay = 40;
+          const stagger = 60;
           const delay = baseDelay + index * stagger;
           // Ajout du style pour l'animation
           const animationStyle = {
-            animationTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            animationDuration: '480ms',
+            animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            animationDuration: '400ms',
           };
           return (
             <InfoCard
@@ -193,10 +193,10 @@ export default function ProfilCommun() {
         <InfoCard
           title="Sécurité"
           className="bg-white shadow-lg rounded-2xl border border-gray-100 transition-all duration-500"
-          delay={80 + 4 * 100}
+          delay={40 + 4 * 60}
           style={{
-            animationTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            animationDuration: '480ms',
+            animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            animationDuration: '400ms',
           }}
         >
           <div className="flex flex-col space-y-4 pt-1">
