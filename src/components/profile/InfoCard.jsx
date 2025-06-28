@@ -10,28 +10,28 @@ const injectKeyframes = () => {
     @keyframes fadeInUpSoft {
       0% {
         opacity: 0;
-        transform: translateY(28px) scale(0.95);
-        filter: blur(6px);
+        transform: translateY(32px) scale(0.96);
+        filter: blur(5px);
         box-shadow: none;
       }
       60% {
         opacity: 1;
         transform: translateY(-2px) scale(1.01);
-        filter: blur(2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        filter: blur(1.5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
       }
       100% {
         opacity: 1;
         transform: translateY(0) scale(1);
         filter: blur(0);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
       }
     }
 
     .fade-in-up {
       animation-name: fadeInUpSoft;
-      animation-duration: 600ms;
-      animation-timing-function: cubic-bezier(0.24, 0.8, 0.32, 1);
+      animation-duration: 480ms;
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
       animation-fill-mode: both;
       will-change: transform, opacity, filter, box-shadow;
     }
