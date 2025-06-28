@@ -166,11 +166,6 @@ export default function ProfilCommun() {
           const baseDelay = 40;
           const stagger = 60;
           const delay = baseDelay + index * stagger;
-          // Ajout du style pour l'animation
-          const animationStyle = {
-            animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-            animationDuration: '400ms',
-          };
           return (
             <InfoCard
               key={section.key}
@@ -178,12 +173,10 @@ export default function ProfilCommun() {
               action={section.action}
               delay={delay}
               className={
-                // Ajout d'un effet visuel évoquant iOS (arrondi, ombre douce, fond blanc, légère bordure)
                 (section.cardClass ||
                   "bg-white shadow-lg rounded-2xl border border-gray-100") +
                 " transition-all duration-500"
               }
-              style={animationStyle}
             >
               {section.content}
             </InfoCard>
@@ -194,10 +187,6 @@ export default function ProfilCommun() {
           title="Sécurité"
           className="bg-white shadow-lg rounded-2xl border border-gray-100 transition-all duration-500"
           delay={40 + 4 * 60}
-          style={{
-            animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-            animationDuration: '400ms',
-          }}
         >
           <div className="flex flex-col space-y-4 pt-1">
           <button
