@@ -2,64 +2,73 @@
 import { Routes, Route } from 'react-router-dom';
 import Home from '../pages/common/Home.jsx';
 import Layout from '../components/layout/Layout.jsx';
-import ProfilCommun from '../pages/common/Profil.jsx';
-import AccessGuard from "../components/logic/AccessGuard.jsx";
+import AccessGuard from '../components/logic/AccessGuard.jsx';
 
-// Client
-import ClientAccueil from '../pages/client/Accueil.jsx';
-import Vitrine from '../pages/client/Vitrine.jsx';
-import Panier from '../pages/client/Panier.jsx';
-import CommandesClient from '../pages/client/Commandes.jsx';
-import MessagesClient from '../pages/client/Messages.jsx';
+// 📦 Auto-importation des pages
+const pageModules = import.meta.glob("../pages/**/*.jsx", { eager: true });
 
-// Vendeur
-import DashboardVendeur from '../pages/vendeur/Dashboard.jsx';
-import Produits from '../pages/vendeur/Produits.jsx';
-import CommandesVendeur from '../pages/vendeur/Commandes.jsx';
-import MessagesVendeur from '../pages/vendeur/Messages.jsx';
+const pages = {};
+for (const path in pageModules) {
+  const cleanedPath = path
+    .replace("../pages/", "")
+    .replace(".jsx", "");
+  pages[cleanedPath] = pageModules[path].default;
+}
 
-// Livreur
-import DashboardLivreur from '../pages/livreur/Dashboard.jsx';
-import Courses from '../pages/livreur/Courses.jsx';
-import Historique from '../pages/livreur/Historique.jsx';
-import MessagesLivreur from '../pages/livreur/Messages.jsx';
+// 🔐 Définition centralisée des routes selon le rôle et le chemin
+const routesConfig = {
+  client: [
+    { key: "client/Accueil", path: "/client/accueil" },
+    { key: "client/Vitrine", path: "/vitrine/:id" },
+    { key: "client/Panier", path: "/client/panier" },
+    { key: "client/Commandes", path: "/client/commandes" },
+    { key: "client/Profil", path: "/client/profil" },
+    { key: "client/Messages", path: "/client/messages" },
+  ],
+  vendeur: [
+    { key: "vendeur/Dashboard", path: "/vendeur/dashboard" },
+    { key: "vendeur/Produits", path: "/vendeur/produits" },
+    { key: "vendeur/Commandes", path: "/vendeur/commandes" },
+    { key: "vendeur/Profil", path: "/vendeur/profil" },
+    { key: "vendeur/Messages", path: "/vendeur/messages" },
+  ],
+  livreur: [
+    { key: "livreur/Dashboard", path: "/livreur/dashboard" },
+    { key: "livreur/Courses", path: "/livreur/courses" },
+    { key: "livreur/Historique", path: "/livreur/historique" },
+    { key: "livreur/Profil", path: "/livreur/profil" },
+    { key: "livreur/Messages", path: "/livreur/messages" },
+  ],
+};
 
-const clientRoutes = [
-  { path: "/client/accueil", element: <AccessGuard allowedRoles={["client"]}><ClientAccueil /></AccessGuard> },
-  { path: "/vitrine/:id", element: <AccessGuard allowedRoles={["client"]}><Vitrine /></AccessGuard> },
-  { path: "/client/panier", element: <AccessGuard allowedRoles={["client"]}><Panier /></AccessGuard> },
-  { path: "/client/commandes", element: <AccessGuard allowedRoles={["client"]}><CommandesClient /></AccessGuard> },
-  { path: "/client/profil", element: <AccessGuard allowedRoles={["client"]}><ProfilCommun /></AccessGuard> },
-  { path: "/client/messages", element: <AccessGuard allowedRoles={["client"]}><MessagesClient /></AccessGuard> },
-];
+// 🛣️ Construction des routes protégées
+const protectedRoutes = Object.entries(routesConfig).flatMap(([role, routes]) =>
+  routes.map(({ key, path }) => {
+    const Component = pages[key];
+    if (!Component) {
+      console.warn(`⚠️ Composant non trouvé pour : ${key}`);
+      return null;
+    }
 
-const vendeurRoutes = [
-  { path: "/vendeur/dashboard", element: <AccessGuard allowedRoles={["vendeur"]}><DashboardVendeur /></AccessGuard> },
-  { path: "/vendeur/produits", element: <AccessGuard allowedRoles={["vendeur"]}><Produits /></AccessGuard> },
-  { path: "/vendeur/commandes", element: <AccessGuard allowedRoles={["vendeur"]}><CommandesVendeur /></AccessGuard> },
-  { path: "/vendeur/profil", element: <AccessGuard allowedRoles={["vendeur"]}><ProfilCommun /></AccessGuard> },
-  { path: "/vendeur/messages", element: <AccessGuard allowedRoles={["vendeur"]}><MessagesVendeur /></AccessGuard> },
-];
-
-const livreurRoutes = [
-  { path: "/livreur/dashboard", element: <AccessGuard allowedRoles={["livreur"]}><DashboardLivreur /></AccessGuard> },
-  { path: "/livreur/courses", element: <AccessGuard allowedRoles={["livreur"]}><Courses /></AccessGuard> },
-  { path: "/livreur/historique", element: <AccessGuard allowedRoles={["livreur"]}><Historique /></AccessGuard> },
-  { path: "/livreur/profil", element: <AccessGuard allowedRoles={["livreur"]}><ProfilCommun /></AccessGuard> },
-  { path: "/livreur/messages", element: <AccessGuard allowedRoles={["livreur"]}><MessagesLivreur /></AccessGuard> },
-];
+    return (
+      <Route
+        key={path}
+        path={path}
+        element={<AccessGuard allowedRoles={[role]}><Component /></AccessGuard>}
+      />
+    );
+  }).filter(Boolean)
+);
 
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Page d'accueil publique (hors layout) */}
+      {/* 🏠 Page d'accueil publique (hors layout) */}
       <Route path="/" element={<Home />} />
 
-      {/* Layout commun à toutes les routes utilisateur */}
+      {/* 🧱 Routes utilisateur avec layout commun */}
       <Route element={<Layout />}>
-        {[...clientRoutes, ...vendeurRoutes, ...livreurRoutes].map(({ path, element }) => (
-          <Route key={path} path={path} element={element} />
-        ))}
+        {protectedRoutes}
       </Route>
     </Routes>
   );
