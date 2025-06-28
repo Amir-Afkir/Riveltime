@@ -19,13 +19,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         audience: "https://api.riveltime.app",
       }}
     >
-      <BrowserRouter>
-        <CartProvider>
-          <UserProvider>
+      <UserProvider>
+        <BrowserRouter>
+          <CartProvider>
             <App />
-          </UserProvider>
-        </CartProvider>
-      </BrowserRouter>
+          </CartProvider>
+        </BrowserRouter>
+      </UserProvider>
     </Auth0Provider>
   </React.StrictMode>
 );

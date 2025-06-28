@@ -6,28 +6,24 @@ import IconRow from "../../components/profile/IconRow";
 import ToggleSwitch from "../../components/profile/ToggleSwitch";
 import Modal from "../../components/ui/Modal";
 import UserForm from "../../components/logic/UserForm";
-import { useAuth0 } from "@auth0/auth0-react";
 import MoyenPaiementForm from "../../components/profile/MoyenPaiementForm";
 
 export default function ProfilCommun() {
-  const { userData, loadingUser } = useUser();
-  const { logout, user: auth0User, getAccessTokenSilently } = useAuth0();
+  const { userData: user, loadingUser: loading, refreshUser, logout } = useUser();
   const [modalOpen, setModalOpen] = useState(false);
   const [paiementModalOpen, setPaiementModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN;
   const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
-  const resetPasswordUrl = `https://${auth0Domain}/lo/reset?client_id=${clientId}`;
 
   const handleDeleteAccount = async () => {
     if (!window.confirm("⚠️ Cette action est irréversible. Supprimer votre compte ?")) return;
 
-    if (!auth0User) return alert("Utilisateur non connecté");
-
+    if (!user) return alert("Utilisateur non connecté");
+    setIsDeleting(true);
     try {
-      const token = await getAccessTokenSilently({
-        authorizationParams: { scope: "openid profile email" },
-      });
+      const token = sessionStorage.getItem("accessToken");
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/account/delete/me`, {
         method: "DELETE",
@@ -40,14 +36,14 @@ export default function ProfilCommun() {
     } catch (err) {
       console.error("❌ Erreur lors de la suppression :", err);
       alert("La suppression du compte a échoué.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleUpdate = async (formData) => {
     try {
-      const token = await getAccessTokenSilently({
-        authorizationParams: { scope: "openid profile email" },
-      });
+      const token = sessionStorage.getItem("accessToken");
 
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
         method: "PUT",
@@ -61,17 +57,17 @@ export default function ProfilCommun() {
       if (!res.ok) throw new Error("Erreur lors de la mise à jour");
 
       alert("Profil mis à jour !");
-      window.location.reload();
+      if (typeof refreshUser === "function") refreshUser();
     } catch (err) {
       console.error("❌", err);
       alert("Échec de la mise à jour");
     }
   };
 
-  if (loadingUser) return <p>Chargement...</p>;
-  if (!userData) return <p>Erreur : utilisateur introuvable</p>;
+  if (loading) return <p>Chargement...</p>;
+  if (!user) return <p>Erreur : utilisateur introuvable</p>;
 
-  const { fullname, email, phone, role, avatarUrl, notifications, infosClient, infosVendeur, infosLivreur } = userData;
+  const { fullname, email, phone, role, avatarUrl, notifications, infosClient, infosVendeur, infosLivreur } = user;
 
   const isProfilIncomplet = () => {
     if (role === "client") {
@@ -195,7 +191,7 @@ export default function ProfilCommun() {
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/account/password-reset`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email: auth0User?.email }),
+                  body: JSON.stringify({ email: user?.email }),
                 });
 
                 const result = await response.json();
@@ -225,10 +221,11 @@ export default function ProfilCommun() {
                 Se déconnecter
               </button>
               <button
-                className="text-sm text-red-700 font-semibold hover:underline"
+                className="text-sm text-red-700 font-semibold hover:underline disabled:opacity-50"
                 onClick={handleDeleteAccount}
+                disabled={isDeleting}
               >
-                Supprimer mon compte
+                {isDeleting ? "Suppression..." : "Supprimer mon compte"}
               </button>
             </div>
           </div>
@@ -238,7 +235,7 @@ export default function ProfilCommun() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Modifier mes informations">
         <UserForm
           role={role}
-          initialData={userData}
+          initialData={user}
           onSubmit={async (formData) => {
             await handleUpdate(formData);
             setModalOpen(false);
@@ -251,7 +248,7 @@ export default function ProfilCommun() {
           moyensPaiement={infosVendeur?.moyensPaiement || []}
           onSubmit={async (updatedPaiements) => {
             await handleUpdate({
-              ...userData,
+              ...user,
               infosVendeur: {
                 ...infosVendeur,
                 moyensPaiement: updatedPaiements,
