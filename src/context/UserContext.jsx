@@ -18,7 +18,16 @@ export function UserProvider({ children }) {
     try {
       setLoadingUser(true);
 
-      const accessToken = await getAccessTokenSilently();
+      const accessToken = await getAccessTokenSilently().catch((err) => {
+        console.error("❌ Auth0 Token Error:", err);
+        return null;
+      });
+
+      if (!accessToken) {
+        setUserData(null);
+        return; // ⛔ stop ici si pas de token
+      }
+
       setToken(accessToken);
       sessionStorage.setItem("accessToken", accessToken);
 
