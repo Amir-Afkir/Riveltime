@@ -10,15 +10,18 @@ const injectKeyframes = () => {
     @keyframes fadeInUpSoft {
       0% {
         opacity: 0;
-        transform: translateY(20px) scale(0.98);
+        transform: translateY(24px) scale(0.96);
+        filter: blur(4px);
       }
-      60% {
+      50% {
         opacity: 1;
-        transform: translateY(-2px) scale(1.01);
+        transform: translateY(-1px) scale(1.02);
+        filter: blur(1px);
       }
       100% {
         opacity: 1;
         transform: translateY(0) scale(1);
+        filter: blur(0);
       }
     }
 
@@ -27,7 +30,7 @@ const injectKeyframes = () => {
       animation-duration: 500ms;
       animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
       animation-fill-mode: both;
-      will-change: transform, opacity;
+      will-change: transform, opacity, filter;
     }
   `;
   document.head.appendChild(style);
