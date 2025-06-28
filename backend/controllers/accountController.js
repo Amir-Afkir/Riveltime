@@ -3,13 +3,25 @@ const axios = require('axios');
 const User = require('../models/User');
 const cloudinary = require('../config/cloudinary');
 
+//Supprime le compte utilisateur (Auth0 + MongoDB + Cloudinary)
 exports.deleteMyAccount = async (req, res) => {
   try {
     const userId = req.user?.sub;
+    const dbUser = req.dbUser;
+
+    if (!userId || !dbUser) {
+      console.warn("❌ Requête invalide : utilisateur manquant");
+      return res.status(400).json({ error: 'Requête invalide' });
+    }
+
+    if (dbUser.auth0Id !== userId) {
+      console.warn("❌ Tentative de suppression non autorisée !");
+      return res.status(403).json({ error: "Action non autorisée" });
+    }
+
     const folderPath = `riveltime/${userId}`;
 
-    if (!userId) return res.status(400).json({ error: 'ID utilisateur introuvable' });
-
+    // 1. Supprimer l'utilisateur sur Auth0
     const { data } = await axios.post(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
       client_id: process.env.AUTH0_CLIENT_ID,
       client_secret: process.env.AUTH0_CLIENT_SECRET,
@@ -18,26 +30,37 @@ exports.deleteMyAccount = async (req, res) => {
     });
 
     await axios.delete(`https://${process.env.AUTH0_DOMAIN}/v2/users/${encodeURIComponent(userId)}`, {
-      headers: { Authorization: `Bearer ${data.access_token}` }
+      headers: { Authorization: `Bearer ${data.access_token}` },
     });
 
+    console.log(`✅ Utilisateur Auth0 supprimé : ${userId}`);
+
+    // 2. Supprimer les fichiers Cloudinary
     try {
       await cloudinary.api.delete_resources_by_prefix(folderPath);
       await cloudinary.api.delete_folder(folderPath);
       console.log(`📁 Dossier Cloudinary supprimé : ${folderPath}`);
     } catch (cloudErr) {
-      console.warn(`⚠️ Erreur lors de la suppression du dossier Cloudinary (${folderPath}) :`, cloudErr.message);
+      console.warn(`⚠️ Erreur Cloudinary : ${cloudErr.message}`);
     }
 
-    await User.findOneAndDelete({ auth0Id: userId });
+    // 3. Supprimer dans MongoDB
+    const result = await User.findOneAndDelete({ auth0Id: userId });
+
+    if (result) {
+      console.log(`🧨 Utilisateur supprimé de MongoDB : ${result.email}`);
+    } else {
+      console.warn(`⚠️ Utilisateur introuvable dans MongoDB : ${userId}`);
+    }
 
     res.status(200).json({ message: '✅ Compte supprimé avec succès' });
   } catch (error) {
     console.error('❌ Erreur suppression :', error?.response?.data || error.message);
-    res.status(500).json({ error: 'Erreur serveur' });
+    res.status(500).json({ error: 'Erreur serveur pendant la suppression du compte' });
   }
 };
 
+//Change le mot de passe du compte utilisateur
 exports.requestPasswordReset = async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email requis" });
