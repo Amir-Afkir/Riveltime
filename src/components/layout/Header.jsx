@@ -1,7 +1,33 @@
 import { useState, useRef, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { useAuth0 } from '@auth0/auth0-react';
+
+// Injecte l'animation dans le <head> une seule fois
+const injectHeaderAnimation = () => {
+  if (document.getElementById("header-animation-style")) return;
+
+  const style = document.createElement("style");
+  style.id = "header-animation-style";
+  style.innerHTML = `
+    @keyframes headerReveal {
+      0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.99);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .header-animated {
+      animation: headerReveal 400ms cubic-bezier(0.22, 1, 0.36, 1);
+      animation-fill-mode: both;
+    }
+  `;
+  document.head.appendChild(style);
+};
 
 export default function Header({ title, showBack, backTo, color = "blue", avatarUrl, showSubtitle }) {
   const navigate = useNavigate();
@@ -77,10 +103,15 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
 
   const headerClass = [
     "fixed top-0 left-0 right-0 z-50 px-4",
+    "header-animated",
     colorClasses[color] || colorClasses.blue,
     "text-white shadow-[0_2px_4px_-1px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out",
     isProfilePage ? "py-6" : "py-4"
   ].join(" ");
+
+  useEffect(() => {
+    injectHeaderAnimation();
+  }, []);
 
   return (
     <>
