@@ -89,76 +89,89 @@ export default function ProfilCommun() {
   return (
     <div className="space-y-4 pb-20">
       <div className="space-y-4 px-4">
-        <InfoCard
-          title="Mes informations"
-          className={`bg-gray-50 shadow-md ${isProfilIncomplet() ? "border-l-4 border-yellow-400 bg-yellow-50" : ""}`}
-          action={
-            <button
-              onClick={() => setModalOpen(true)}
-              className={`inline-flex items-center text-sm font-medium transition-colors duration-200
-                ${isProfilIncomplet()
-                  ? "text-yellow-600 hover:text-yellow-700"
-                  : role === "client"
-                  ? "text-blue-600 hover:text-blue-700"
-                  : role === "vendeur"
-                  ? "text-green-600 hover:text-green-700"
-                  : role === "livreur"
-                  ? "text-orange-600 hover:text-orange-700"
-                  : "text-gray-600 hover:text-gray-700"}`}
-            >
-              {isProfilIncomplet() ? "Compléter" : "Modifier"}
-            </button>
-          }
-        >
-          {isProfilIncomplet() && (
-            <p className="text-yellow-800 mb-2 text-sm">Votre profil est incomplet. Veuillez le compléter.</p>
-          )}
-          {!isProfilIncomplet() && (
-            <>
-              <IconRow label="Nom" value={fullname} />
-              {email && <IconRow label="Email" value={email} />}
-              <IconRow label="Téléphone" value={phone} />
-              {role === "client" && infosClient?.adresseComplete && (
-                <IconRow label="Adresse" value={infosClient.adresseComplete} />
-              )}
-              {role === "vendeur" && infosVendeur?.adresseComplete && (
-                <IconRow label="Adresse" value={infosVendeur.adresseComplete} />
-              )}
-              {role === "livreur" && (
-                <>
-                  {infosLivreur?.typeDeTransport && (
-                    <IconRow label="Transport" value={infosLivreur.typeDeTransport} />
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </InfoCard>
-
-        <InfoCard title="Notifications" className="bg-gray-50 shadow-md">
-          <ToggleSwitch label="Email Alerts" checked={notifications ?? false} role={role} />
-        </InfoCard>
-
-        {!isProfilIncomplet() && role === "vendeur" && (
-          <InfoCard
-            title="Moyens de paiement"
-            className="bg-gray-50 shadow-md"
-            action={
+        {[
+          {
+            key: "infos",
+            title: "Mes informations",
+            content: (
+              <>
+                {isProfilIncomplet() && (
+                  <p className="text-yellow-800 mb-2 text-sm">Votre profil est incomplet. Veuillez le compléter.</p>
+                )}
+                {!isProfilIncomplet() && (
+                  <>
+                    <IconRow label="Nom" value={fullname} />
+                    {email && <IconRow label="Email" value={email} />}
+                    <IconRow label="Téléphone" value={phone} />
+                    {role === "client" && infosClient?.adresseComplete && (
+                      <IconRow label="Adresse" value={infosClient.adresseComplete} />
+                    )}
+                    {role === "vendeur" && infosVendeur?.adresseComplete && (
+                      <IconRow label="Adresse" value={infosVendeur.adresseComplete} />
+                    )}
+                    {role === "livreur" && infosLivreur?.typeDeTransport && (
+                      <IconRow label="Transport" value={infosLivreur.typeDeTransport} />
+                    )}
+                  </>
+                )}
+              </>
+            ),
+            action: (
               <button
-                onClick={() => setPaiementModalOpen(true)}
-                className="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-700"
+                onClick={() => setModalOpen(true)}
+                className={`inline-flex items-center text-sm font-medium transition-colors duration-200
+                  ${isProfilIncomplet()
+                    ? "text-yellow-600 hover:text-yellow-700"
+                    : role === "client"
+                    ? "text-blue-600 hover:text-blue-700"
+                    : role === "vendeur"
+                    ? "text-green-600 hover:text-green-700"
+                    : role === "livreur"
+                    ? "text-orange-600 hover:text-orange-700"
+                    : "text-gray-600 hover:text-gray-700"}`}
               >
-                Modifier
+                {isProfilIncomplet() ? "Compléter" : "Modifier"}
               </button>
-            }
+            ),
+            cardClass: `bg-gray-50 shadow-md${isProfilIncomplet() ? " border-l-4 border-yellow-400 bg-yellow-50" : ""}`,
+          },
+          {
+            key: "notifications",
+            title: "Notifications",
+            content: <ToggleSwitch label="Email Alerts" checked={notifications ?? false} role={role} />,
+          },
+          ...(role === "vendeur" && !isProfilIncomplet()
+            ? [
+                {
+                  key: "paiement",
+                  title: "Moyens de paiement",
+                  content: infosVendeur?.moyensPaiement?.length > 0 ? (
+                    <p>{infosVendeur.moyensPaiement.join(", ")}</p>
+                  ) : (
+                    <p className="text-gray-500 italic">Aucun moyen de paiement renseigné</p>
+                  ),
+                  action: (
+                    <button
+                      onClick={() => setPaiementModalOpen(true)}
+                      className="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-700"
+                    >
+                      Modifier
+                    </button>
+                  ),
+                },
+              ]
+            : []),
+        ].map((section, index) => (
+          <InfoCard
+            key={section.key}
+            title={section.title}
+            action={section.action}
+            delay={index * 100}
+            className={section.cardClass || "bg-gray-50 shadow-md"}
           >
-            {infosVendeur?.moyensPaiement?.length > 0 ? (
-              <p>{infosVendeur.moyensPaiement.join(", ")}</p>
-            ) : (
-              <p className="text-gray-500 italic">Aucun moyen de paiement renseigné</p>
-            )}
+            {section.content}
           </InfoCard>
-        )}
+        ))}
 
         <InfoCard title="Sécurité" className="bg-gray-50 shadow-md">
           <div className="flex flex-col space-y-4 pt-1">

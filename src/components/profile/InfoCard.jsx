@@ -1,36 +1,48 @@
+// ✅ InfoCard.jsx — Avec support du delay pour effet cascade
 import React, { useEffect } from "react";
 
-// ✅ Injecte les keyframes dans le <head> une seule fois
 const injectKeyframes = () => {
   if (document.getElementById("fade-in-up-style")) return;
 
   const style = document.createElement("style");
   style.id = "fade-in-up-style";
   style.innerHTML = `
-    @keyframes fadeInUp {
-      from {
+    @keyframes fadeInUpSoft {
+      0% {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(20px) scale(0.98);
       }
-      to {
+      60% {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(-2px) scale(1.01);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
       }
     }
+
     .fade-in-up {
-      animation: fadeInUp 0.4s ease-out both;
+      animation-name: fadeInUpSoft;
+      animation-duration: 500ms;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      animation-fill-mode: both;
+      will-change: transform, opacity;
     }
   `;
   document.head.appendChild(style);
 };
 
-export default function InfoCard({ title, children, action, icon }) {
+export default function InfoCard({ title, children, action, icon, delay = 0 }) {
   useEffect(() => {
     injectKeyframes();
   }, []);
 
   return (
-    <div className="fade-in-up rounded-2xl bg-white/80 backdrop-blur-sm shadow-md border border-gray-100 p-4 mb-5 transition-all duration-300">
+    <div
+      className="fade-in-up rounded-2xl bg-white/80 backdrop-blur-sm shadow-md border border-gray-100 p-4 mb-5 transition-all duration-300"
+      style={{ animationDelay: `${delay}ms` }}
+    >
       {(title || action) && (
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
