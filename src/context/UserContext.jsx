@@ -53,6 +53,30 @@ export function UserProvider({ children }) {
     }
   }, [auth0Loading, isAuthenticated]);
 
+  // Fonction pour supprimer le compte utilisateur
+  const deleteAccount = async () => {
+    const confirm = window.confirm("⚠️ Cette action est irréversible. Supprimer votre compte ?");
+    if (!confirm) return;
+
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/account/delete/me`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error("Erreur serveur");
+
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("decodedToken");
+      setUserData(null);
+      logout({ returnTo: import.meta.env.VITE_BASE_URL });
+    } catch (err) {
+      console.error("❌ Erreur lors de la suppression :", err);
+      alert("La suppression du compte a échoué.");
+    }
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -66,6 +90,7 @@ export function UserProvider({ children }) {
         isAuthenticated,
         auth0User,
         logout,
+        deleteAccount, // 👈 ajouté ici
       }}
     >
       {children}

@@ -1,4 +1,4 @@
-// backend/controllers/authController.js
+// backend/controllers/accountController.js
 const axios = require('axios');
 const User = require('../models/User');
 const cloudinary = require('../config/cloudinary');
@@ -25,11 +25,11 @@ exports.deleteMyAccount = async (req, res) => {
     const { data } = await axios.post(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
       client_id: process.env.AUTH0_CLIENT_ID,
       client_secret: process.env.AUTH0_CLIENT_SECRET,
-      audience: `https://${process.env.AUTH0_DOMAIN}/v2/`,
+      audience: `https://${process.env.AUTH0_DOMAIN}/api/v2/`,
       grant_type: 'client_credentials',
     });
 
-    await axios.delete(`https://${process.env.AUTH0_DOMAIN}/v2/users/${encodeURIComponent(userId)}`, {
+    await axios.delete(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(userId)}`, {
       headers: { Authorization: `Bearer ${data.access_token}` },
     });
 

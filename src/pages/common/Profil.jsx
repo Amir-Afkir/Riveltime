@@ -9,37 +9,13 @@ import UserForm from "../../components/logic/UserForm";
 import MoyenPaiementForm from "../../components/profile/MoyenPaiementForm";
 
 export default function ProfilCommun() {
-  const { userData: user, loadingUser: loading, refreshUser, logout } = useUser();
+  const { userData: user, loadingUser: loading, refreshUser, logout, deleteAccount } = useUser();
   const [modalOpen, setModalOpen] = useState(false);
   const [paiementModalOpen, setPaiementModalOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN;
   const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
 
-  const handleDeleteAccount = async () => {
-    if (!window.confirm("⚠️ Cette action est irréversible. Supprimer votre compte ?")) return;
-
-    if (!user) return alert("Utilisateur non connecté");
-    setIsDeleting(true);
-    try {
-      const token = sessionStorage.getItem("accessToken");
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/account/delete/me`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) throw new Error("Erreur serveur");
-
-      logout({ returnTo: import.meta.env.VITE_BASE_URL});
-    } catch (err) {
-      console.error("❌ Erreur lors de la suppression :", err);
-      alert("La suppression du compte a échoué.");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const handleUpdate = async (formData) => {
     try {
@@ -222,10 +198,9 @@ export default function ProfilCommun() {
               </button>
               <button
                 className="text-sm text-red-700 font-semibold hover:underline disabled:opacity-50"
-                onClick={handleDeleteAccount}
-                disabled={isDeleting}
+                onClick={deleteAccount}
               >
-                {isDeleting ? "Suppression..." : "Supprimer mon compte"}
+                Supprimer mon compte
               </button>
             </div>
           </div>
