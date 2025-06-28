@@ -161,19 +161,25 @@ export default function ProfilCommun() {
                 },
               ]
             : []),
-        ].map((section, index) => (
-          <InfoCard
-            key={section.key}
-            title={section.title}
-            action={section.action}
-            delay={index * 100}
-            className={section.cardClass || "bg-gray-50 shadow-md"}
-          >
-            {section.content}
-          </InfoCard>
-        ))}
+        ].map((section, index) => {
+          const baseDelay = 120;
+          const stagger = 80;
+          const delay = baseDelay + index * stagger;
 
-        <InfoCard title="Sécurité" className="bg-gray-50 shadow-md">
+          return (
+            <InfoCard
+              key={section.key}
+              title={section.title}
+              action={section.action}
+              delay={delay}
+              className={section.cardClass || "bg-gray-50 shadow-md"}
+            >
+              {section.content}
+            </InfoCard>
+          );
+        })}
+
+        <InfoCard title="Sécurité" className="bg-gray-50 shadow-md" delay={120 + 3 * 80}>
           <div className="flex flex-col space-y-4 pt-1">
           <button
             onClick={async () => {
