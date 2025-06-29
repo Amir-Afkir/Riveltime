@@ -110,7 +110,29 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
   ].join(" ");
 
   useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      const colorMap = {
+        blue: "#2563eb",
+        green: "#16a34a",
+        orange: "#ea580c"
+      };
+      meta.setAttribute("content", colorMap[color] || "#f43f5e"); // rose par défaut
+    }
+  }, [color]);
+
+  useEffect(() => {
     injectHeaderAnimation();
+    // Synchronise la balise <meta name="theme-color"> avec la couleur du header à chaque (re)montée du header
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      const colorMap = {
+        blue: "#2563eb",
+        green: "#16a34a",
+        orange: "#ea580c"
+      };
+      meta.setAttribute("content", colorMap[color] || "#f43f5e");
+    }
   }, []);
 
   return (
