@@ -31,19 +31,6 @@ html, body {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-.theme-green {
-  background-color: #ecfdf5;
-}
-.theme-orange {
-  background-color: #fff7ed;
-}
-.theme-blue {
-  background-color: #eff6ff;
-}
-.theme-rose {
-  background-color: #fff1f2;
-}
-
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -65,4 +52,16 @@ html, body {
 
 .read-the-docs {
   color: #888;
+}
+
+.theme-default {
+  background-color: #ffe4e6;
+}
+
+.theme-rivel-light {
+  background-color: #fdf2f8;
+}
+
+.theme-rivel-dark {
+  background-color: #831843;
 }

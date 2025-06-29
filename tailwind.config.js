@@ -6,6 +6,12 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        rivel: '#f43f5e',
+        'rivel-light': '#ffe4e6',
+        'rivel-dark': '#be123c',
+        night: '#0f172a',
+      },
       animation: {
         avatarFadeIn: 'fadeInScale 0.3s ease-out forwards',
       },
