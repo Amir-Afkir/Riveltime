@@ -16,15 +16,17 @@ export default function Layout() {
     return { color: "rose", bodyBg: "#fff1f2" }; // rose-50
   };
 
-  const { color, bodyBg } = getTheme(pathname);
+  const { color } = getTheme(pathname);
 
   useEffect(() => {
-    const previousColor = document.body.style.backgroundColor;
-    const previousMetaTheme = document.querySelector("meta[name='theme-color']")?.getAttribute("content");
+    const htmlEl = document.documentElement;
+    const themeClass = `theme-${color}`;
 
-    document.body.style.backgroundColor = bodyBg;
+    htmlEl.classList.add(themeClass);
 
     const metaTheme = document.querySelector("meta[name='theme-color']");
+    const previousMetaTheme = metaTheme?.getAttribute("content");
+
     if (metaTheme) {
       const themeColor = color === "green"
         ? "#22c55e"
@@ -37,12 +39,12 @@ export default function Layout() {
     }
 
     return () => {
-      document.body.style.backgroundColor = previousColor;
+      htmlEl.classList.remove(themeClass);
       if (metaTheme && previousMetaTheme) {
         metaTheme.setAttribute("content", previousMetaTheme);
       }
     };
-  }, [bodyBg, color]);
+  }, [color]);
 
   const isProfilePage = ["/client/profil", "/vendeur/profil", "/livreur/profil"].includes(pathname);
 
