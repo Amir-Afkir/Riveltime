@@ -3,19 +3,46 @@ import { Outlet, useLocation } from "react-router-dom";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
 import { useUser } from "../../context/UserContext";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 
 export default function Layout() {
   const { pathname } = useLocation();
   const { userData } = useUser();
 
   const getTheme = (path) => {
-    if (path.startsWith("/vendeur")) return { color: "green", bgColor: "bg-green-50" };
-    if (path.startsWith("/livreur")) return { color: "orange", bgColor: "bg-orange-50" };
-    return { color: "blue", bgColor: "bg-blue-50" };
+    if (path.startsWith("/vendeur")) return { color: "green", bodyBg: "#ecfdf5" }; // green-50
+    if (path.startsWith("/livreur")) return { color: "orange", bodyBg: "#fff7ed" }; // orange-50
+    if (path.startsWith("/client")) return { color: "blue", bodyBg: "#eff6ff" }; // blue-50
+    return { color: "rose", bodyBg: "#fff1f2" }; // rose-50
   };
 
-  const { color, bgColor } = getTheme(pathname);
+  const { color, bodyBg } = getTheme(pathname);
+
+  useEffect(() => {
+    const previousColor = document.body.style.backgroundColor;
+    const previousMetaTheme = document.querySelector("meta[name='theme-color']")?.getAttribute("content");
+
+    document.body.style.backgroundColor = bodyBg;
+
+    const metaTheme = document.querySelector("meta[name='theme-color']");
+    if (metaTheme) {
+      const themeColor = color === "green"
+        ? "#22c55e"
+        : color === "orange"
+        ? "#fb923c"
+        : color === "blue"
+        ? "#3b82f6"
+        : "#f43f5e"; // rose par défaut
+      metaTheme.setAttribute("content", themeColor);
+    }
+
+    return () => {
+      document.body.style.backgroundColor = previousColor;
+      if (metaTheme && previousMetaTheme) {
+        metaTheme.setAttribute("content", previousMetaTheme);
+      }
+    };
+  }, [bodyBg, color]);
 
   const isProfilePage = ["/client/profil", "/vendeur/profil", "/livreur/profil"].includes(pathname);
 
@@ -51,7 +78,7 @@ export default function Layout() {
       : "/src/assets/avatar-default.png";
 
   return (
-    <div className={`min-h-screen pb-28 ${bgColor}`}>
+    <div className="min-h-screen pb-28">
       <Header
         title={title}
         showBack={false}

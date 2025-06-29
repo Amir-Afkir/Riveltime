@@ -4,8 +4,9 @@
     "description": "Livraison locale rapide et responsable",
     "start_url": "/",
     "display": "standalone",
+    "prefer_related_applications": false,
+    "display_override": ["standalone", "fullscreen"],
     "background_color": "#ffffff",
-    "theme_color": "#0f172a",
     "orientation": "portrait",
     "scope": "/",
     "icons": [
