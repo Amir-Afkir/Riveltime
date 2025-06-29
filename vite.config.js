@@ -9,18 +9,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export default defineConfig({
-  base: "/",
+  base: "/", // Utiliser "/" si l'app est déployée à la racine d'un domaine
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: [
+        'favicon.ico',
+        'apple-touch-icon.png',
+        'icon-192.png',
+        'icon-512.png'
+      ],
       manifest: {
         name: 'Riveltime',
         short_name: 'Riveltime',
+        description: 'Livraison locale rapide et responsable',
         start_url: '/',
         display: 'standalone',
-        background_color: '#f44357',
-        theme_color: '#f44357',
+        background_color: '#ffffff',
+        theme_color: '#0f172a',
+        orientation: 'portrait',
         icons: [
           {
             src: 'icon-192.png',
@@ -30,6 +38,11 @@ export default defineConfig({
           {
             src: 'icon-512.png',
             sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: 'apple-touch-icon.png',
+            sizes: '180x180',
             type: 'image/png'
           }
         ]
