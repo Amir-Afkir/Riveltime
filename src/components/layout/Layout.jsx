@@ -16,15 +16,35 @@ export default function Layout() {
     return { color: "rose", bodyBg: "#fff1f2" }; // rose-50
   };
 
-  const { color, bodyBg } = getTheme(pathname);
+  const { color } = getTheme(pathname);
 
   useEffect(() => {
-    const previousColor = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = bodyBg;
+    const htmlEl = document.documentElement;
+    const themeClass = `theme-${color}`;
+
+    htmlEl.classList.add(themeClass);
+
+    const metaTheme = document.querySelector("meta[name='theme-color']");
+    const previousMetaTheme = metaTheme?.getAttribute("content");
+
+    if (metaTheme) {
+      const themeColor = color === "green"
+        ? "#22c55e"
+        : color === "orange"
+        ? "#fb923c"
+        : color === "blue"
+        ? "#3b82f6"
+        : "#f43f5e"; // rose par défaut
+      metaTheme.setAttribute("content", themeColor);
+    }
+
     return () => {
-      document.body.style.backgroundColor = previousColor;
+      htmlEl.classList.remove(themeClass);
+      if (metaTheme && previousMetaTheme) {
+        metaTheme.setAttribute("content", previousMetaTheme);
+      }
     };
-  }, [bodyBg]);
+  }, [color]);
 
   const isProfilePage = ["/client/profil", "/vendeur/profil", "/livreur/profil"].includes(pathname);
 
