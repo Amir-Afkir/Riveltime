@@ -96,9 +96,9 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
   };
 
   const colorClasses = {
-    blue: "bg-blue-600",
-    green: "bg-green-600",
-    orange: "bg-orange-600",
+    blue: "bg-[#3b82f6]",
+    green: "bg-[#22c55e]",
+    orange: "bg-[#fb923c]",
   };
 
   const headerClass = [
