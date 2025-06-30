@@ -19,30 +19,13 @@ export default function Layout() {
   useEffect(() => {
     // Sauvegarder les valeurs précédentes pour nettoyage
     const previousColor = document.body.style.backgroundColor;
-    const previousMetaTheme = document.querySelector("meta[name='theme-color']")?.getAttribute("content");
 
     // Appliquer couleur de fond au body
     document.body.style.backgroundColor = bodyBg;
 
-    // Mettre à jour meta theme-color (pour mobile browsers UI)
-    const metaTheme = document.querySelector("meta[name='theme-color']");
-    if (metaTheme) {
-      const themeColor = color === "green"
-        ? "#22c55e"
-        : color === "orange"
-        ? "#fb923c"
-        : color === "blue"
-        ? "#3b82f6"
-        : "#f43f5e"; // rose par défaut
-      metaTheme.setAttribute("content", themeColor);
-    }
-
     // Nettoyage au démontage / changement thème
     return () => {
       document.body.style.backgroundColor = previousColor;
-      if (metaTheme && previousMetaTheme) {
-        metaTheme.setAttribute("content", previousMetaTheme);
-      }
     };
   }, [bodyBg, color]);
 
