@@ -11,7 +11,7 @@ export default function Layout() {
 
   // Détermine le thème couleur & background selon le rôle/page
   const getTheme = () => {
-    return { color: "rose", bodyBg: "#fff1f2" }; // rose-50 de Tailwind
+    return { color: "rose", bodyBg: "#ffe4e6" }; // rose-50 de Tailwind
   };
 
   const { color, bodyBg } = getTheme();

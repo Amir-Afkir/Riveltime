@@ -26,8 +26,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        background_color: '#ffe4e6',  // 👈 fond clair rose
-        theme_color: '#ffe4e6',       // 👈 couleur de barre mobile
+        background_color: '#ffe4e6', 
+        theme_color: '#ffe4e6',       
         orientation: 'portrait',
         icons: [
           {
