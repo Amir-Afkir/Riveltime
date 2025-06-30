@@ -9,7 +9,7 @@
              env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
     min-height: calc(100% + env(safe-area-inset-top));
     touch-action: manipulation;
-    background-color: #ffe4e6;
+    background-color: #ffe4e6 !important;
   }
 
   body {
@@ -38,7 +38,7 @@
     left: 0;
     right: 0;
     height: env(safe-area-inset-bottom);
-    background-color: #ffe4e6; /* bas rose */
+    background-color: #ffe4e6 !important;
     z-index: 9999;
     pointer-events: none;
   }
