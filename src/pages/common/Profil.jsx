@@ -1,5 +1,6 @@
 // ✅ ProfilCommun.jsx
 import { useState, useRef, useEffect, useMemo } from "react";
+import NotificationBanner from "../../components/ui/NotificationBanner";
 import AddressSuggestionsPortal from "../../components/profile/AddressSuggestionsPortal";
 import AvatarHeader from "../../components/profile/AvatarHeader";
 import { useUser } from "../../context/UserContext";
@@ -11,10 +12,12 @@ import Modal from "../../components/ui/Modal";
 import MoyenPaiementForm from "../../components/profile/MoyenPaiementForm";
 
 
-export default function ProfilCommun() {
+export default function ProfilCommun({ isLoading }) {
   const { userData: user, loadingUser: loading, refreshUser, logout, deleteAccount } = useUser();
   const [paiementModalOpen, setPaiementModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [notif, setNotif] = useState({ message: "", type: "success" });
   const [editableData, setEditableData] = useState({
     fullname: user?.fullname || "",
     phone: user?.phone || "",
@@ -27,6 +30,7 @@ export default function ProfilCommun() {
 
   const handleUpdate = async (formData) => {
     try {
+      setIsUpdating(true);
       const token = sessionStorage.getItem("accessToken");
 
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
@@ -40,15 +44,17 @@ export default function ProfilCommun() {
 
       if (!res.ok) throw new Error("Erreur lors de la mise à jour");
 
-      alert("Profil mis à jour !");
-      if (typeof refreshUser === "function") refreshUser();
+      setNotif({ message: "Profil mis à jour avec succès !", type: "success" });
+      if (typeof refreshUser === "function") await refreshUser({ silent: true });
     } catch (err) {
       console.error("❌", err);
-      alert("Échec de la mise à jour");
+      setNotif({ message: "❌ La mise à jour a échoué", type: "error" });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  if (loading) return <p>Chargement...</p>;
+  // if (loading) return <p>Chargement...</p>;
   if (!user) return <p>Erreur : utilisateur introuvable</p>;
 
   // Regroupe la logique d'extraction des propriétés utilisateur dans un useMemo
@@ -285,10 +291,17 @@ export default function ProfilCommun() {
   ];
 
   return (
-      <div className="relative z-10 pt-4">
-        <AvatarHeader />
-        <div className="h-6" />
-        <div className="space-y-6 px-4">
+    <div className="relative z-10 pt-4">
+      <AvatarHeader />
+      {notif.message && (
+        <NotificationBanner
+          message={notif.message}
+          type={notif.type}
+          onClose={() => setNotif({ message: "", type: "success" })}
+        />
+      )}
+      <div className="h-6" />
+      <div className="space-y-6 px-4">
         {sections.map((section, index) => {
           // Nouveau style d'animation plus fluide et aspect iOS moderne
           const baseDelay = 40;
@@ -361,22 +374,22 @@ export default function ProfilCommun() {
             </button>
           </div>
         </InfoCard>
-        </div>
-        <Modal open={paiementModalOpen} onClose={() => setPaiementModalOpen(false)} title="Modifier les moyens de paiement">
-          <MoyenPaiementForm
-            moyensPaiement={infosVendeur?.moyensPaiement || []}
-            onSubmit={async (updatedPaiements) => {
-              await handleUpdate({
-                ...user,
-                infosVendeur: {
-                  ...infosVendeur,
-                  moyensPaiement: updatedPaiements,
-                },
-              });
-              setPaiementModalOpen(false);
-            }}
-          />
-        </Modal>
       </div>
+      <Modal open={paiementModalOpen} onClose={() => setPaiementModalOpen(false)} title="Modifier les moyens de paiement">
+        <MoyenPaiementForm
+          moyensPaiement={infosVendeur?.moyensPaiement || []}
+          onSubmit={async (updatedPaiements) => {
+            await handleUpdate({
+              ...user,
+              infosVendeur: {
+                ...infosVendeur,
+                moyensPaiement: updatedPaiements,
+              },
+            });
+            setPaiementModalOpen(false);
+          }}
+        />
+      </Modal>
+    </div>
   );
 }

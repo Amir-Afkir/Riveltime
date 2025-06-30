@@ -14,9 +14,9 @@ export function UserProvider({ children }) {
   const [userData, setUserData] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  const fetchUser = async () => {
+  const fetchUser = async ({ silent = false } = {}) => {
     try {
-      setLoadingUser(true);
+      if (!silent) setLoadingUser(true);
 
       const accessToken = await getAccessTokenSilently().catch((err) => {
         console.error("❌ Auth0 Token Error:", err);
@@ -24,7 +24,7 @@ export function UserProvider({ children }) {
       });
 
       if (!accessToken) {
-        setUserData(null);
+        if (!silent) setUserData(null);
         return; // ⛔ stop ici si pas de token
       }
 
@@ -50,9 +50,9 @@ export function UserProvider({ children }) {
       setUserData(data.user || data);
     } catch (error) {
       console.error("❌ Erreur fetchUser:", error);
-      setUserData(null);
+      if (!silent) setUserData(null);
     } finally {
-      setLoadingUser(false);
+      if (!silent) setLoadingUser(false);
     }
   };
 

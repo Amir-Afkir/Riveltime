@@ -4,9 +4,10 @@ import { useAuth0 } from "@auth0/auth0-react";
 
 
 export default function AvatarHeader() {
-  const { userData } = useUser();
+  const { userData, refreshUser } = useUser();
   const fileInputRef = useRef();
   const [avatarVersion, setAvatarVersion] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const { getAccessTokenSilently } = useAuth0();
   const hasAvatar = userData?.avatarUrl && userData.avatarUrl.length > 5;
 
@@ -14,6 +15,7 @@ export default function AvatarHeader() {
     if (!file) return;
     const formData = new FormData();
     formData.append("avatar", file);
+    setIsUploading(true);
     try {
       const token = await getAccessTokenSilently();
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me/avatar`, {
@@ -22,11 +24,13 @@ export default function AvatarHeader() {
         body: formData,
       });
       if (!res.ok) throw new Error("Upload échoué");
-      window.location.reload();
+      await refreshUser({ silent: true });
       setAvatarVersion(Date.now());
     } catch (err) {
       alert("❌ Échec de l’upload de l’avatar");
       console.error(err);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -37,10 +41,15 @@ export default function AvatarHeader() {
   return (
     <div className="flex flex-col items-center justify-center text-center w-full gap-3">
       <div
-        className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md cursor-pointer"
+        className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md cursor-pointer"
         onClick={handleClickAvatar}
         title="Modifier votre avatar"
       >
+        {isUploading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-[3px] border-[#f58ba0]/50 border-t-[#ed354f]" />
+          </div>
+        )}
         <img
           src={hasAvatar ? `${userData.avatarUrl}?v=${avatarVersion}` : "/src/assets/avatar-default.png"}
           alt="Avatar utilisateur"
@@ -49,10 +58,14 @@ export default function AvatarHeader() {
       </div>
       <div>
         <h1 className="text-xl font-semibold leading-tight text-white">
-          Bonjour {userData?.name ?? "Utilisateur"} !
+          Bonjour {userData?.fullname?.trim() || userData?.name || "Utilisateur"} !
         </h1>
         {userData?.role && (
-          <p className="text-sm text-white/80">{userData.role} fidèle depuis février</p>
+          <p className="text-sm text-white/80">
+            {userData.role === "client" && "Bienvenue parmi nos fidèles clients"}
+            {userData.role === "vendeur" && "Merci de faire vivre nos quartiers"}
+            {userData.role === "livreur" && "Livrer, c’est aussi créer du lien "}
+          </p>
         )}
       </div>
       <input
