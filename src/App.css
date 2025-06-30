@@ -1,29 +1,19 @@
 html {
   height: 100%;
-  background-color: #ffe4e6;
+  background-color: transparent;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
+           env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  min-height: calc(100% + env(safe-area-inset-top));
   overscroll-behavior: none;
-  touch-action: manipulation;
+  touch-action: none;
 }
 
 body {
   height: 100%;
   margin: 0;
-  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
-           env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
-  background-color: transparent;
+  padding: 0;
+  background-color: green;
   position: relative;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: env(safe-area-inset-top);
-  background-color: white;
-  z-index: 9999;
-  pointer-events: none;
 }
 
 #root {
@@ -31,8 +21,6 @@ body::before {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
   overscroll-behavior: none;
   touch-action: manipulation;
 }
