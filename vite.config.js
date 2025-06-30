@@ -25,7 +25,7 @@ export default defineConfig({
         short_name: 'Riveltime',
         description: 'Livraison locale rapide et responsable',
         start_url: '/',
-        display: 'standalone',
+        display: 'fullscreen',
         background_color: '#ffffff',
         theme_color: '#0f172a',
         orientation: 'portrait',
