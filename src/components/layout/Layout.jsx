@@ -98,6 +98,18 @@ export default function Layout() {
       </main>
       {/* Ne pas afficher BottomNav sur home ("/") */}
       {pathname !== "/" && <BottomNav />}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 'env(safe-area-inset-bottom)',
+          backgroundColor: '#ffe4e6',
+          pointerEvents: 'none',
+          zIndex: 50,
+        }}
+      />
     </div>
   );
 }

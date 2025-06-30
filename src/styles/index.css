@@ -9,7 +9,7 @@
              env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
     min-height: calc(100% + env(safe-area-inset-top));
     touch-action: manipulation;
-    background-color: #ffe4e6 !important;
+    background-color: #ed354f !important;
   }
 
   body {
@@ -27,18 +27,6 @@
     right: 0;
     height: env(safe-area-inset-top);
     background-color: #ed354f; /* haut rouge */
-    z-index: 9999;
-    pointer-events: none;
-  }
-
-  body::after {
-    content: "";
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: env(safe-area-inset-bottom);
-    background-color: #ffe4e6 !important;
     z-index: 9999;
     pointer-events: none;
   }
