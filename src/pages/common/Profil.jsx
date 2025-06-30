@@ -76,86 +76,87 @@ export default function ProfilCommun() {
 
   const profilCompletion = getProfilCompletion();
 
-  return (
-      <div className="relative z-10">
-        <AvatarHeader />
-        <div className="h-4" />
-        <div className="space-y-4 px-4">
-        {[
+  const roleColor = {
+    client: "text-blue-600 hover:text-blue-700",
+    vendeur: "text-green-600 hover:text-green-700",
+    livreur: "text-orange-600 hover:text-orange-700"
+  }[role] || "text-gray-600 hover:text-gray-700";
+
+  const sections = [
+    {
+      key: "infos",
+      title: "Mes informations",
+      content: (
+        <>
+          {isProfilIncomplet() && (
+            <p className="bg-yellow-50 text-yellow-900 p-2 text-sm rounded border border-yellow-300 font-medium">
+              ⚠️ Votre profil est incomplet. Veuillez le compléter.
+            </p>
+          )}
+          {!isProfilIncomplet() && (
+            <>
+              <IconRow label="Nom" value={fullname} />
+              {email && <IconRow label="Email" value={email} />}
+              <IconRow label="Téléphone" value={phone} />
+              {(role === "client" && infosClient?.adresseComplete) ||
+              (role === "vendeur" && infosVendeur?.adresseComplete) ? (
+                <IconRow label="Adresse" value={infosClient?.adresseComplete || infosVendeur?.adresseComplete} />
+              ) : null}
+              {role === "livreur" && infosLivreur?.typeDeTransport && (
+                <IconRow label="Transport" value={infosLivreur.typeDeTransport} />
+              )}
+            </>
+          )}
+        </>
+      ),
+      action: (
+        <button
+          onClick={() => setModalOpen(true)}
+          className={`inline-flex items-center text-sm font-medium transition-colors duration-200 ${
+            isProfilIncomplet()
+              ? "text-yellow-600 hover:text-yellow-700"
+              : roleColor
+          }`}
+        >
+          {isProfilIncomplet() ? "Compléter" : "Modifier"}
+        </button>
+      ),
+      cardClass: `bg-gray-50 shadow-md${isProfilIncomplet() ? " border-l-4 border-yellow-400 bg-yellow-50" : ""}`,
+    },
+    {
+      key: "notifications",
+      title: "Notifications",
+      content: <ToggleSwitch label="Recevoir les alertes e-mail" checked={notifications ?? false} role={role} />,
+    },
+    ...(role === "vendeur" && !isProfilIncomplet()
+      ? [
           {
-            key: "infos",
-            title: "Mes informations",
-            content: (
-              <>
-                {isProfilIncomplet() && (
-                  <p className="bg-yellow-50 text-yellow-900 p-2 text-sm rounded border border-yellow-300 font-medium">
-                    ⚠️ Votre profil est incomplet. Veuillez le compléter.
-                  </p>
-                )}
-                {!isProfilIncomplet() && (
-                  <>
-                    <IconRow label="Nom" value={fullname} />
-                    {email && <IconRow label="Email" value={email} />}
-                    <IconRow label="Téléphone" value={phone} />
-                    {role === "client" && infosClient?.adresseComplete && (
-                      <IconRow label="Adresse" value={infosClient.adresseComplete} />
-                    )}
-                    {role === "vendeur" && infosVendeur?.adresseComplete && (
-                      <IconRow label="Adresse" value={infosVendeur.adresseComplete} />
-                    )}
-                    {role === "livreur" && infosLivreur?.typeDeTransport && (
-                      <IconRow label="Transport" value={infosLivreur.typeDeTransport} />
-                    )}
-                  </>
-                )}
-              </>
+            key: "paiement",
+            title: "Moyens de paiement",
+            content: infosVendeur?.moyensPaiement?.length > 0 ? (
+              <p>{infosVendeur.moyensPaiement.join(", ")}</p>
+            ) : (
+              <p className="text-gray-500 italic">Aucun moyen de paiement renseigné</p>
             ),
             action: (
               <button
-                onClick={() => setModalOpen(true)}
-                className={`inline-flex items-center text-sm font-medium transition-colors duration-200
-                  ${isProfilIncomplet()
-                    ? "text-yellow-600 hover:text-yellow-700"
-                    : role === "client"
-                    ? "text-blue-600 hover:text-blue-700"
-                    : role === "vendeur"
-                    ? "text-green-600 hover:text-green-700"
-                    : role === "livreur"
-                    ? "text-orange-600 hover:text-orange-700"
-                    : "text-gray-600 hover:text-gray-700"}`}
+                onClick={() => setPaiementModalOpen(true)}
+                className="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-700"
               >
-                {isProfilIncomplet() ? "Compléter" : "Modifier"}
+                Modifier
               </button>
             ),
-            cardClass: `bg-gray-50 shadow-md${isProfilIncomplet() ? " border-l-4 border-yellow-400 bg-yellow-50" : ""}`,
           },
-          {
-            key: "notifications",
-            title: "Notifications",
-            content: <ToggleSwitch label="Recevoir les alertes e-mail" checked={notifications ?? false} role={role} />,
-          },
-          ...(role === "vendeur" && !isProfilIncomplet()
-            ? [
-                {
-                  key: "paiement",
-                  title: "Moyens de paiement",
-                  content: infosVendeur?.moyensPaiement?.length > 0 ? (
-                    <p>{infosVendeur.moyensPaiement.join(", ")}</p>
-                  ) : (
-                    <p className="text-gray-500 italic">Aucun moyen de paiement renseigné</p>
-                  ),
-                  action: (
-                    <button
-                      onClick={() => setPaiementModalOpen(true)}
-                      className="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-700"
-                    >
-                      Modifier
-                    </button>
-                  ),
-                },
-              ]
-            : []),
-        ].map((section, index) => {
+        ]
+      : []),
+  ];
+
+  return (
+      <div className="relative z-10 pt-4">
+        <AvatarHeader />
+        <div className="h-6" />
+        <div className="space-y-6 px-4">
+        {sections.map((section, index) => {
           // Nouveau style d'animation plus fluide et aspect iOS moderne
           const baseDelay = 40;
           const stagger = 60;
@@ -203,10 +204,8 @@ export default function ProfilCommun() {
               }}
               className="inline-flex items-center justify-start gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
             >
-              <>
-                <Lock className="w-4 h-4 text-indigo-600" strokeWidth={2} />
-                <span>Modifier mon mot de passe</span>
-              </>
+              <Lock className="w-4 h-4 text-indigo-600" strokeWidth={2} />
+              <span>Modifier mon mot de passe</span>
             </button>
 
             <hr className="border-gray-200" />
