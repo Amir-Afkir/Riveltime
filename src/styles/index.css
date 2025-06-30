@@ -9,7 +9,6 @@
              env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
     min-height: calc(100% + env(safe-area-inset-top));
     touch-action: manipulation;
-    background-color: #ed354f !important;
   }
 
   body {
@@ -17,17 +16,5 @@
     margin: 0;
     padding: 0;
     position: relative;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: env(safe-area-inset-top);
-    background-color: #ed354f; /* haut rouge */
-    z-index: 9999;
-    pointer-events: none;
   }
 }
