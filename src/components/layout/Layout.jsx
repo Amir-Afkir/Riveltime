@@ -80,8 +80,6 @@ export default function Layout() {
         className="fixed top-0 left-0 w-full h-[30vh] z-[-10]"
         style={{
           backgroundColor: "#ed354f",
-          transform: "translateY(calc(var(--scroll-y, 0px) * -0.3))",
-          transition: "transform 0.1s ease-out",
         }}
       />
       {!isProfilePage && (
