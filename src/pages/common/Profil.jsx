@@ -1,5 +1,6 @@
 // ✅ ProfilCommun.jsx
-import { useState } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import AddressSuggestionsPortal from "../../components/profile/AddressSuggestionsPortal";
 import AvatarHeader from "../../components/profile/AvatarHeader";
 import { useUser } from "../../context/UserContext";
 import InfoCard from "../../components/profile/InfoCard";
@@ -9,9 +10,9 @@ import ToggleSwitch from "../../components/profile/ToggleSwitch";
 import Modal from "../../components/ui/Modal";
 import MoyenPaiementForm from "../../components/profile/MoyenPaiementForm";
 
+
 export default function ProfilCommun() {
   const { userData: user, loadingUser: loading, refreshUser, logout, deleteAccount } = useUser();
-  const [modalOpen, setModalOpen] = useState(false);
   const [paiementModalOpen, setPaiementModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editableData, setEditableData] = useState({
@@ -22,8 +23,7 @@ export default function ProfilCommun() {
   });
 
   const [adresseSuggestions, setAdresseSuggestions] = useState([]);
-
-  const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN;
+  const adresseInputRef = useRef(null);
 
   const handleUpdate = async (formData) => {
     try {
@@ -51,36 +51,40 @@ export default function ProfilCommun() {
   if (loading) return <p>Chargement...</p>;
   if (!user) return <p>Erreur : utilisateur introuvable</p>;
 
-  const { fullname, email, phone, role, notifications, infosClient, infosVendeur, infosLivreur } = user;
+  // Regroupe la logique d'extraction des propriétés utilisateur dans un useMemo
+  const {
+    fullname,
+    email,
+    phone,
+    role,
+    notifications,
+    infosClient,
+    infosVendeur,
+    infosLivreur
+  } = useMemo(() => user || {}, [user]);
 
-  const isProfilIncomplet = () => {
-    if (role === "client") {
-      return !fullname || !phone || !infosClient?.adresseComplete;
-    }
-    if (role === "vendeur") {
-      return !fullname || !phone || !infosVendeur?.categorie || !infosVendeur?.adresseComplete;
-    }
-    if (role === "livreur") {
-      return !fullname || !phone || !infosLivreur?.typeDeTransport;
-    }
-    return false;
-  };
-
-  const getProfilCompletion = () => {
-    let total = 3;
+  // Calcule la complétion de profil via un useMemo pour éviter les recalculs
+  const profilCompletion = useMemo(() => {
     let filled = 0;
-
     if (fullname) filled++;
     if (phone) filled++;
     if (role === "client" && infosClient?.adresseComplete) filled++;
-    if (role === "vendeur" && infosVendeur?.categorie && infosVendeur?.adresseComplete) filled += 2;
+    if (role === "vendeur") {
+      if (infosVendeur?.categorie) filled++;
+      if (infosVendeur?.adresseComplete) filled++;
+    }
     if (role === "livreur" && infosLivreur?.typeDeTransport) filled++;
-
     const max = role === "vendeur" ? 4 : 3;
     return Math.round((filled / max) * 100);
-  };
+  }, [fullname, phone, role, infosClient, infosVendeur, infosLivreur]);
 
-  const profilCompletion = getProfilCompletion();
+  // Crée une constante profilIncomplet pour éviter les appels répétés à isProfilIncomplet()
+  const profilIncomplet = useMemo(() => {
+    if (role === "client") return !fullname || !phone || !infosClient?.adresseComplete;
+    if (role === "vendeur") return !fullname || !phone || !infosVendeur?.categorie || !infosVendeur?.adresseComplete;
+    if (role === "livreur") return !fullname || !phone || !infosLivreur?.typeDeTransport;
+    return false;
+  }, [fullname, phone, role, infosClient, infosVendeur, infosLivreur]);
 
   const roleColor = {
     client: "text-blue-600 hover:text-blue-700",
@@ -88,49 +92,37 @@ export default function ProfilCommun() {
     livreur: "text-orange-600 hover:text-orange-700"
   }[role] || "text-gray-600 hover:text-gray-700";
 
+  // Refactore handleEditToggle() pour simplifier la mise à jour des données.
   const handleEditToggle = async () => {
     if (isEditing) {
-      // Save changes
-      const updatedUser = { ...user };
-      updatedUser.fullname = editableData.fullname;
-      updatedUser.phone = editableData.phone;
-      if (role === "client") {
-        updatedUser.infosClient = {
-          ...infosClient,
-          adresseComplete: editableData.adresseComplete,
-        };
-      } else if (role === "vendeur") {
-        updatedUser.infosVendeur = {
-          ...infosVendeur,
-          adresseComplete: editableData.adresseComplete,
-        };
-      }
-      if (role === "livreur") {
-        updatedUser.infosLivreur = {
-          ...infosLivreur,
-          typeDeTransport: editableData.typeDeTransport,
-        };
-      }
+      const updatedUser = {
+        ...user,
+        fullname: editableData.fullname,
+        phone: editableData.phone,
+        infosClient: role === "client" ? { ...infosClient, adresseComplete: editableData.adresseComplete } : infosClient,
+        infosVendeur: role === "vendeur" ? { ...infosVendeur, adresseComplete: editableData.adresseComplete } : infosVendeur,
+        infosLivreur: role === "livreur" ? { ...infosLivreur, typeDeTransport: editableData.typeDeTransport } : infosLivreur,
+      };
       await handleUpdate(updatedUser);
     } else {
-      // Initialize editable data on edit start
       setEditableData({
         fullname: fullname || "",
         phone: phone || "",
-        adresseComplete: (infosClient?.adresseComplete || infosVendeur?.adresseComplete) || "",
+        adresseComplete: infosClient?.adresseComplete || infosVendeur?.adresseComplete || "",
         typeDeTransport: infosLivreur?.typeDeTransport || "",
       });
     }
     setIsEditing(!isEditing);
   };
 
+  // Remplace dans sections les appels à isProfilIncomplet() par profilIncomplet
   const sections = [
     {
       key: "infos",
       title: "Mes informations",
       content: (
         <>
-          {isProfilIncomplet() && !isEditing && (
+          {profilIncomplet && !isEditing && (
             <>
               <p className="bg-yellow-50 text-yellow-900 p-2 text-sm rounded border border-yellow-300 font-medium">
                 ⚠️ Votre profil est incomplet. Veuillez le compléter.
@@ -159,9 +151,15 @@ export default function ProfilCommun() {
                 <div className="flex items-center gap-2">
                   <Phone size={18} />
                   <input
-                    type="text"
+                    type="tel"
                     value={editableData.phone}
-                    onChange={(e) => setEditableData({ ...editableData, phone: e.target.value })}
+                    onChange={(e) => {
+                      // Autoriser uniquement chiffres, +, espaces, tirets
+                      const filteredValue = e.target.value.replace(/[^\d+ \-]/g, "");
+                      setEditableData({ ...editableData, phone: filteredValue });
+                    }}
+                    pattern="^\+?[0-9\- ]{7,15}$"
+                    title="Entrez un numéro de téléphone valide (7 à 15 chiffres, espaces et tirets autorisés)"
                     className="border border-gray-300 rounded px-2 py-1 w-full"
                     placeholder="Téléphone"
                   />
@@ -186,7 +184,7 @@ export default function ProfilCommun() {
                     </select>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 relative">
+                  <div className="flex items-center gap-2">
                     <MapPin size={18} />
                     <input
                       type="text"
@@ -206,34 +204,25 @@ export default function ProfilCommun() {
                       className="border border-gray-300 rounded px-2 py-1 w-full"
                       placeholder="Adresse complète"
                       autoComplete="off"
+                      ref={adresseInputRef}
                     />
-                    {adresseSuggestions.length > 0 && (
-                        <ul
-                        className="absolute top-full mt-1 w-full bg-white border border-gray-300 rounded shadow z-50 max-h-48 overflow-auto"
-                        >                        
-                        {adresseSuggestions.map((sug) => (
-                          <li
-                            key={sug.properties.id}
-                            className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-sm"
-                            onClick={() => {
-                              setEditableData({ ...editableData, adresseComplete: sug.properties.label });
-                              setAdresseSuggestions([]);
-                            }}
-                          >
-                            {sug.properties.label}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <AddressSuggestionsPortal
+                      suggestions={adresseSuggestions}
+                      onSelect={(label) => {
+                        setEditableData({ ...editableData, adresseComplete: label });
+                        setAdresseSuggestions([]);
+                      }}
+                      inputRef={adresseInputRef}
+                    />
                   </div>
                 )}
                 {email && <UserFieldCard icon={<Mail size={18} />} value={email} />}
               </>
             ) : (
               <>
-                <UserFieldCard icon={<User size={18} />} value={fullname} />
+                {!profilIncomplet && <UserFieldCard icon={<User size={18} />} value={fullname} />}
                 {email && <UserFieldCard icon={<Mail size={18} />} value={email} />}
-                <UserFieldCard icon={<Phone size={18} />} value={phone} />
+                {!profilIncomplet && <UserFieldCard icon={<Phone size={18} />} value={phone} />}
                 {(role === "client" && infosClient?.adresseComplete) ||
                 (role === "vendeur" && infosVendeur?.adresseComplete) ? (
                   <UserFieldCard
@@ -255,24 +244,24 @@ export default function ProfilCommun() {
           className={`inline-flex items-center text-sm font-medium transition-colors duration-200 ${
             isEditing
               ? "text-green-600 hover:text-green-700"
-              : isProfilIncomplet()
+              : profilIncomplet
               ? "text-yellow-600 hover:text-yellow-700"
               : roleColor
           }`}
           aria-label={isEditing ? "Sauvegarder" : "Modifier"}
         >
           {isEditing ? <CheckCircle size={18} /> : <Pencil size={18} />}
-          <span className="ml-1">{isEditing ? "Sauvegarder" : isProfilIncomplet() ? "Compléter" : "Modifier"}</span>
+          <span className="ml-1">{isEditing ? "Sauvegarder" : profilIncomplet ? "Compléter" : "Modifier"}</span>
         </button>
       ),
-      cardClass: `bg-gray-50 shadow-md${isProfilIncomplet() ? " border-l-4 border-yellow-400 bg-yellow-50" : ""}`,
+      cardClass: `bg-gray-50 shadow-md${profilIncomplet ? " border-l-4 border-yellow-400 bg-yellow-50" : ""}`,
     },
     {
       key: "notifications",
       title: "Notifications",
       content: <ToggleSwitch label="Recevoir les alertes e-mail" checked={notifications ?? false} role={role} />,
     },
-    ...(role === "vendeur" && !isProfilIncomplet()
+    ...(role === "vendeur" && !profilIncomplet
       ? [
           {
             key: "paiement",
@@ -312,8 +301,9 @@ export default function ProfilCommun() {
               action={section.action}
               delay={delay}
               className={
-                (section.cardClass ||
-                  "bg-white shadow-lg rounded-2xl border border-gray-100") +
+                (section.cardClass
+                  ? section.cardClass
+                  : "bg-white shadow-lg rounded-2xl border border-gray-100") +
                 " transition-all duration-500"
               }
             >
