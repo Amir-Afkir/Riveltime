@@ -5,6 +5,7 @@ html {
   min-height: calc(100% + env(safe-area-inset-top));
   overscroll-behavior: none;
   touch-action: none;
+  background-color: #ffe4e6;
 }
 
 body {
@@ -12,6 +13,31 @@ body {
   margin: 0;
   padding: 0;
   position: relative;
+  background-color: transparent;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top);
+  background-color: #ed354f; /* haut de l'écran (rouge) */
+  z-index: 9999;
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-bottom);
+  background-color: #ffe4e6; /* bas de l'écran (rose clair) */
+  z-index: 9999;
+  pointer-events: none;
 }
 
 #root {
@@ -43,8 +69,6 @@ body {
 .read-the-docs {
   color: #888;
 }
-
-
 
 @keyframes riseFade {
   0% { opacity: 0; transform: translateY(30px) scale(0.96); }
