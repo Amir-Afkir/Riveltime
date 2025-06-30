@@ -1,3 +1,4 @@
+// vite.config.js
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import react from '@vitejs/plugin-react';
@@ -24,11 +25,9 @@ export default defineConfig({
         short_name: 'Riveltime',
         description: 'Livraison locale rapide et responsable',
         start_url: '/',
-        scope: '/',
         display: 'standalone',
-        display_override: ['standalone', 'fullscreen'],
-        background_color: '#ffe4e6',
-        theme_color: '#ffe4e6', 
+        background_color: '#ffffff',
+        theme_color: '#0f172a',
         orientation: 'portrait',
         icons: [
           {
