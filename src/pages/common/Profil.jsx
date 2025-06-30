@@ -77,8 +77,6 @@ export default function ProfilCommun() {
   const profilCompletion = getProfilCompletion();
 
   return (
-    <div className="relative min-h-screen">
-      {/* Ajoute ici le fond rose */}
       <div className="relative z-10">
         <AvatarHeader />
         <div className="h-4" />
@@ -257,6 +255,5 @@ export default function ProfilCommun() {
           />
         </Modal>
       </div>
-    </div>
   );
 }

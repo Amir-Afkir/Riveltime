@@ -61,7 +61,7 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md shadow-t-md border-t border-gray-200 rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 inset-x-0 z-20 pb-[env(safe-area-inset-bottom,16px)] bg-white/80 backdrop-blur-md shadow-t-md border-t border-gray-200 rounded-t-2xl pb-[env(safe-area-inset-bottom)]">  
       <ul className="flex justify-around items-center h-16">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
