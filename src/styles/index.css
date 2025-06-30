@@ -17,4 +17,8 @@
     padding: 0;
     position: relative;
   }
+
+  input, select, textarea {
+    @apply text-[16px];
+  }
 }

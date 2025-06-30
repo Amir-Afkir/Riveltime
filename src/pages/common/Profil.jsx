@@ -144,7 +144,7 @@ export default function ProfilCommun() {
                     type="text"
                     value={editableData.fullname}
                     onChange={(e) => setEditableData({ ...editableData, fullname: e.target.value })}
-                    className="border border-gray-300 rounded px-2 py-1 w-full"
+                    className="border border-gray-300 rounded px-2 py-1 w-full text-[16px]"
                     placeholder="Nom complet"
                   />
                 </div>
@@ -160,7 +160,7 @@ export default function ProfilCommun() {
                     }}
                     pattern="^\+?[0-9\- ]{7,15}$"
                     title="Entrez un numéro de téléphone valide (7 à 15 chiffres, espaces et tirets autorisés)"
-                    className="border border-gray-300 rounded px-2 py-1 w-full"
+                    className="border border-gray-300 rounded px-2 py-1 w-full text-[16px]"
                     placeholder="Téléphone"
                   />
                 </div>
@@ -172,7 +172,7 @@ export default function ProfilCommun() {
                       onChange={(e) =>
                         setEditableData({ ...editableData, typeDeTransport: e.target.value })
                       }
-                      className="border border-gray-300 rounded px-2 py-1 w-full"
+                      className="border border-gray-300 rounded px-2 py-1 w-full text-[16px]"
                       required
                     >
                       <option value="">-- Choisissez un transport --</option>
@@ -201,7 +201,7 @@ export default function ProfilCommun() {
                           setAdresseSuggestions([]);
                         }
                       }}
-                      className="border border-gray-300 rounded px-2 py-1 w-full"
+                      className="border border-gray-300 rounded px-2 py-1 w-full text-[16px]"
                       placeholder="Adresse complète"
                       autoComplete="off"
                       ref={adresseInputRef}
