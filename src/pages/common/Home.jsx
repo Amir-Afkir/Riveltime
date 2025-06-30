@@ -18,9 +18,17 @@ export default function Home() {
 
   useEffect(() => {
     if (!loadingUser && isAuthenticated && userData?.role) {
-      // Redirection automatique désactivée (commentée)
+      const role = userData.role;
+      if (role === "client") navigate("/client/accueil");
+      else if (role === "vendeur") navigate("/vendeur/dashboard");
+      else if (role === "livreur") navigate("/livreur/dashboard");
     }
-  }, [isAuthenticated, userData, loadingUser]);
+  }, [isAuthenticated, userData, loadingUser, navigate]);
+
+  const role = userData?.role;
+  if (role === "client") navigate("/client/accueil");
+  else if (role === "vendeur") navigate("/vendeur/dashboard");
+  else if (role === "livreur") navigate("/livreur/dashboard");
 
   const handleRoleClick = (role) => {
     if (isAuthenticated) return;
