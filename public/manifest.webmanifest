@@ -7,6 +7,7 @@
     "prefer_related_applications": false,
     "display_override": ["standalone", "fullscreen"],
     "background_color": "#ffe4e6",
+    "theme_color": "#ffe4e6", 
     "orientation": "portrait",
     "scope": "/",
     "icons": [
