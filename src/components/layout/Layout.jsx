@@ -99,7 +99,7 @@ export default function Layout() {
       {/* Ne pas afficher BottomNav sur home ("/") */}
       {pathname !== "/" && <BottomNav />}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none backdrop-blur bg-white/80"
+        className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none bg-white/80 backdrop-blur-md"
         style={{
           height: 'env(safe-area-inset-bottom)',
         }}
