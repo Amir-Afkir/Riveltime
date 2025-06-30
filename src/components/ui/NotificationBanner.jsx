@@ -67,7 +67,7 @@ export default function NotificationBanner({ message, type = "success", onClose 
   return (
     <div
       ref={bannerRef}
-      className={`fade-in-up fixed top-6 left-4 right-4 z-50 border px-4 py-3 rounded-xl shadow-md bg-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out ${bgColor}`}
+      className={`fade-in-up fixed top-[calc(env(safe-area-inset-top)+1rem)] left-4 right-4 z-50 border px-4 py-3 rounded-xl shadow-md bg-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out ${bgColor}`}
     >
       <div className="flex items-center justify-between gap-4 text-sm">
         <span className="leading-snug">{message}</span>
