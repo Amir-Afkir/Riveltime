@@ -99,15 +99,9 @@ export default function Layout() {
       {/* Ne pas afficher BottomNav sur home ("/") */}
       {pathname !== "/" && <BottomNav />}
       <div
+        className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none backdrop-blur bg-white/80"
         style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
           height: 'env(safe-area-inset-bottom)',
-          backgroundColor: '#ffe4e6',
-          pointerEvents: 'none',
-          zIndex: 50,
         }}
       />
     </div>
