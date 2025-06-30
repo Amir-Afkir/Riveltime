@@ -1,4 +1,3 @@
-// vite.config.js
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import react from '@vitejs/plugin-react';
@@ -9,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export default defineConfig({
-  base: "/", // Utiliser "/" si l'app est déployée à la racine d'un domaine
+  base: "/", // Déploiement à la racine du domaine
   plugins: [
     react(),
     VitePWA({
@@ -25,9 +24,10 @@ export default defineConfig({
         short_name: 'Riveltime',
         description: 'Livraison locale rapide et responsable',
         start_url: '/',
-        display: 'fullscreen',
-        background_color: '#ffffff',
-        theme_color: '#ffe4e6',
+        scope: '/',
+        display: 'standalone',
+        background_color: '#ffe4e6',  // 👈 fond clair rose
+        theme_color: '#ffe4e6',       // 👈 couleur de barre mobile
         orientation: 'portrait',
         icons: [
           {
