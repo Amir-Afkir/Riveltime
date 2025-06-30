@@ -1,10 +1,9 @@
-import { useState, useRef, useMemo } from 'react';
-import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useUser } from '../../context/UserContext';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useState, useRef, useMemo, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useUser } from "../../context/UserContext";
+import { useAuth0 } from "@auth0/auth0-react";
 
-// Injecte l'animation dans le <head> une seule fois
+// Injection CSS globale des animations (une seule fois)
 const injectHeaderAnimation = () => {
   if (document.getElementById("header-animation-style")) return;
 
@@ -21,49 +20,74 @@ const injectHeaderAnimation = () => {
         transform: translateY(0) scale(1);
       }
     }
+    @keyframes spinToupie {
+      0% {
+        transform: rotateY(0deg) scale(1);
+      }
+      100% {
+        transform: rotateY(360deg) scale(1);
+      }
+    }
     .header-animated {
       animation: headerReveal 400ms cubic-bezier(0.22, 1, 0.36, 1);
       animation-fill-mode: both;
+    }
+    .toupie-spin {
+      animation: spinToupie 3s linear infinite;
+      transform-style: preserve-3d;
+      backface-visibility: visible;
     }
   `;
   document.head.appendChild(style);
 };
 
-export default function Header({ title, showBack, backTo, color = "blue", avatarUrl, showSubtitle }) {
+export default function Header({
+  title,
+  showBack,
+  backTo,
+  color = "blue",
+  avatarUrl,
+  showSubtitle,
+}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { getAccessTokenSilently } = useAuth0();
   const { refreshUser } = useUser();
 
+  const isHomePage = location.pathname === "/";
+  const isProfilePage = Boolean(avatarUrl && showSubtitle);
+  const isCloudinaryImage = avatarUrl?.startsWith("https://res.cloudinary.com/") ?? false;
+
   const fileInputRef = useRef();
   const [modalOpen, setModalOpen] = useState(false);
   const [avatarVersion, setAvatarVersion] = useState(0);
 
-  const isProfilePage = Boolean(avatarUrl && showSubtitle);
-  const isCloudinaryImage = avatarUrl?.startsWith('https://res.cloudinary.com/') ?? false;
-
-  const getToken = () => getAccessTokenSilently();
-
+  // Prépare URL optimisée avatar avec version cache-bust
   const displayedAvatarUrl = useMemo(() => {
     if (!avatarUrl) return "/src/assets/avatar-default.png";
     if (avatarUrl.startsWith("https://res.cloudinary.com/")) {
-      const optimized = avatarUrl.replace("/upload/", "/upload/f_auto,q_auto,w_160,h_160,c_thumb,g_face,r_max/");
+      const optimized = avatarUrl.replace(
+        "/upload/",
+        "/upload/f_auto,q_auto,w_160,h_160,c_thumb,g_face,r_max/"
+      );
       return avatarVersion > 0 ? `${optimized}?v=${avatarVersion}` : optimized;
     }
     return avatarUrl;
   }, [avatarUrl, avatarVersion]);
 
+  // Gestion clic avatar profil (upload ou modal)
   const handleClickAvatar = () => {
     if (!location.pathname.includes("/profil")) return;
     isCloudinaryImage ? setModalOpen(true) : fileInputRef.current?.click();
   };
 
+  // Upload avatar vers backend + refresh utilisateur
   const handleAvatarUpload = async (file) => {
     if (!file) return;
     const formData = new FormData();
     formData.append("avatar", file);
     try {
-      const token = await getToken();
+      const token = await getAccessTokenSilently();
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me/avatar`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
@@ -78,10 +102,11 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
     }
   };
 
+  // Suppression avatar + refresh utilisateur
   const handleDeleteAvatar = async () => {
     if (!window.confirm("Supprimer votre avatar ?")) return;
     try {
-      const token = await getToken();
+      const token = await getAccessTokenSilently();
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me/avatar`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -95,85 +120,54 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
     }
   };
 
-  const colorClasses = {
-    blue: "bg-[#3b82f6]",
-    green: "bg-[#22c55e]",
-    orange: "bg-[#fb923c]",
-  };
-
+  // Classe CSS dynamique header
   const headerClass = [
-    "fixed top-0 left-0 right-0 z-50 px-4",
+    "fixed top-0 left-0 right-0 z-10",
     "header-animated",
-    colorClasses[color] || colorClasses.blue,
-    "text-white shadow-[0_2px_4px_-1px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out",
-    isProfilePage ? "py-6" : "py-4"
+    `${isHomePage ? "h-[30vh]" : "h-[22vh]"}`,
+    "transition-all duration-300 ease-in-out"
   ].join(" ");
 
   useEffect(() => {
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) {
-      const colorMap = {
-        blue: "#2563eb",
-        green: "#16a34a",
-        orange: "#ea580c"
-      };
-      meta.setAttribute("content", colorMap[color] || "#f43f5e"); // rose par défaut
-    }
-  }, [color]);
-
-  useEffect(() => {
     injectHeaderAnimation();
-    // Synchronise la balise <meta name="theme-color"> avec la couleur du header à chaque (re)montée du header
+    // Synchronisation meta theme-color (fixé à rouge ici)
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) {
-      const colorMap = {
-        blue: "#2563eb",
-        green: "#16a34a",
-        orange: "#ea580c"
-      };
-      meta.setAttribute("content", colorMap[color] || "#f43f5e");
-    }
+    if (meta) meta.setAttribute("content", "#ed354f");
   }, []);
 
   return (
     <>
       <header className={headerClass}>
         {isProfilePage ? (
-          <div className="flex items-center gap-4">
-            <div
-              className="relative w-16 h-16 cursor-pointer"
-              onClick={handleClickAvatar}
-              title={isCloudinaryImage ? "Voir et modifier l’avatar" : "Modifier l’avatar"}
-            >
-              <img
-                src={displayedAvatarUrl}
-                alt="Avatar utilisateur"
-                onError={e => {
-                  e.target.onerror = null;
-                  e.target.src = "/src/assets/avatar-default.png";
-                }}
-                className="w-full h-full object-cover rounded-full border-2 border-white shadow-md animate-avatarFadeIn"
-              />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold leading-tight">{title}</h1>
-              <p className="text-sm opacity-80">{showSubtitle}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center w-full">
-            {showBack && (
-              <button
-                onClick={() => backTo ? navigate(backTo) : navigate(-1)}
-                className="text-white text-2xl font-light absolute left-4"
-                aria-label="Retour"
+          <div className="flex flex-col w-full pt-10 pb-5 px-4 bg-[#ed354f] text-white relative shadow-[0_2px_4px_-1px_rgba(0,0,0,0.1)]">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-2xl font-bold leading-snug">{title}</h1>
+                <p className="text-sm font-medium text-white/80">{showSubtitle}</p>
+              </div>
+              <div
+                className="w-16 h-16 rounded-full border-4 border-white overflow-hidden shadow-md cursor-pointer"
+                onClick={handleClickAvatar}
+                title={isCloudinaryImage ? "Voir et modifier l’avatar" : "Modifier l’avatar"}
               >
-                ←
-              </button>
-            )}
-            <h1 className="text-xl font-semibold text-center">{title}</h1>
+                <img
+                  src={displayedAvatarUrl}
+                  alt="Avatar utilisateur"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/src/assets/avatar-default.png";
+                  }}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 w-full h-2 rounded-full bg-white/20 overflow-hidden">
+              <div className="h-2 bg-white rounded-full" style={{ width: "100%" }}></div>
+            </div>
+            <p className="mt-1 text-xs text-right text-white/80">Profil complété à 100%</p>
           </div>
-        )}
+        ) : null}
       </header>
 
       <input
@@ -181,7 +175,7 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
         accept="image/*"
         className="hidden"
         ref={fileInputRef}
-        onChange={e => handleAvatarUpload(e.target.files[0])}
+        onChange={(e) => handleAvatarUpload(e.target.files[0])}
       />
 
       {modalOpen && (
@@ -193,7 +187,7 @@ export default function Header({ title, showBack, backTo, color = "blue", avatar
         >
           <div
             className="bg-white rounded p-4 max-w-sm w-full relative"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setModalOpen(false)}

@@ -1,5 +1,6 @@
 // ✅ ProfilCommun.jsx
 import { useState } from "react";
+import AvatarHeader from "../../components/profile/AvatarHeader";
 import { useUser } from "../../context/UserContext";
 import InfoCard from "../../components/profile/InfoCard";
 import IconRow from "../../components/profile/IconRow";
@@ -7,6 +8,7 @@ import ToggleSwitch from "../../components/profile/ToggleSwitch";
 import Modal from "../../components/ui/Modal";
 import UserForm from "../../components/logic/UserForm";
 import MoyenPaiementForm from "../../components/profile/MoyenPaiementForm";
+import { Lock } from "lucide-react";
 
 export default function ProfilCommun() {
   const { userData: user, loadingUser: loading, refreshUser, logout, deleteAccount } = useUser();
@@ -58,9 +60,29 @@ export default function ProfilCommun() {
     return false;
   };
 
+  const getProfilCompletion = () => {
+    let total = 3;
+    let filled = 0;
+
+    if (fullname) filled++;
+    if (phone) filled++;
+    if (role === "client" && infosClient?.adresseComplete) filled++;
+    if (role === "vendeur" && infosVendeur?.categorie && infosVendeur?.adresseComplete) filled += 2;
+    if (role === "livreur" && infosLivreur?.typeDeTransport) filled++;
+
+    const max = role === "vendeur" ? 4 : 3;
+    return Math.round((filled / max) * 100);
+  };
+
+  const profilCompletion = getProfilCompletion();
+
   return (
-    <div className="space-y-4 pb-20">
-      <div className="space-y-4 px-4">
+    <div className="relative min-h-screen">
+      {/* Ajoute ici le fond rose */}
+      <div className="relative z-10">
+        <AvatarHeader />
+        <div className="h-4" />
+        <div className="space-y-4 px-4">
         {[
           {
             key: "infos",
@@ -68,7 +90,9 @@ export default function ProfilCommun() {
             content: (
               <>
                 {isProfilIncomplet() && (
-                  <p className="text-yellow-800 mb-2 text-sm">Votre profil est incomplet. Veuillez le compléter.</p>
+                  <p className="bg-yellow-50 text-yellow-900 p-2 text-sm rounded border border-yellow-300 font-medium">
+                    ⚠️ Votre profil est incomplet. Veuillez le compléter.
+                  </p>
                 )}
                 {!isProfilIncomplet() && (
                   <>
@@ -110,7 +134,7 @@ export default function ProfilCommun() {
           {
             key: "notifications",
             title: "Notifications",
-            content: <ToggleSwitch label="Email Alerts" checked={notifications ?? false} role={role} />,
+            content: <ToggleSwitch label="Recevoir les alertes e-mail" checked={notifications ?? false} role={role} />,
           },
           ...(role === "vendeur" && !isProfilIncomplet()
             ? [
@@ -160,79 +184,79 @@ export default function ProfilCommun() {
           className="bg-white shadow-lg rounded-2xl border border-gray-100 transition-all duration-500"
           delay={40 + 4 * 60}
         >
-          <div className="flex flex-col space-y-4 pt-1">
-          <button
-            onClick={async () => {
-              try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/account/password-reset`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email: user?.email }),
-                });
+          <div className="flex flex-col space-y-4">
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch(`${import.meta.env.VITE_API_URL}/account/password-reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: user?.email }),
+                  });
 
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.error || "Erreur");
+                  const result = await response.json();
+                  if (!response.ok) throw new Error(result.error || "Erreur");
 
-                alert(result.message || "Un email de réinitialisation a été envoyé à votre adresse.");
-              } catch (err) {
-                console.error("❌", err);
-                alert("Erreur lors de l'envoi de l’email");
-              }
-            }}
-            className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-          >
-            🔒 <span className="ml-1">Modifier mon mot de passe</span>
-          </button>
+                  alert(result.message || "Un email de réinitialisation a été envoyé à votre adresse.");
+                } catch (err) {
+                  console.error("❌", err);
+                  alert("Erreur lors de l'envoi de l’email");
+                }
+              }}
+              className="inline-flex items-center justify-start gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+            >
+              <>
+                <Lock className="w-4 h-4 text-indigo-600" strokeWidth={2} />
+                <span>Modifier mon mot de passe</span>
+              </>
+            </button>
 
             <hr className="border-gray-200" />
 
-            <div className="flex justify-between">
-              <button
-                className="text-sm text-gray-700 hover:text-gray-900"
-                onClick={() => {
-                  console.log("🔁 redirect to:", import.meta.env.VITE_BASE_URL);
-                  logout({returnTo: import.meta.env.VITE_BASE_URL});
-                }}
-              >
-                Se déconnecter
-              </button>
-              <button
-                className="text-sm text-red-700 font-semibold hover:underline disabled:opacity-50"
-                onClick={deleteAccount}
-              >
-                Supprimer mon compte
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                logout({ returnTo: import.meta.env.VITE_BASE_URL });
+              }}
+              className="w-full bg-neutral-50 !text-black border border-gray-300 hover:bg-neutral-100 active:scale-[0.98] active:shadow-inner focus-visible:ring-2 focus-visible:ring-red-300 rounded-full flex items-center justify-center gap-2 py-2.5 text-[15px] transition-all"
+            >
+              Déconnexion
+            </button>
+
+            <button
+              onClick={deleteAccount}
+              className="w-full bg-[#ed354f] text-white rounded-full hover:bg-[#d12e47] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#f58ba0] py-2.5 text-[15px] transition-all"
+            >
+              Supprimer mon profil
+            </button>
           </div>
         </InfoCard>
+        </div>
+        <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Modifier mes informations">
+          <UserForm
+            role={role}
+            initialData={user}
+            onSubmit={async (formData) => {
+              await handleUpdate(formData);
+              setModalOpen(false);
+            }}
+          />
+        </Modal>
+        <Modal open={paiementModalOpen} onClose={() => setPaiementModalOpen(false)} title="Modifier les moyens de paiement">
+          <MoyenPaiementForm
+            moyensPaiement={infosVendeur?.moyensPaiement || []}
+            onSubmit={async (updatedPaiements) => {
+              await handleUpdate({
+                ...user,
+                infosVendeur: {
+                  ...infosVendeur,
+                  moyensPaiement: updatedPaiements,
+                },
+              });
+              setPaiementModalOpen(false);
+            }}
+          />
+        </Modal>
       </div>
-
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Modifier mes informations">
-        <UserForm
-          role={role}
-          initialData={user}
-          onSubmit={async (formData) => {
-            await handleUpdate(formData);
-            setModalOpen(false);
-          }}
-        />
-      </Modal>
-
-      <Modal open={paiementModalOpen} onClose={() => setPaiementModalOpen(false)} title="Modifier les moyens de paiement">
-        <MoyenPaiementForm
-          moyensPaiement={infosVendeur?.moyensPaiement || []}
-          onSubmit={async (updatedPaiements) => {
-            await handleUpdate({
-              ...user,
-              infosVendeur: {
-                ...infosVendeur,
-                moyensPaiement: updatedPaiements,
-              },
-            });
-            setPaiementModalOpen(false);
-          }}
-        />
-      </Modal>
     </div>
   );
 }

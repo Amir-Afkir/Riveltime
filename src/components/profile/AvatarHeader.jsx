@@ -1,23 +1,25 @@
-// ✅ AvatarHeader.jsx
 import React from "react";
+import { useUser } from "../../context/UserContext";
 
-export default function AvatarHeader({ avatarUrl, name, subtitle }) {
-  const hasAvatar = avatarUrl && avatarUrl.length > 5;
+export default function AvatarHeader() {
+  const { userData } = useUser();
+  const hasAvatar = userData?.avatarUrl && userData.avatarUrl.length > 5;
+
   return (
-    <div className="flex items-center gap-4">
-      <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md">
+    <div className="flex flex-col items-center justify-center text-center w-full gap-3">
+      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md">
         <img
-          src={hasAvatar ? avatarUrl : "/src/assets/avatar-default.png"}
+          src={hasAvatar ? userData.avatarUrl : "/src/assets/avatar-default.png"}
           alt="Avatar utilisateur"
           className="w-full h-full object-cover"
         />
       </div>
       <div>
         <h1 className="text-xl font-semibold leading-tight text-white">
-          {name || "Utilisateur"}
+          Bonjour {userData?.name ?? "Utilisateur"} !
         </h1>
-        {subtitle && (
-          <p className="text-sm opacity-80 text-white">{subtitle}</p>
+        {userData?.role && (
+          <p className="text-sm text-white/80">{userData.role} fidèle depuis février</p>
         )}
       </div>
     </div>

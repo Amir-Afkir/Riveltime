@@ -68,11 +68,9 @@ const protectedRoutes = Object.entries(routesConfig).flatMap(([role, routes]) =>
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* 🏠 Page publique */}
-      <Route path="/" element={<Home />} />
-
-      {/* 🧱 Layout et routes protégées */}
+      {/* 🧱 Layout commun à toutes les pages, y compris / */}
       <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
         {protectedRoutes}
       </Route>
     </Routes>

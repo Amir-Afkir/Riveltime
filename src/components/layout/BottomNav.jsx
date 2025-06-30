@@ -35,7 +35,7 @@ export default function BottomNav() {
 
   const path = location.pathname;
   let navItems = [];
-  let color = "text-blue-600";
+  const color = "text-[#ed354f]";
 
   if (path.startsWith("/client") || path.startsWith("/vitrine")) {
     navItems = [
@@ -51,7 +51,6 @@ export default function BottomNav() {
       { label: "Commandes", path: "/vendeur/commandes", icon: FileText },
       { label: "Profil", path: "/vendeur/profil", icon: User },
     ];
-    color = "text-green-600";
   } else if (path.startsWith("/livreur")) {
     navItems = [
       { label: "Dashboard", path: "/livreur/dashboard", icon: Bike },
@@ -59,7 +58,6 @@ export default function BottomNav() {
       { label: "Historique", path: "/livreur/historique", icon: Scroll },
       { label: "Profil", path: "/livreur/profil", icon: User },
     ];
-    color = "text-orange-600";
   }
 
   return (

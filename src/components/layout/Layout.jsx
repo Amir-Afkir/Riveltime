@@ -1,4 +1,3 @@
-// ✅ Layout.jsx
 import { Outlet, useLocation } from "react-router-dom";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
@@ -8,22 +7,24 @@ import { useMemo, useEffect } from "react";
 export default function Layout() {
   const { pathname } = useLocation();
   const { userData } = useUser();
+  
 
-  const getTheme = (path) => {
-    if (path.startsWith("/vendeur")) return { color: "green", bodyBg: "#ecfdf5" }; // green-50
-    if (path.startsWith("/livreur")) return { color: "orange", bodyBg: "#fff7ed" }; // orange-50
-    if (path.startsWith("/client")) return { color: "blue", bodyBg: "#eff6ff" }; // blue-50
-    return { color: "rose", bodyBg: "#fff1f2" }; // rose-50
+  // Détermine le thème couleur & background selon le rôle/page
+  const getTheme = () => {
+    return { color: "rose", bodyBg: "#fff1f2" }; // rose-50 de Tailwind
   };
 
-  const { color, bodyBg } = getTheme(pathname);
+  const { color, bodyBg } = getTheme();
 
   useEffect(() => {
+    // Sauvegarder les valeurs précédentes pour nettoyage
     const previousColor = document.body.style.backgroundColor;
     const previousMetaTheme = document.querySelector("meta[name='theme-color']")?.getAttribute("content");
 
+    // Appliquer couleur de fond au body
     document.body.style.backgroundColor = bodyBg;
 
+    // Mettre à jour meta theme-color (pour mobile browsers UI)
     const metaTheme = document.querySelector("meta[name='theme-color']");
     if (metaTheme) {
       const themeColor = color === "green"
@@ -36,6 +37,7 @@ export default function Layout() {
       metaTheme.setAttribute("content", themeColor);
     }
 
+    // Nettoyage au démontage / changement thème
     return () => {
       document.body.style.backgroundColor = previousColor;
       if (metaTheme && previousMetaTheme) {
@@ -44,11 +46,14 @@ export default function Layout() {
     };
   }, [bodyBg, color]);
 
+  // Détecte si on est sur une page profil (titre + avatar)
   const isProfilePage = ["/client/profil", "/vendeur/profil", "/livreur/profil"].includes(pathname);
 
+  // Définit le titre de la page dans le header
   const title = useMemo(() => {
     if (isProfilePage) return userData?.fullname?.trim() || "Mon profil";
 
+    // Mappage des chemins vers titres
     const rules = [
       ["/client/accueil", "Accueil"],
       ["/client/panier", "Mon panier"],
@@ -72,24 +77,44 @@ export default function Layout() {
     return pathname === "/" ? "Accueil" : "Riveltime";
   }, [pathname, userData]);
 
-    const avatarUrl =
+  // Détermine URL avatar à passer au header (avec cache bust pour profil)
+  const avatarUrl =
     isProfilePage && userData?.avatarUrl?.startsWith("http")
       ? `${userData.avatarUrl}?v=${Date.now()}`
       : "/src/assets/avatar-default.png";
 
+  useEffect(() => {
+    const onScroll = () => {
+      document.documentElement.style.setProperty("--scroll-y", `${window.scrollY}px`);
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <div className="min-h-screen pb-28">
-      <Header
-        title={title}
-        showBack={false}
-        color={color}
-        avatarUrl={avatarUrl}
-        showSubtitle={isProfilePage ? userData?.role : null}
+    <div className={`min-h-screen ${pathname !== "/" ? "pb-28" : "pb-0"}`}>
+      <div
+        className="fixed top-0 left-0 w-full h-[30vh] z-[-10]"
+        style={{
+          backgroundColor: "#ed354f",
+          transform: "translateY(calc(var(--scroll-y, 0px) * -0.3))",
+          transition: "transform 0.1s ease-out",
+        }}
       />
-      <main className={`${isProfilePage ? "pt-32" : "pt-20"} p-4 max-w-md mx-auto`}>
+      {!isProfilePage && (
+        <Header
+          title={title}
+          showBack={false}
+          color={color}
+          avatarUrl={avatarUrl}
+          showSubtitle={null}
+        />
+      )}
+      <main className="p-0 max-w-md mx-auto">
         <Outlet />
       </main>
-      <BottomNav />
+      {/* Ne pas afficher BottomNav sur home ("/") */}
+      {pathname !== "/" && <BottomNav />}
     </div>
   );
 }

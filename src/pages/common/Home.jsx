@@ -1,72 +1,103 @@
-import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
-import { useUser } from "../../context/UserContext";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useUser } from "../../context/UserContext";
 import Button from "../../components/ui/Button";
+import { User, Store, Bike } from "lucide-react";
+
+const roles = [
+  { role: "client", icon: <User size={18} />, label: "Je suis Client" },
+  { role: "vendeur", icon: <Store size={18} />, label: "Je suis Commerçant" },
+  { role: "livreur", icon: <Bike size={18} />, label: "Je suis Livreur" },
+];
 
 export default function Home() {
   const navigate = useNavigate();
   const { loginWithRedirect, isAuthenticated, user: auth0User } = useAuth0();
-  const { logout } = useUser();
-  const { userData, loadingUser } = useUser();
+  const { logout, userData, loadingUser } = useUser();
 
   useEffect(() => {
-    if (!loadingUser && userData?.role) {
-      const role = userData.role;
-      if (role === "client") navigate("/client/accueil");
-      else if (role === "vendeur") navigate("/vendeur/dashboard");
-      else if (role === "livreur") navigate("/livreur/dashboard");
+    if (!loadingUser && isAuthenticated && userData?.role) {
+      // Redirection automatique désactivée (commentée)
     }
-  }, [userData, loadingUser, navigate]);
+  }, [isAuthenticated, userData, loadingUser]);
 
   const handleRoleClick = (role) => {
-    if (isAuthenticated) {
-      if (role === "client") navigate("/client/accueil");
-      else if (role === "vendeur") navigate("/vendeur/dashboard");
-      else if (role === "livreur") navigate("/livreur/dashboard");
-    } else {
-      localStorage.setItem("signup_role", role);
-      loginWithRedirect({
-        screen_hint: "signup",
-        authorizationParams: {
-          signup_role: role,
-          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-          scope: "openid profile email",
-        },
-      });
-    }
+    if (isAuthenticated) return;
+    localStorage.setItem("signup_role", role);
+    loginWithRedirect({
+      screen_hint: "signup",
+      authorizationParams: {
+        signup_role: role,
+        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        scope: "openid profile email",
+      },
+    });
+  };
+
+  const handleManualRedirect = () => {
+    const destination = {
+      client: "/client/accueil",
+      vendeur: "/vendeur/dashboard",
+      livreur: "/livreur/dashboard",
+    }[userData?.role];
+    if (destination) navigate(destination);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4 text-center">
-      <h1 className="text-2xl font-bold">Bienvenue sur Riveltime</h1>
-      <p className="text-gray-600">Choisissez votre rôle pour commencer</p>
-
-      {!isAuthenticated ? (
-        <div className="flex flex-col gap-2 w-full max-w-xs">
-          <Button className="w-full" role="client" onClick={() => handleRoleClick("client")}>
-            👤 Je suis un Client
-          </Button>
-          <Button className="w-full" role="vendeur" onClick={() => handleRoleClick("vendeur")}>
-            🏪 Je suis un Commerçant
-          </Button>
-          <Button className="w-full" role="livreur" onClick={() => handleRoleClick("livreur")}>
-            🚴 Je suis un Livreur
-          </Button>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-          <p>Bienvenue, {auth0User?.name} !</p>
-          {userData?.role && (
-            <p className="text-blue-600 font-semibold">
-              Rôle : {userData.role.charAt(0).toUpperCase() + userData.role.slice(1)}
+    <div className="relative min-h-screen flex items-center justify-center p-4">
+      <img
+        src="/icon.svg"
+        alt="Logo Riveltime"
+        className="h-[25vh] mb-4 fixed top-6 left-1/2 -translate-x-1/2 z-0"
+      />
+      <div className="bg-white/80 backdrop-blur-md shadow-xl border border-gray-100 rounded-3xl p-6 w-full text-center flex flex-col items-center gap-6 animate-[riseFade_600ms_ease-out_forwards] z-10">
+        {!isAuthenticated ? (
+          <>
+            <h1 className="text-2xl font-semibold leading-tight">Bienvenue sur Riveltime</h1>
+            <p className="text-gray-600 text-sm mb-4 tracking-wide">Choisissez votre rôle pour commencer</p>
+            <div className="flex flex-col gap-3 w-full max-w-xs">
+              {roles.map(({ role, icon, label }) => (
+                <Button
+                  key={role}
+                  className="w-full bg-neutral-50 !text-black border border-gray-300 hover:bg-neutral-100 active:scale-[0.98] active:shadow-inner focus-visible:ring-2 focus-visible:ring-red-300 rounded-full flex items-center justify-center gap-2 py-2.5 text-[15px] transition-all"
+                  onClick={() => handleRoleClick(role)}
+                >
+                  {icon} {label}
+                </Button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-4 w-full max-w-xs">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Bonjour {userData?.fullname || auth0User?.name || auth0User?.email} !
+            </h2>
+            {userData?.role && (
+              <p className="text-gray-600 italic">
+                Votre rôle : <span className="font-medium capitalize">{userData.role}</span>
+              </p>
+            )}
+            <p className="text-gray-500 text-sm mb-4">
+              Préparation de votre espace... Vous serez redirigé sous peu.
             </p>
-          )}
-          <Button className="w-full" onClick={() => logout({ returnTo: import.meta.env.VITE_BASE_URL })}>
-            Se déconnecter
-          </Button>
-        </div>
-      )}
+            <div className="animate-spin rounded-full h-8 w-8 border-[3px] border-[#f58ba0]/50 border-t-[#ed354f] mx-auto mb-4" />
+            <Button
+              className="w-full bg-neutral-50 !text-black border border-gray-300 hover:bg-neutral-100 active:scale-[0.98] active:shadow-inner focus-visible:ring-2 focus-visible:ring-red-300 rounded-full flex items-center justify-center gap-2 py-2.5 text-[15px] transition-all"
+              onClick={handleManualRedirect}
+            >
+              Aller à mon espace
+            </Button>
+            <button
+              type="button"
+              className="w-full bg-[#ed354f] text-white rounded-full hover:bg-[#d12e47] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#f58ba0] py-2.5 text-[15px] transition-all"
+              onClick={() => logout({ returnTo: import.meta.env.VITE_BASE_URL })}
+            >
+              Se déconnecter
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
