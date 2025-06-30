@@ -130,9 +130,6 @@ export default function Header({
 
   useEffect(() => {
     injectHeaderAnimation();
-    // Synchronisation meta theme-color (fixé à rouge ici)
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", "#ed354f");
   }, []);
 
   return (
