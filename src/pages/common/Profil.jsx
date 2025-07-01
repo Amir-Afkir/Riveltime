@@ -92,11 +92,6 @@ export default function ProfilCommun({ isLoading }) {
     return false;
   }, [fullname, phone, role, infosClient, infosVendeur, infosLivreur]);
 
-  const roleColor = {
-    client: "text-blue-600 hover:text-blue-700",
-    vendeur: "text-green-600 hover:text-green-700",
-    livreur: "text-orange-600 hover:text-orange-700"
-  }[role] || "text-gray-600 hover:text-gray-700";
 
   // Refactore handleEditToggle() pour simplifier la mise à jour des données.
   const handleEditToggle = async () => {
@@ -247,13 +242,11 @@ export default function ProfilCommun({ isLoading }) {
       action: (
         <button
           onClick={handleEditToggle}
-          className={`inline-flex items-center text-sm font-medium transition-colors duration-200 ${
+          className={
             isEditing
-              ? "text-green-600 hover:text-green-700"
-              : profilIncomplet
-              ? "text-yellow-600 hover:text-yellow-700"
-              : roleColor
-          }`}
+              ? "inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors duration-200"
+              : "inline-flex items-center text-sm font-medium text-neutral-600 hover:text-neutral-800 transition-colors duration-200"
+          }
           aria-label={isEditing ? "Sauvegarder" : "Modifier"}
         >
           {isEditing ? <CheckCircle size={18} /> : <Pencil size={18} />}
@@ -343,10 +336,10 @@ export default function ProfilCommun({ isLoading }) {
                   const result = await response.json();
                   if (!response.ok) throw new Error(result.error || "Erreur");
 
-                  alert(result.message || "Un email de réinitialisation a été envoyé à votre adresse.");
+                  setNotif({ message: result.message || "Un email de réinitialisation a été envoyé à votre adresse.", type: "success" });
                 } catch (err) {
                   console.error("❌", err);
-                  alert("Erreur lors de l'envoi de l’email");
+                  setNotif({ message: "Erreur lors de l'envoi de l’email", type: "error" });
                 }
               }}
               className="inline-flex items-center justify-start gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"

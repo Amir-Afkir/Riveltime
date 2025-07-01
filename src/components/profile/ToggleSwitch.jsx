@@ -6,13 +6,7 @@ export default function ToggleSwitch({
     readOnly = true,
     role = "client" // nouveau
   }) {
-    const roleColor = {
-      client: "bg-blue-500",
-      vendeur: "bg-green-500",
-      livreur: "bg-orange-500",
-    };
-  
-    const activeColor = roleColor[role] || "bg-gray-500";
+    const activeColor = "bg-emerald-500";
   
     return (
       <label className="flex items-center justify-between gap-3 py-2">
