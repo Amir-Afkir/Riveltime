@@ -1,8 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
-import Header from "./Header";
 import BottomNav from "./BottomNav";
 import { useUser } from "../../context/UserContext";
-import { useMemo, useEffect } from "react";
+import { useEffect } from "react";
 
 export default function Layout() {
   const { pathname } = useLocation();
@@ -29,43 +28,6 @@ export default function Layout() {
     };
   }, [bodyBg, color]);
 
-  // Détecte si on est sur une page profil (titre + avatar)
-  const isProfilePage = ["/client/profil", "/vendeur/profil", "/livreur/profil"].includes(pathname);
-
-  // Définit le titre de la page dans le header
-  const title = useMemo(() => {
-    if (isProfilePage) return userData?.fullname?.trim() || "Mon profil";
-
-    // Mappage des chemins vers titres
-    const rules = [
-      ["/client/accueil", "Accueil"],
-      ["/client/panier", "Mon panier"],
-      ["/client/commandes", "Commandes"],
-      ["/client/messages", "Messages"],
-      ["/vitrine/", "Vitrine"],
-      ["/vendeur/dashboard", "Tableau de bord"],
-      ["/vendeur/produits", "Mes produits"],
-      ["/vendeur/commandes", "Commandes"],
-      ["/vendeur/messages", "Messages"],
-      ["/livreur/dashboard", "Tableau de bord"],
-      ["/livreur/courses", "Courses"],
-      ["/livreur/historique", "Historique"],
-      ["/livreur/messages", "Messages"],
-    ];
-
-    for (const [prefix, label] of rules) {
-      if (pathname.startsWith(prefix)) return label;
-    }
-
-    return pathname === "/" ? "Accueil" : "Riveltime";
-  }, [pathname, userData]);
-
-  // Détermine URL avatar à passer au header (avec cache bust pour profil)
-  const avatarUrl =
-    isProfilePage && userData?.avatarUrl?.startsWith("http")
-      ? `${userData.avatarUrl}?v=${Date.now()}`
-      : "/src/assets/avatar-default.png";
-
   useEffect(() => {
     const onScroll = () => {
       document.documentElement.style.setProperty("--scroll-y", `${window.scrollY}px`);
@@ -82,15 +44,6 @@ export default function Layout() {
           backgroundColor: "#ed354f",
         }}
       />
-      {!isProfilePage && (
-        <Header
-          title={title}
-          showBack={false}
-          color={color}
-          avatarUrl={avatarUrl}
-          showSubtitle={null}
-        />
-      )}
       <main className="p-0 max-w-md mx-auto">
         <Outlet />
       </main>

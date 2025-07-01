@@ -6,13 +6,8 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        rivel: '#f43f5e',
-        'rivel-light': '#ffe4e6',
-        'rivel-dark': '#be123c',
-        night: '#0f172a',
-      },
       animation: {
+        spinY: 'spinY 6s linear infinite',
         avatarFadeIn: 'fadeInScale 0.3s ease-out forwards',
       },
       keyframes: {
@@ -20,8 +15,12 @@ export default {
           '0%': { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
+        spinY: {
+          '0%': { transform: 'rotateY(0deg)' },
+          '100%': { transform: 'rotateY(360deg)' },
+        },
       },
-    },
+    }
   },
   plugins: [],
 }

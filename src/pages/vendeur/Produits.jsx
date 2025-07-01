@@ -6,6 +6,7 @@ import Card from "../../components/ui/Card";
 import Title from "../../components/ui/Title";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import NotificationBanner from "../../components/ui/NotificationBanner";
 
 export default function Produits() {
   const [produits, setProduits] = useState([]);
@@ -18,6 +19,7 @@ export default function Produits() {
     description: "",
     image: null
   });
+  const [notification, setNotification] = useState(null);
   const { getAccessTokenSilently, user } = useAuth0();
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export default function Produits() {
 
   const sauvegarderProduit = async () => {
     if (!nouveauProduit.name || !nouveauProduit.price) {
-      alert("Tous les champs sont requis.");
+      setNotification({ message: "Tous les champs sont requis.", type: "error" });
       return;
     }
     try {
@@ -129,94 +131,103 @@ export default function Produits() {
   };
 
   return (
-    <div className="space-y-4">
-      {produits.map((produit) => (
-        <Card key={produit._id} className="flex items-center gap-4">
-          {produit.imageUrl && (
-            <img
-              src={produit.imageUrl}
-              alt={produit.name}
-              className="w-24 min-w-[96px] h-24 aspect-square max-w-full object-cover rounded-md shadow border border-gray-200"
-            />
-          )}
-          <div className="flex-1">
-            <div className="space-y-1">
-              <Title level={4} className="text-gray-800 font-semibold">{produit.name}</Title>
-              <p className="text-sm text-gray-600">{produit.price.toFixed(2)} €</p>
-              {produit.description && (
-                <p className="text-sm text-gray-500">{produit.description}</p>
-              )}
-              {produit.category && (
-                <p className="text-sm italic text-gray-400">{produit.category}</p>
-              )}
-            </div>
-            <div className="flex mt-3 space-x-2">
-              <Button
-                onClick={() => {
-                  setNouveauProduit({
-                    _id: produit._id,
-                    name: produit.name,
-                    price: produit.price,
-                    category: produit.category,
-                    description: produit.description,
-                    image: null
-                  });
-                  setShowModal(true);
-                }}
-                variant="primary"
-                size="small"
-              >
-                Modifier
-              </Button>
-              <Button
-                onClick={() => supprimerProduit(produit._id)}
-                variant="danger"
-                size="small"
-              >
-                Supprimer
-              </Button>
-            </div>
-          </div>
-        </Card>
-      ))}
-
-      <Button className="w-full" variant="success" onClick={() => setShowModal(true)}>
-        ➕ Ajouter un produit
-      </Button>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow w-full max-w-sm max-h-[90vh] overflow-y-auto">
-            <Title level={3}>Nouveau produit</Title>
-            {nouveauProduit.image && typeof nouveauProduit.image === 'string' && (
+    <>
+      {notification && (
+        <NotificationBanner
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
+      <div className="space-y-4">
+        {produits.map((produit) => (
+          <Card key={produit._id} className="flex items-center gap-4">
+            {produit.imageUrl && (
               <img
-                src={nouveauProduit.image}
-                alt="Aperçu"
-                className="w-full h-40 object-cover rounded"
+                src={produit.imageUrl}
+                alt={produit.name}
+                className="w-24 min-w-[96px] h-24 aspect-square max-w-full object-cover rounded-md shadow border border-gray-200"
               />
             )}
-            <div className="space-y-4 mt-4">
-              <Input label="Titre" name="name" value={nouveauProduit.name} onChange={handleChange} />
-              <Input label="Catégorie" name="category" value={nouveauProduit.category} onChange={handleChange} />
-              <Input label="Description" name="description" value={nouveauProduit.description} onChange={handleChange} />
-              <Input label="Prix (€)" name="price" type="number" value={nouveauProduit.price} onChange={handleChange} />
-              <Input
-                label="Image"
-                name="image"
-                type="file"
-                accept="image/*"
-                onChange={handleChangeFile}
-              />
-              <div className="flex justify-end space-x-2">
-                <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-                <Button variant="success" onClick={sauvegarderProduit}>
-                  {nouveauProduit._id ? "Modifier" : "Ajouter"}
+            <div className="flex-1">
+              <div className="space-y-1">
+                <Title level={4} className="text-gray-800 font-semibold">{produit.name}</Title>
+                <p className="text-sm text-gray-600">{produit.price.toFixed(2)} €</p>
+                {produit.description && (
+                  <p className="text-sm text-gray-500">{produit.description}</p>
+                )}
+                {produit.category && (
+                  <p className="text-sm italic text-gray-400">{produit.category}</p>
+                )}
+              </div>
+              <div className="flex mt-3 space-x-2">
+                <Button
+                  onClick={() => {
+                    setNouveauProduit({
+                      _id: produit._id,
+                      name: produit.name,
+                      price: produit.price,
+                      category: produit.category,
+                      description: produit.description,
+                      image: null
+                    });
+                    setShowModal(true);
+                  }}
+                  variant="primary"
+                  size="small"
+                >
+                  Modifier
+                </Button>
+                <Button
+                  onClick={() => supprimerProduit(produit._id)}
+                  variant="danger"
+                  size="small"
+                >
+                  Supprimer
                 </Button>
               </div>
             </div>
+          </Card>
+        ))}
+
+        <Button className="w-full" variant="success" onClick={() => setShowModal(true)}>
+          ➕ Ajouter un produit
+        </Button>
+
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded shadow w-full max-w-sm max-h-[90vh] overflow-y-auto">
+              <Title level={3}>Nouveau produit</Title>
+              {nouveauProduit.image && typeof nouveauProduit.image === 'string' && (
+                <img
+                  src={nouveauProduit.image}
+                  alt="Aperçu"
+                  className="w-full h-40 object-cover rounded"
+                />
+              )}
+              <div className="space-y-4 mt-4">
+                <Input label="Titre" name="name" value={nouveauProduit.name} onChange={handleChange} />
+                <Input label="Catégorie" name="category" value={nouveauProduit.category} onChange={handleChange} />
+                <Input label="Description" name="description" value={nouveauProduit.description} onChange={handleChange} />
+                <Input label="Prix (€)" name="price" type="number" value={nouveauProduit.price} onChange={handleChange} />
+                <Input
+                  label="Image"
+                  name="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleChangeFile}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
+                  <Button variant="success" onClick={sauvegarderProduit}>
+                    {nouveauProduit._id ? "Modifier" : "Ajouter"}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }
