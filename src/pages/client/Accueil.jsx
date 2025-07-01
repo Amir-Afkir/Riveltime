@@ -15,10 +15,13 @@ export default function Accueil() {
   );
 
   return (
-    <div className="pb-10">
-      <div className="flex justify-between items-center mb-3 gap-4 px-5 mt-3">
+    <>
+      {/* Header fixe */}
+      <div
+        className="fixed top-0 left-0 right-0 z-10 flex justify-between items-center gap-4 px-5 py-3 bg-transparent"
+      >
         <img
-          src="/public/icon.svg"
+          src="/icon.svg"
           alt="Riveltime logo"
           className="h-11 w-auto shrink-0 cursor-pointer"
           onClick={() => navigate("/")}
@@ -31,10 +34,19 @@ export default function Accueil() {
           Se connecter
         </button>
       </div>
-      <div className="bg-[#ffe4e6] w-full rounded-t-[2rem] p-4 mt-2">
+
+      {/* Container principal avec marge haute pour laisser place au header */}
+      <div
+        className="bg-[#ffe4e6] w-full rounded-t-[2rem] p-4 mt-[56px] z-20 relative"
+        style={{ minHeight: "100vh" }}
+      >
         <div className="mb-5" aria-hidden="true" />
-        <h1 className="text-xl font-semibold text-gray-900 text-center">Bienvenue sur Riveltime</h1>
-        <p className="text-sm text-gray-600 mb-4 text-center">Vos commerces locaux, livrés en un clin d'œil.</p>
+        <h1 className="text-xl font-semibold text-gray-900 text-center">
+          Bienvenue sur Riveltime
+        </h1>
+        <p className="text-sm text-gray-600 mb-4 text-center">
+          Vos commerces locaux, livrés en un clin d'œil.
+        </p>
         <Input
           type="text"
           placeholder="Rechercher un commerçant ou une catégorie..."
@@ -78,6 +90,6 @@ export default function Accueil() {
           ))}
         </main>
       </div>
-    </div>
+    </>
   );
 }
