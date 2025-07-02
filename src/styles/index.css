@@ -7,14 +7,16 @@
     height: 100%;
     padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
              env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+    padding-top: env(safe-area-inset-top);
     min-height: calc(100% + env(safe-area-inset-top));
     touch-action: manipulation;
   }
 
-  body {
+  body, #root {
     height: 100%;
     margin: 0;
     padding: 0;
+    padding-top: env(safe-area-inset-top);
     position: relative;
   }
 
