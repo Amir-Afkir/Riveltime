@@ -15,7 +15,7 @@ const addressRoutes = require('./routes/addressRoutes');
 const accountRoutes = require('./routes/accountRoutes');
 const testRoutes = require('./routes/testRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
-const sellerRoutes = require('./routes/sellerRoutes');
+const boutiqueRoutes = require('./routes/boutiqueRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -49,7 +49,8 @@ app.use((req, res, next) => {
 // Routes publiques (avant jwtCheck), toutes sous /api
 app.use('/api', testRoutes);
 app.use('/api/account', accountRoutes);
-app.use('/api/products', productRoutes);     // Certaines routes doivent être sécurisées dans productRoutes.js
+app.use('/api/boutiques', boutiqueRoutes);
+app.use('/api/products', productRoutes);
 app.use('/api/address', addressRoutes);
 app.use('/api/client/accueil', vendorRoutes);
 
@@ -57,7 +58,6 @@ app.use('/api/client/accueil', vendorRoutes);
 app.use(jwtCheck, injectUser, createUserIfNotExists);
 
 // Routes sécurisées (protégées par JWT)
-app.use('/api/sellers', sellerRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 

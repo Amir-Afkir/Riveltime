@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const streamifier = require('streamifier');
 const Product = require('../models/Product');
 const path = require('path');
@@ -18,11 +19,22 @@ exports.createProduct = async (req, res) => {
       return res.status(400).json({ error: 'Le nom et le prix sont requis.' });
     }
 
-    // 🔐 Vérification de l'utilisateur (Auth0)
-    const sellerId = req.user?.sub || req.user?.id;
+    // 🔐 Vérification de l'utilisateur (boutiqueId)
+    const boutiqueId = req.body.boutiqueId;
+    if (!mongoose.Types.ObjectId.isValid(boutiqueId)) {
+      return res.status(400).json({ error: 'boutiqueId invalide.' });
+    }
+    const boutiqueObjectId = new mongoose.Types.ObjectId(boutiqueId);
+
+    const Boutique = require('../models/Boutique');
+    const exists = await Boutique.exists({ _id: boutiqueObjectId });
+    if (!exists) {
+      return res.status(404).json({ error: 'Boutique introuvable.' });
+    }
+
     console.log('👤 Utilisateur Auth0 :', req.user);
-    if (!sellerId) {
-      return res.status(401).json({ error: 'Utilisateur non authentifié.' });
+    if (!boutiqueId) {
+      return res.status(400).json({ error: 'boutiqueId est requis.' });
     }
 
     // 🖼️ Vérification et construction de l'URL de l’image
@@ -32,7 +44,7 @@ exports.createProduct = async (req, res) => {
       const streamUpload = () => {
         return new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
-            { folder: `riveltime/${sellerId}/vitrine` },
+            { folder: `riveltime/${boutiqueId}/vitrine` },
             (error, result) => {
               if (result) resolve(result);
               else reject(error);
@@ -57,7 +69,7 @@ exports.createProduct = async (req, res) => {
       description,
       imageUrl,
       imagePublicId,
-      seller: sellerId,
+      boutique: boutiqueObjectId,
     });
 
     await product.save();
@@ -70,30 +82,43 @@ exports.createProduct = async (req, res) => {
 
 exports.getMyProducts = async (req, res) => {
   try {
-    const sellerId = req.user?.sub || req.user?.id;
-    if (!sellerId) {
+    const userId = req.dbUser?._id;
+    if (!userId) {
       return res.status(401).json({ error: 'Utilisateur non authentifié.' });
     }
 
-    const products = await Product.find({ seller: sellerId });
+    const Boutique = require('../models/Boutique');
+    const boutiques = await Boutique.find({ owner: userId });
+
+    if (!boutiques || !boutiques.filter(Boolean).length) {
+      return res.status(404).json({ error: 'Aucune boutique trouvée pour cet utilisateur.' });
+    }
+
+    const boutiqueIds = boutiques.filter(Boolean).map(b => b._id);
+    const products = await Product.find({ boutique: { $in: boutiqueIds } });
+
     res.json(products);
   } catch (err) {
     console.error('❌ Erreur lors de la récupération des produits :', err);
     res.status(500).json({ error: 'Erreur lors de la récupération des produits.' });
   }
 };
+
 exports.deleteProduct = async (req, res) => {
   try {
-    const sellerId = req.user?.sub || req.user?.id;
+    const boutiqueId = req.body.boutiqueId;
     const productId = req.params.id;
 
-    console.log("🧨 Suppression : sellerId =", sellerId, "| productId =", productId);
+    if (!mongoose.Types.ObjectId.isValid(boutiqueId)) {
+      return res.status(400).json({ error: 'boutiqueId invalide.' });
+    }
+    const boutiqueObjectId = new mongoose.Types.ObjectId(boutiqueId);
 
-    if (!sellerId) {
+    if (!boutiqueId) {
       return res.status(401).json({ error: 'Utilisateur non authentifié.' });
     }
 
-    const product = await Product.findOne({ _id: productId, seller: sellerId });
+    const product = await Product.findOne({ _id: productId, boutique: boutiqueObjectId });
 
     if (!product) {
       console.log("🚫 Produit introuvable ou non autorisé :", productId);
@@ -116,15 +141,19 @@ exports.deleteProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const sellerId = req.user?.sub || req.user?.id;
+    const boutiqueId = req.body.boutiqueId;
     const productId = req.params.id;
 
-    console.log("✏️ Modification : sellerId =", sellerId, "| productId =", productId);
-    if (!sellerId) {
+    if (!mongoose.Types.ObjectId.isValid(boutiqueId)) {
+      return res.status(400).json({ error: 'boutiqueId invalide.' });
+    }
+    const boutiqueObjectId = new mongoose.Types.ObjectId(boutiqueId);
+
+    if (!boutiqueId) {
       return res.status(401).json({ error: 'Utilisateur non authentifié.' });
     }
 
-    const existingProduct = await Product.findOne({ _id: productId, seller: sellerId });
+    const existingProduct = await Product.findOne({ _id: productId, boutique: boutiqueObjectId });
     if (!existingProduct) {
       return res.status(404).json({ error: 'Produit non trouvé ou non autorisé.' });
     }
@@ -138,7 +167,7 @@ exports.updateProduct = async (req, res) => {
       const streamUpload = () => {
         return new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
-            { folder: `riveltime/${sellerId}/vitrine` },
+            { folder: `riveltime/${boutiqueId}/vitrine` },
             (error, result) => {
               if (result) resolve(result);
               else reject(error);

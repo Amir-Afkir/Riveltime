@@ -9,7 +9,7 @@ const orderItemSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema({
   client: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  seller: { type: mongoose.Schema.Types.ObjectId, ref: 'Seller', required: true },
+  boutique: { type: mongoose.Schema.Types.ObjectId, ref: 'boutique', required: true },
   deliverer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Peut être null au départ
   items: [orderItemSchema],
   totalPrice: { type: Number, required: true },
@@ -27,7 +27,7 @@ const orderSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 orderSchema.index({ client: 1 });
-orderSchema.index({ seller: 1 });
+orderSchema.index({ boutique: 1 });
 orderSchema.index({ deliverer: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);

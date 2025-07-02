@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 /**
- * Schéma pour la boutique (Seller)
+ * Schéma pour la boutique
  */
-const sellerSchema = new mongoose.Schema({
+const boutiqueSchema = new mongoose.Schema({
   /**
    * Nom de la boutique
    * @type {string}
@@ -124,6 +124,6 @@ const sellerSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Index géospatial 2dsphere pour les requêtes spatiales
-sellerSchema.index({ location: '2dsphere' });
+boutiqueSchema.index({ location: '2dsphere' });
 
-module.exports = mongoose.model('Seller', sellerSchema);
+module.exports = mongoose.model('Boutique', boutiqueSchema);

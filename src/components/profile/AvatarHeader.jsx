@@ -18,7 +18,7 @@ export default function AvatarHeader() {
     setIsUploading(true);
     try {
       const token = await getAccessTokenSilently();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me/avatar`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me/avatar`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -63,7 +63,7 @@ export default function AvatarHeader() {
         {userData?.role && (
           <p className="text-sm text-white/80">
             {userData.role === "client" && "Bienvenue parmi nos fidèles clients"}
-            {userData.role === "vendeur" && "Merci de faire vivre nos quartiers"}
+            {userData.role === "vendeur" && "Cher commerçant, merci de faire vivre nos quartiers"}
             {userData.role === "livreur" && "Livrer, c’est aussi créer du lien "}
           </p>
         )}

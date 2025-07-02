@@ -1,4 +1,4 @@
-const { jwtCheck, injectUser } = require('../middleware/auth');
+const { jwtCheck, injectUser, createUserIfNotExists } = require('../middleware/auth');
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -20,9 +20,9 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 Mo max
 });
 
-router.post('/', jwtCheck, injectUser, upload.single('image'), createProduct);
-router.get('/mine', jwtCheck, injectUser, getMyProducts);
-router.delete('/:id', jwtCheck, injectUser, deleteProduct);
-router.put('/:id', jwtCheck, injectUser, upload.single('image'), updateProduct);
+router.post('/', jwtCheck, injectUser, createUserIfNotExists, upload.single('image'), createProduct);
+router.get('/mine', jwtCheck, injectUser, createUserIfNotExists, getMyProducts);
+router.delete('/:id', jwtCheck, injectUser, createUserIfNotExists, deleteProduct);
+router.put('/:id', jwtCheck, injectUser, createUserIfNotExists, upload.single('image'), updateProduct);
 
 module.exports = router;

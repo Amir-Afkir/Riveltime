@@ -6,7 +6,7 @@ import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import NotificationBanner from "../../components/ui/NotificationBanner";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "https://api.riveltime.app/api";
 
 export default function Produits() {
   // États boutique
@@ -47,17 +47,19 @@ export default function Produits() {
     setBoutiqueLoading(true);
     setBoutiqueError(null);
     try {
-      const res = await fetch(`${API_BASE}/sellers/me`, {
+      const res = await fetch(`${API_BASE}/boutiques/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Erreur chargement boutique");
       const data = await res.json();
       // Ajustement selon structure renvoyée
+      const b = data.boutique;
       setBoutique({
-        name: data.name || "",
-        category: data.category || "",
-        coverImageUrl: data.coverImageUrl || "",
+        name: b?.name || "",
+        category: b?.category || "",
+        coverImageUrl: b?.coverImageUrl || "",
         coverImage: null,
+        _id: b?._id || null,
       });
     } catch (error) {
       setBoutiqueError(error.message);
@@ -125,7 +127,7 @@ export default function Produits() {
       formData.append("category", boutique.category);
       if (boutique.coverImage) formData.append("coverImage", boutique.coverImage);
 
-      const res = await fetch(`${API_BASE}/sellers/me`, {  // URL corrigée ici aussi
+      const res = await fetch(`${API_BASE}/boutiques/me`, {  // URL corrigée ici aussi
         method: "POST", // ou PUT selon backend (vérifie)
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -169,6 +171,9 @@ export default function Produits() {
       formData.append("category", nouveauProduit.category);
       formData.append("description", nouveauProduit.description || "");
       if (nouveauProduit.image) formData.append("image", nouveauProduit.image);
+
+      // 🔁 Ajout de l'ID de la boutique
+      formData.append("boutiqueId", boutique._id);
 
       const method = nouveauProduit._id ? "PUT" : "POST";
       const url = nouveauProduit._id

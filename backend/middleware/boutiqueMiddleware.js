@@ -1,9 +1,9 @@
-// backend/middleware/sellerMiddleware.js
+// backend/middleware/boutiqueMiddleware.js
 
 const multer = require('multer');
 
 // Middleware pour valider les données reçues dans req.body pour la boutique vendeur
-function validateSellerData(req, res, next) {
+function validateBoutiqueData(req, res, next) {
   const { name, category } = req.body;
   const allowedCategories = [
     'Alimentation',
@@ -47,7 +47,7 @@ function multerErrorHandler(err, req, res, next) {
 }
 
 module.exports = {
-  validateSellerData,
+  validateBoutiqueData,
   requireVendeurRole,
   multerErrorHandler
 };

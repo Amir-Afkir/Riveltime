@@ -1,4 +1,4 @@
-const Seller = require('../models/Seller');
+const Boutique = require('../models/Boutique');
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
 
@@ -14,15 +14,15 @@ async function uploadCoverImage(userId, fileBuffer) {
 }
 
 // Récupérer une boutique par son ID (publique)
-exports.getSellerById = async (req, res) => {
+exports.getBoutiqueById = async (req, res) => {
   try {
-    const sellerId = req.params.id;
-    if (!sellerId.match(/^[0-9a-fA-F]{24}$/)) {
+    const boutiqueId = req.params.id;
+    if (!boutiqueId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ error: 'ID de boutique invalide.' });
     }
-    const seller = await Seller.findById(sellerId);
-    if (!seller) return res.status(404).json({ error: 'Boutique non trouvée.' });
-    res.json({ seller });
+    const boutique = await Boutique.findById(boutiqueId);
+    if (!boutique) return res.status(404).json({ error: 'Boutique non trouvée.' });
+    res.json({ boutique });
   } catch (err) {
     console.error('Erreur récupération boutique par ID:', err);
     res.status(500).json({ error: 'Erreur serveur.' });
@@ -30,10 +30,10 @@ exports.getSellerById = async (req, res) => {
 };
 
 // Récupérer toutes les boutiques (publique)
-exports.getAllSellers = async (_req, res) => {
+exports.getAllBoutiques = async (_req, res) => {
   try {
-    const sellers = await Seller.find();
-    res.json(sellers);
+    const boutiques = await Boutique.find();
+    res.json(boutiques);
   } catch (err) {
     console.error('Erreur récupération toutes les boutiques :', err);
     res.status(500).json({ error: 'Erreur serveur.' });
@@ -41,7 +41,7 @@ exports.getAllSellers = async (_req, res) => {
 };
 
 // Créer ou mettre à jour la boutique du vendeur connecté
-exports.createOrUpdateSeller = async (req, res) => {
+exports.createOrUpdateBoutique = async (req, res) => {
   try {
     if (!req.dbUser || !req.dbUser._id) {
       return res.status(401).json({ error: 'Utilisateur non authentifié.' });
@@ -78,7 +78,7 @@ exports.createOrUpdateSeller = async (req, res) => {
       }
     }
 
-    let seller = await Seller.findOne({ owner: userId });
+    let boutique = await Boutique.findOne({ owner: userId });
 
     // Upload image (si présente)
     let coverImageUrl = null;
@@ -86,9 +86,9 @@ exports.createOrUpdateSeller = async (req, res) => {
 
     if (req.file?.buffer) {
       // Supprimer ancienne image si existante
-      if (seller?.coverImagePublicId) {
+      if (boutique?.coverImagePublicId) {
         try {
-          await cloudinary.uploader.destroy(seller.coverImagePublicId);
+          await cloudinary.uploader.destroy(boutique.coverImagePublicId);
         } catch (err) {
           console.warn('Erreur suppression ancienne image Cloudinary :', err);
         }
@@ -99,8 +99,8 @@ exports.createOrUpdateSeller = async (req, res) => {
       coverImagePublicId = result.public_id;
     }
 
-    if (!seller) {
-      seller = new Seller({
+    if (!boutique) {
+      boutique = new Boutique({
         owner: userId,
         name,
         category,
@@ -112,19 +112,19 @@ exports.createOrUpdateSeller = async (req, res) => {
       });
     } else {
       // Mise à jour plus concise
-      seller.name = name;
-      seller.category = category;
-      if (description !== undefined) seller.description = description;
-      if (address !== undefined) seller.address = address;
-      if (location !== undefined) seller.location = location;
+      boutique.name = name;
+      boutique.category = category;
+      if (description !== undefined) boutique.description = description;
+      if (address !== undefined) boutique.address = address;
+      if (location !== undefined) boutique.location = location;
       if (coverImageUrl) {
-        seller.coverImageUrl = coverImageUrl;
-        seller.coverImagePublicId = coverImagePublicId;
+        boutique.coverImageUrl = coverImageUrl;
+        boutique.coverImagePublicId = coverImagePublicId;
       }
     }
 
-    await seller.save();
-    res.status(200).json({ seller });
+    await boutique.save();
+    res.status(200).json({ boutique });
   } catch (err) {
     console.error('Erreur gestion boutique vendeur:', err);
     res.status(500).json({ error: 'Erreur serveur.' });
@@ -132,15 +132,15 @@ exports.createOrUpdateSeller = async (req, res) => {
 };
 
 // Récupérer la boutique du vendeur connecté
-exports.getMySeller = async (req, res) => {
+exports.getMyBoutique = async (req, res) => {
   try {
     if (!req.dbUser || !req.dbUser._id) {
       return res.status(401).json({ error: 'Utilisateur non authentifié.' });
     }
     const userId = req.dbUser._id;
-    const seller = await Seller.findOne({ owner: userId });
-    if (!seller) return res.status(404).json({ error: 'Boutique non trouvée.' });
-    res.json({ seller });
+    const boutique = await Boutique.findOne({ owner: userId });
+    if (!boutique) return res.status(404).json({ error: 'Boutique non trouvée.' });
+    res.json({ boutique });
   } catch (err) {
     console.error('Erreur récupération boutique vendeur:', err);
     res.status(500).json({ error: 'Erreur serveur.' });
@@ -148,18 +148,18 @@ exports.getMySeller = async (req, res) => {
 };
 
 // Supprimer la boutique du vendeur connecté (optionnel)
-exports.deleteMySeller = async (req, res) => {
+exports.deleteMyBoutique = async (req, res) => {
   try {
     if (!req.dbUser || !req.dbUser._id) {
       return res.status(401).json({ error: 'Utilisateur non authentifié.' });
     }
     const userId = req.dbUser._id;
-    const seller = await Seller.findOneAndDelete({ owner: userId });
-    if (!seller) return res.status(404).json({ error: 'Boutique non trouvée.' });
+    const boutique = await Boutique.findOneAndDelete({ owner: userId });
+    if (!boutique) return res.status(404).json({ error: 'Boutique non trouvée.' });
 
-    if (seller.coverImagePublicId) {
+    if (boutique.coverImagePublicId) {
       try {
-        await cloudinary.uploader.destroy(seller.coverImagePublicId);
+        await cloudinary.uploader.destroy(boutique.coverImagePublicId);
       } catch (err) {
         console.warn('Erreur suppression image Cloudinary lors suppression boutique :', err);
       }
