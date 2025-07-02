@@ -1,17 +1,32 @@
 // src/pages/client/Accueil.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import MerchantCard from "../../components/MerchantCard";
-import merchants from "../../data/merchants.json";
 
 export default function Accueil() {
   const [query, setQuery] = useState("");
+  const [vendors, setVendors] = useState([]);
   const navigate = useNavigate();
 
-  const filteredMerchants = merchants.filter((m) =>
-    m.name.toLowerCase().includes(query.toLowerCase()) ||
-    m.category.toLowerCase().includes(query.toLowerCase())
+  useEffect(() => {
+    async function fetchVendors() {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/client/accueil/vendeurs`);
+        if (!res.ok) throw new Error("Erreur lors du fetch vendeurs");
+        const data = await res.json();
+        setVendors(data);
+      } catch (error) {
+        console.error("Erreur fetch vendeurs", error);
+      }
+    }
+    fetchVendors();
+  }, []);
+
+  const filteredVendors = vendors.filter(
+    (v) =>
+      v.fullname.toLowerCase().includes(query.toLowerCase()) ||
+      (v.infosVendeur?.categorie || "").toLowerCase().includes(query.toLowerCase())
   );
 
   return (
@@ -39,7 +54,7 @@ export default function Accueil() {
         </button>
       </div>
 
-      {/* Container principal avec marge haute pour laisser place au header */}
+      {/* Container principal */}
       <div
         className="bg-[#ffe4e6] w-full rounded-t-[2rem] p-4 mt-[56px] z-20 relative"
         style={{ minHeight: "100vh" }}
@@ -90,14 +105,14 @@ export default function Accueil() {
         </div>
 
         <main className="max-w-md mx-auto space-y-5 mt-6">
-          {filteredMerchants.map((m) => (
+          {filteredVendors.map((v) => (
             <MerchantCard
-              key={m.id}
-              id={m.id}
-              name={m.name}
-              category={m.category}
-              distance={m.distance}
-              onClick={() => navigate(`/vitrine/${m.id}`)}
+              key={v._id}
+              id={v._id}
+              name={v.fullname}
+              category={v.infosVendeur?.categorie || "Non renseigné"}
+              distance={v.distance || null}
+              onClick={() => navigate(`/vitrine/${v._id}`)}
             />
           ))}
         </main>

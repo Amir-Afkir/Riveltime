@@ -33,7 +33,7 @@ export default function ProfilCommun({ isLoading }) {
       setIsUpdating(true);
       const token = sessionStorage.getItem("accessToken");
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

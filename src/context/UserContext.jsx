@@ -38,8 +38,7 @@ export function UserProvider({ children }) {
       } catch (err) {
         console.warn("❌ Impossible de décoder l'access token :", err);
       }
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -69,7 +68,7 @@ export function UserProvider({ children }) {
 
     try {
       const token = sessionStorage.getItem("accessToken");
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/account/delete/me`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/account/delete/me`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

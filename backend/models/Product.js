@@ -12,6 +12,8 @@ const productSchema = new mongoose.Schema({
   category: String,
 }, { timestamps: true });
 
+
+
 productSchema.index({ name: 'text', description: 'text' });
 
 module.exports = mongoose.model('Product', productSchema);

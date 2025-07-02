@@ -51,6 +51,8 @@ const formatUserProfile = (user) => {
 exports.getMyProfile = async (req, res) => {
   try {
     const dbUser = req.dbUser;
+    console.log("🔐 req.user:", req.user);
+    console.log("🧬 req.dbUser:", req.dbUser);
     if (!dbUser) return res.status(404).json({ error: 'Utilisateur introuvable' });
 
     const formatted = formatUserProfile(dbUser);

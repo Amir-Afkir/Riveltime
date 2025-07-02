@@ -7,68 +7,69 @@ const fs = require('fs');
 const path = require('path');
 
 const { jwtCheck, injectUser, createUserIfNotExists } = require('./middleware/auth');
-const User = require('./models/User');
 
 const notificationRoutes = require('./routes/notificationRoutes');
-const productRoutes = require('./routes/productRoutes.js');
-const userRoutes = require('./routes/userRoutes.js');
-const addressRoutes = require('./routes/addressRoutes.js');
-const accountRoutes = require('./routes/accountRoutes.js'); // ✅ Ajouté
-
+const productRoutes = require('./routes/productRoutes');
+const userRoutes = require('./routes/userRoutes');
+const addressRoutes = require('./routes/addressRoutes');
+const accountRoutes = require('./routes/accountRoutes');
 const testRoutes = require('./routes/testRoutes');
+const vendorRoutes = require('./routes/vendorRoutes');
+const sellerRoutes = require('./routes/sellerRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// 📁 Créer le dossier uploads si nécessaire
+// Création dossier uploads si besoin
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// 🌐 Middlewares globaux
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(uploadDir));
 
-// 🔗 Connexion MongoDB
+// Connexion MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ Connecté à MongoDB'))
   .catch((err) => console.error('❌ Erreur MongoDB :', err));
 
-// 🔥 Health check
+// Health check
 app.get('/', (req, res) => {
   res.send('✅ API Riveltime en ligne');
 });
 
-// 🧪 Logger de requêtes
+// Logger
 app.use((req, res, next) => {
   console.log(`➡️ ${req.method} ${req.path}`);
   next();
 });
 
-// 🌍 Routes publiques (déclarées avant jwtCheck)
-app.use('/', require('./routes/testRoutes'));
-app.use('/account', accountRoutes);
-app.use('/products', productRoutes);
-app.use('/address', addressRoutes);
+// Routes publiques (avant jwtCheck), toutes sous /api
+app.use('/api', testRoutes);
+app.use('/api/account', accountRoutes);
+app.use('/api/products', productRoutes);     // Certaines routes doivent être sécurisées dans productRoutes.js
+app.use('/api/address', addressRoutes);
+app.use('/api/client/accueil', vendorRoutes);
 
-// 🔐 Middleware Auth0 commun
+// Middleware commun pour authentification (après routes publiques)
 app.use(jwtCheck, injectUser, createUserIfNotExists);
 
-// 📦 Routes API sécurisées
-app.use('/users', userRoutes);
-app.use('/notifications', notificationRoutes);
+// Routes sécurisées (protégées par JWT)
+app.use('/api/sellers', sellerRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
-// 🚫 Ignore les requêtes vers favicon.ico pour éviter les erreurs 401 inutiles
+// Gestion favicon
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-// ✅ Route de test sécurisée
-app.get('/authorized', (req, res) => {
+// Route test sécurisée
+app.get('/api/authorized', (req, res) => {
   res.send('✅ Ressource sécurisée accessible');
 });
 
-// 🌐 Gestion des erreurs
+// Gestion erreurs
 app.use((err, req, res, next) => {
   console.error('❌ Erreur serveur :', err);
   res.status(500).json({ error: 'Erreur serveur' });
@@ -78,7 +79,6 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route introuvable' });
 });
 
-// 🚀 Démarrage du serveur
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend démarré sur http://0.0.0.0:${PORT}`);
 });

@@ -25,10 +25,6 @@ export default function Home() {
     }
   }, [isAuthenticated, userData, loadingUser, navigate]);
 
-  const role = userData?.role;
-  if (role === "client") navigate("/client/accueil");
-  else if (role === "vendeur") navigate("/vendeur/dashboard");
-  else if (role === "livreur") navigate("/livreur/dashboard");
 
   const handleRoleClick = (role) => {
     if (isAuthenticated) return;
@@ -57,20 +53,13 @@ export default function Home() {
       
       <div className="relative min-h-screen flex items-center justify-center p-4">
       <div
-        className="fixed top-6 left-1/2 -translate-x-1/2 z-0 flex flex-col items-center"
-        style={{ perspective: "800px" }}
+        className="fixed top-20 left-1/2 -translate-x-1/2 z-0 flex flex-col items-center"
       >
         <img
-          src="/icon.svg"
+          src="/icon-txt.svg"
           alt="Logo Riveltime"
           className="h-[10vh] mb-[-1]"
         />
-        <h1
-          className="text-[2.5vh] font-bold text-white drop-shadow-md"
-          style={{ letterSpacing: '0.15em', width: 'calc(10vh * (logoWidthRatio))', textAlign: 'center' }}
-        >
-          RIVELTIME
-        </h1>
       </div>
         <div className="bg-white/80 backdrop-blur-md shadow-xl border border-gray-100 rounded-3xl p-6 w-full text-center flex flex-col items-center gap-6 animate-[riseFade_600ms_ease-out_forwards] z-10">
           {!isAuthenticated ? (
