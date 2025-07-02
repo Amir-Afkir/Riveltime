@@ -18,7 +18,11 @@ export default function Accueil() {
     <>
       {/* Header fixe */}
       <div
-        className="fixed top-0 left-0 right-0 z-10 flex justify-between items-center px-5 py-1 bg-transparent"
+        className="fixed top-0 left-0 right-0 z-10 flex justify-between items-center px-5 bg-transparent"
+        style={{
+          paddingTop: "env(safe-area-inset-top, 10px)",
+          paddingBottom: "env(safe-area-inset-top, 10px)",
+        }}
       >
         <img
           src="/icon.svg"
