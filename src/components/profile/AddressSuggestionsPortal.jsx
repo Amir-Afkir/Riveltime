@@ -22,7 +22,7 @@ export default function AddressSuggestionsPortal({ suggestions, onSelect, inputR
       className="bg-white border border-gray-300 rounded shadow max-h-48 overflow-auto z-[9999]"
       style={{
         position: "absolute",
-        top: `calc(${position.top}px + env(safe-area-inset-top, 0px))`,
+        top: `calc(${position.top}px - env(safe-area-inset-top, 0px))`,
         left: position.left,
         width: position.width,
       }}
