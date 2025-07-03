@@ -6,7 +6,7 @@ import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import NotificationBanner from "../../components/ui/NotificationBanner";
 
-const API_BASE = "https://api.riveltime.app/api";
+const API_BASE = "https://api.riveltime.app";
 
 export default function Produits() {
   // États boutique
@@ -69,31 +69,32 @@ export default function Produits() {
     }
   }
 
-  // Charger produits
-  async function fetchProduits(token) {
-    setProduitsLoading(true);
-    setProduitsError(null);
-    try {
-      const res = await fetch(`${API_BASE}/products/mine`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Erreur chargement produits");
-      const data = await res.json();
-      setProduits(data);
-    } catch (error) {
-      setProduitsError(error.message);
-      console.error(error);
-    } finally {
-      setProduitsLoading(false);
-    }
+// Charger produits
+async function fetchProduits(token) {
+  setProduitsLoading(true);
+  setProduitsError(null);
+  try {
+    const res = await fetch(`${API_BASE}/products/mine`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Erreur chargement produits");
+    const data = await res.json();
+    // Si la réponse contient une clé "produits", l'utiliser, sinon utiliser data directement
+    setProduits(data.produits || data);
+  } catch (error) {
+    setProduitsError(error.message);
+    console.error(error);
+  } finally {
+    setProduitsLoading(false);
   }
+}
 
   // Charger données au montage
   useEffect(() => {
     async function loadData() {
       try {
         const token = await getAccessTokenSilently({
-          audience: "https://api.riveltime.app/api",
+          audience: "https://api.riveltime.app",
         });
         await Promise.all([fetchBoutique(token), fetchProduits(token)]);
       } catch (err) {
@@ -120,7 +121,7 @@ export default function Produits() {
     }
     try {
       const token = await getAccessTokenSilently({
-        audience: "https://api.riveltime.app/api",
+        audience: "https://api.riveltime.app",
       });
       const formData = new FormData();
       formData.append("name", boutique.name);
@@ -164,7 +165,7 @@ export default function Produits() {
     }
 
     try {
-      const token = await getAccessTokenSilently({ audience: "https://api.riveltime.app/api" });
+      const token = await getAccessTokenSilently({ audience: "https://api.riveltime.app" });
       const formData = new FormData();
       formData.append("name", nouveauProduit.name);
       formData.append("price", nouveauProduit.price);
@@ -206,7 +207,7 @@ export default function Produits() {
   // Supprimer un produit
   const supprimerProduit = async (id) => {
     try {
-      const token = await getAccessTokenSilently({ audience: "https://api.riveltime.app/api" });
+      const token = await getAccessTokenSilently({ audience: "https://api.riveltime.app" });
       const res = await fetch(`${API_BASE}/products/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },

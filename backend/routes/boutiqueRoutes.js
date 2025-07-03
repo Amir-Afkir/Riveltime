@@ -1,73 +1,39 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
-const { jwtCheck, injectUser } = require('../middleware/auth');
-const Boutique = require('../models/Boutique');
+const multer = require('multer');
+const boutiqueController = require('../controllers/boutiqueController');
 
-// ✅ Récupérer toutes les boutiques de l'utilisateur connecté
-router.get('/me', jwtCheck, injectUser, async (req, res) => {
-  try {
-    const userId = req.dbUser?._id;
-    if (!userId) {
-      return res.status(401).json({ error: 'Utilisateur non authentifié.' });
-    }
+const { jwtCheck, injectUser, createUserIfNotExists } = require('../middleware/auth');
+const { validateBoutiqueData, requireVendeurRole, multerErrorHandler } = require('../middleware/boutiqueMiddleware');
 
-    const boutiques = await Boutique.find({ owner: userId });
-    res.json(boutiques);
-  } catch (err) {
-    console.error('❌ Erreur lors de la récupération des boutiques :', err);
-    res.status(500).json({ error: 'Erreur serveur lors du chargement des boutiques.' });
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE'));
   }
 });
 
-// ✅ Créer une nouvelle boutique
-router.post('/', jwtCheck, injectUser, async (req, res) => {
-  try {
-    const { nom, description, adresse, latitude, longitude } = req.body;
-    const userId = req.dbUser?._id;
+// Routes publiques
+router.get('/', boutiqueController.getAllBoutiques);
+router.get('/me', jwtCheck, injectUser, createUserIfNotExists, requireVendeurRole, boutiqueController.getMyBoutique);
+router.get('/:id', boutiqueController.getBoutiqueById);
 
-    if (!nom) {
-      return res.status(400).json({ error: 'Le nom de la boutique est requis.' });
-    }
+// Routes sécurisées pour le vendeur connecté
+router.post(
+  '/me',
+  jwtCheck,
+  injectUser,
+  createUserIfNotExists,
+  requireVendeurRole,
+  upload.single('coverImage'),
+  multerErrorHandler,
+  validateBoutiqueData,
+  boutiqueController.createOrUpdateBoutique
+);
 
-    const nouvelleBoutique = new Boutique({
-      nom,
-      description,
-      adresse,
-      latitude,
-      longitude,
-      owner: userId,
-    });
-
-    await nouvelleBoutique.save();
-    res.status(201).json(nouvelleBoutique);
-  } catch (err) {
-    console.error('❌ Erreur lors de la création de la boutique :', err);
-    res.status(500).json({ error: 'Erreur serveur lors de la création de la boutique.' });
-  }
-});
-
-// ✅ Supprimer une boutique par ID
-router.delete('/:id', jwtCheck, injectUser, async (req, res) => {
-  try {
-    const boutiqueId = req.params.id;
-    const userId = req.dbUser?._id;
-
-    if (!mongoose.Types.ObjectId.isValid(boutiqueId)) {
-      return res.status(400).json({ error: 'ID de boutique invalide.' });
-    }
-
-    const boutique = await Boutique.findOne({ _id: boutiqueId, owner: userId });
-    if (!boutique) {
-      return res.status(404).json({ error: 'Boutique non trouvée ou non autorisée.' });
-    }
-
-    await Boutique.deleteOne({ _id: boutiqueId });
-    res.json({ message: 'Boutique supprimée avec succès.' });
-  } catch (err) {
-    console.error('❌ Erreur lors de la suppression de la boutique :', err);
-    res.status(500).json({ error: 'Erreur serveur lors de la suppression de la boutique.' });
-  }
-});
+router.delete('/me', jwtCheck, injectUser, createUserIfNotExists, requireVendeurRole, boutiqueController.deleteMyBoutique);
 
 module.exports = router;

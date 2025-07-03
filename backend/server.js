@@ -9,13 +9,13 @@ const path = require('path');
 const { jwtCheck, injectUser, createUserIfNotExists } = require('./middleware/auth');
 
 const notificationRoutes = require('./routes/notificationRoutes');
-const productRoutes = require('./routes/productRoutes');
 const userRoutes = require('./routes/userRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const accountRoutes = require('./routes/accountRoutes');
 const testRoutes = require('./routes/testRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const boutiqueRoutes = require('./routes/boutiqueRoutes');
+const productRoutes = require('./routes/productRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,26 +46,34 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes publiques (avant jwtCheck), toutes sous /api
-app.use('/api', testRoutes);
-app.use('/api/account', accountRoutes);
-app.use('/api/boutiques', boutiqueRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/address', addressRoutes);
-app.use('/api/client/accueil', vendorRoutes);
+// Routes publiques (avant jwtCheck),
+console.log('📦 Mounting / (testRoutes)');
+app.use('/', testRoutes);
+console.log('📦 Mounting /account');
+app.use('/account', accountRoutes);
+console.log('📦 Mounting /address');
+app.use('/address', addressRoutes);
+console.log('📦 Mounting /client/accueil');
+app.use('/client/accueil', vendorRoutes);
 
 // Middleware commun pour authentification (après routes publiques)
 app.use(jwtCheck, injectUser, createUserIfNotExists);
 
 // Routes sécurisées (protégées par JWT)
-app.use('/api/users', userRoutes);
-app.use('/api/notifications', notificationRoutes);
+console.log('📦 Mounting /users');
+app.use('/users', userRoutes);
+console.log('📦 Mounting /boutiques');
+app.use('/boutiques', boutiqueRoutes);
+console.log('📦 Mounting /products');
+app.use('/products', productRoutes);
+console.log('📦 Mounting /notifications');
+app.use('/notifications', notificationRoutes);
 
 // Gestion favicon
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // Route test sécurisée
-app.get('/api/authorized', (req, res) => {
+app.get('/authorized', (req, res) => {
   res.send('✅ Ressource sécurisée accessible');
 });
 

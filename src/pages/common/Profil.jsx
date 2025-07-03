@@ -33,7 +33,7 @@ export default function ProfilCommun({ isLoading }) {
       setIsUpdating(true);
       const token = sessionStorage.getItem("accessToken");
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -327,7 +327,7 @@ export default function ProfilCommun({ isLoading }) {
             <button
               onClick={async () => {
                 try {
-                  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/account/password-reset`, {
+                  const response = await fetch(`${import.meta.env.VITE_API_URL}/account/password-reset`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: user?.email }),

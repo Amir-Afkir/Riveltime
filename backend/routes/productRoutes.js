@@ -21,7 +21,7 @@ const upload = multer({
 });
 
 router.post('/', jwtCheck, injectUser, createUserIfNotExists, upload.single('image'), createProduct);
-router.get('/mine', jwtCheck, injectUser, createUserIfNotExists, getMyProducts);
+router.get('/mine', getMyProducts);
 router.delete('/:id', jwtCheck, injectUser, createUserIfNotExists, deleteProduct);
 router.put('/:id', jwtCheck, injectUser, createUserIfNotExists, upload.single('image'), updateProduct);
 

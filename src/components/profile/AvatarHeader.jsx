@@ -18,7 +18,7 @@ export default function AvatarHeader() {
     setIsUploading(true);
     try {
       const token = await getAccessTokenSilently();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me/avatar`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me/avatar`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
