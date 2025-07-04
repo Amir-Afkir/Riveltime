@@ -8,9 +8,9 @@ const productSchema = new mongoose.Schema({
   imagePublicId: String,
   price: { type: Number, required: true },
   stock: { type: Number, default: 0 },
-  category: String,
+  collectionName: String,
 }, { timestamps: true });
 
-productSchema.index({ name: 'text', description: 'text' });
+productSchema.index({ name: 'text', description: 'text', collectionName: 'text' });
 
 module.exports = mongoose.model('Product', productSchema);

@@ -1,196 +1,145 @@
 const mongoose = require('mongoose');
 const streamifier = require('streamifier');
 const Product = require('../models/Product');
-const path = require('path');
+const Boutique = require('../models/Boutique');
 const cloudinary = require('../config/cloudinary');
-const fs = require('fs');
 
+// 📤 Upload image produit vers Cloudinary
+async function uploadProductImage(userId, fileBuffer, boutiqueId) {
+  const folderPath = `riveltime/${boutiqueId}/vitrine`;
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: folderPath },
+      (error, result) => (result ? resolve(result) : reject(error))
+    );
+    streamifier.createReadStream(fileBuffer).pipe(stream);
+  });
+}
+
+// 🚀 Créer un produit
 exports.createProduct = async (req, res) => {
   try {
-    const { name, price, category, description } = req.body;
-    console.log('🔐 Utilisateur connecté (req.user) :', req.user);
-    console.log('📥 Champs reçus :', { name, price, category, description });
-    console.log('🧾 Headers :', req.headers);
-    console.log('🔍 req.body :', req.body);
-    console.log('🖼️ req.file :', req.file);
+    const { name, price, collectionName, description, boutiqueId } = req.body;
 
-    // 🛡️ Vérification des champs requis
-    if (!name || !price) {
-      return res.status(400).json({ error: 'Le nom et le prix sont requis.' });
+    if (!name || !price || !boutiqueId) {
+      return res.status(400).json({ success: false, error: 'Champs requis manquants.' });
     }
 
-    // 🔐 Vérification de l'utilisateur (boutiqueId)
-    const boutiqueId = req.body.boutiqueId;
     if (!mongoose.Types.ObjectId.isValid(boutiqueId)) {
-      return res.status(400).json({ error: 'boutiqueId invalide.' });
-    }
-    const boutiqueObjectId = new mongoose.Types.ObjectId(boutiqueId);
-
-    const Boutique = require('../models/Boutique');
-    const exists = await Boutique.exists({ _id: boutiqueObjectId });
-    if (!exists) {
-      return res.status(404).json({ error: 'Boutique introuvable.' });
+      return res.status(400).json({ success: false, error: 'ID de boutique invalide.' });
     }
 
-    console.log('👤 Utilisateur Auth0 :', req.user);
-    if (!boutiqueId) {
-      return res.status(400).json({ error: 'boutiqueId est requis.' });
+    const boutique = await Boutique.findById(boutiqueId);
+    if (!boutique) {
+      return res.status(404).json({ success: false, error: 'Boutique introuvable.' });
     }
 
-    // 🖼️ Vérification et construction de l'URL de l’image
-    let imageUrl = null;
-    let imagePublicId = null;
-    if (req.file && req.file.buffer) {
-      const streamUpload = () => {
-        return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: `riveltime/${boutiqueId}/vitrine` },
-            (error, result) => {
-              if (result) resolve(result);
-              else reject(error);
-            }
-          );
-          streamifier.createReadStream(req.file.buffer).pipe(stream);
-        });
-      };
-      const result = await streamUpload();
-      imageUrl = result.secure_url;
-      imagePublicId = result.public_id;
-    }
-    if (!imageUrl) {
-      return res.status(400).json({ error: 'Aucune image fournie ou échec de l’upload.' });
+    if (!boutique.owner.equals(req.dbUser._id)) {
+      return res.status(403).json({ success: false, error: 'Accès non autorisé à cette boutique.' });
     }
 
-    // 🛠️ Création du produit
-    const product = new Product({
+    if (!req.file?.buffer) {
+      return res.status(400).json({ success: false, error: 'Image produit requise.' });
+    }
+
+    const result = await uploadProductImage(req.dbUser._id, req.file.buffer, boutiqueId);
+
+    const produit = new Product({
       name,
       price,
-      category,
+      collectionName,
       description,
-      imageUrl,
-      imagePublicId,
-      boutique: boutiqueObjectId,
+      imageUrl: result.secure_url,
+      imagePublicId: result.public_id,
+      boutique: boutique._id,
     });
 
-    await product.save();
-    res.status(201).json(product);
+    await produit.save();
+    return res.status(201).json({ success: true, produit });
   } catch (err) {
-    console.error('❌ Erreur lors de la création du produit :', err);
-    res.status(500).json({ error: 'Erreur interne du serveur.', message: err.message });
+    console.error('❌ Erreur createProduct :', err);
+    res.status(500).json({ success: false, error: 'Erreur serveur.' });
   }
 };
 
+// 🛒 Obtenir tous les produits des boutiques du vendeur
 exports.getMyProducts = async (req, res) => {
   try {
-    const userId = req.dbUser?._id;
-    if (!userId) {
-      return res.status(401).json({ error: 'Utilisateur non authentifié.' });
-    }
-
-    const Boutique = require('../models/Boutique');
-    const boutiques = await Boutique.find({ owner: userId });
-
-    if (!boutiques || !boutiques.filter(Boolean).length) {
-      return res.status(404).json({ error: 'Aucune boutique trouvée pour cet utilisateur.' });
-    }
-
-    const boutiqueIds = boutiques.filter(Boolean).map(b => b._id);
-    const products = await Product.find({ boutique: { $in: boutiqueIds } });
-
-    res.json(products);
+    const boutiques = await Boutique.find({ owner: req.dbUser._id });
+    const boutiqueIds = boutiques.map(b => b._id);
+    const produits = await Product.find({ boutique: { $in: boutiqueIds } });
+    res.json({ success: true, produits });
   } catch (err) {
-    console.error('❌ Erreur lors de la récupération des produits :', err);
-    res.status(500).json({ error: 'Erreur lors de la récupération des produits.' });
+    console.error('❌ Erreur getMyProducts :', err);
+    res.status(500).json({ success: false, error: 'Erreur serveur.' });
   }
 };
 
+// 🗑️ Supprimer un produit
 exports.deleteProduct = async (req, res) => {
   try {
-    const boutiqueId = req.body.boutiqueId;
-    const productId = req.params.id;
-
-    if (!mongoose.Types.ObjectId.isValid(boutiqueId)) {
-      return res.status(400).json({ error: 'boutiqueId invalide.' });
-    }
-    const boutiqueObjectId = new mongoose.Types.ObjectId(boutiqueId);
-
-    if (!boutiqueId) {
-      return res.status(401).json({ error: 'Utilisateur non authentifié.' });
+    const produit = await Product.findById(req.params.id).populate('boutique');
+    if (!produit || !produit.boutique.owner.equals(req.dbUser._id)) {
+      return res.status(403).json({ success: false, error: 'Accès non autorisé.' });
     }
 
-    const product = await Product.findOne({ _id: productId, boutique: boutiqueObjectId });
-
-    if (!product) {
-      console.log("🚫 Produit introuvable ou non autorisé :", productId);
-      return res.status(404).json({ error: 'Produit non trouvé ou non autorisé.' });
+    if (produit.imagePublicId) {
+      await cloudinary.uploader.destroy(produit.imagePublicId);
     }
 
-    if (product.imagePublicId) {
-      const result = await cloudinary.uploader.destroy(product.imagePublicId);
-      console.log("🗑️ Résultat suppression Cloudinary :", result);
-    }
-
-    await Product.deleteOne({ _id: productId });
-
-    res.status(200).json({ message: 'Produit supprimé avec succès.' });
+    await produit.deleteOne();
+    res.json({ success: true, message: 'Produit supprimé.' });
   } catch (err) {
-    console.error('❌ Erreur lors de la suppression du produit :', err);
-    res.status(500).json({ error: 'Erreur lors de la suppression du produit.' });
+    console.error('❌ Erreur deleteProduct :', err);
+    res.status(500).json({ success: false, error: 'Erreur serveur.' });
   }
 };
 
+// ✏️ Modifier un produit
 exports.updateProduct = async (req, res) => {
   try {
-    const boutiqueId = req.body.boutiqueId;
-    const productId = req.params.id;
+    const produit = await Product.findById(req.params.id).populate('boutique');
+    if (!produit || !produit.boutique || !produit.boutique.owner.equals(req.dbUser._id)) {
+      return res.status(403).json({ success: false, error: 'Accès non autorisé.' });
+    }
+
+    const { name, price, collectionName, description } = req.body;
+
+    if (req.file?.buffer) {
+      if (produit.imagePublicId) {
+        await cloudinary.uploader.destroy(produit.imagePublicId);
+      }
+      const result = await uploadProductImage(req.dbUser._id, req.file.buffer, produit.boutique._id);
+      produit.imageUrl = result.secure_url;
+      produit.imagePublicId = result.public_id;
+    }
+
+    if (name) produit.name = name;
+    if (price) produit.price = price;
+    if (collectionName) produit.collectionName = collectionName;
+    if (description) produit.description = description;
+
+    await produit.save();
+    res.json({ success: true, produit });
+  } catch (err) {
+    console.error('❌ Erreur updateProduct :', err);
+    res.status(500).json({ success: false, error: 'Erreur serveur.' });
+  }
+};
+
+// 🌐 Produits publics d’une boutique
+exports.getProduitsParBoutique = async (req, res) => {
+  try {
+    const boutiqueId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(boutiqueId)) {
-      return res.status(400).json({ error: 'boutiqueId invalide.' });
-    }
-    const boutiqueObjectId = new mongoose.Types.ObjectId(boutiqueId);
-
-    if (!boutiqueId) {
-      return res.status(401).json({ error: 'Utilisateur non authentifié.' });
+      return res.status(400).json({ success: false, error: 'ID de boutique invalide.' });
     }
 
-    const existingProduct = await Product.findOne({ _id: productId, boutique: boutiqueObjectId });
-    if (!existingProduct) {
-      return res.status(404).json({ error: 'Produit non trouvé ou non autorisé.' });
-    }
-
-    const { name, price, category, description } = req.body;
-    if (req.file && req.file.buffer) {
-      if (existingProduct.imagePublicId) {
-        const destroyResult = await cloudinary.uploader.destroy(existingProduct.imagePublicId);
-        console.log("🗑️ Résultat suppression ancienne image :", destroyResult);
-      }
-      const streamUpload = () => {
-        return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: `riveltime/${boutiqueId}/vitrine` },
-            (error, result) => {
-              if (result) resolve(result);
-              else reject(error);
-            }
-          );
-          streamifier.createReadStream(req.file.buffer).pipe(stream);
-        });
-      };
-      const result = await streamUpload();
-      existingProduct.imageUrl = result.secure_url;
-      existingProduct.imagePublicId = result.public_id;
-    }
-
-    if (name) existingProduct.name = name;
-    if (price) existingProduct.price = price;
-    if (category) existingProduct.category = category;
-    if (description) existingProduct.description = description;
-
-    await existingProduct.save();
-
-    res.status(200).json(existingProduct);
+    const produits = await Product.find({ boutique: boutiqueId });
+    res.json({ success: true, produits });
   } catch (err) {
-    console.error('❌ Erreur lors de la modification du produit :', err);
-    res.status(500).json({ error: 'Erreur lors de la modification du produit.' });
+    console.error('❌ Erreur getProduitsParBoutique :', err);
+    res.status(500).json({ success: false, error: 'Erreur serveur.' });
   }
 };

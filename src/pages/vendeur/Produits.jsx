@@ -1,32 +1,57 @@
 import { useState, useEffect } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
-import Card from "../../components/ui/Card";
-import Title from "../../components/ui/Title";
-import Button from "../../components/ui/Button";
-import Input from "../../components/ui/Input";
+import useBoutiques from "../../components/gestionMagasin/hooks/useBoutiques";
+import useProduits from "../../components/gestionMagasin/hooks/useProduits.js";
+
+import {
+  BoutiqueSelector,
+  BoutiqueModal,
+  ProduitModal,
+  ProduitSection,
+} from "../../components/gestionMagasin";
+
 import NotificationBanner from "../../components/ui/NotificationBanner";
 
-const API_BASE = "https://api.riveltime.app";
+const CATEGORIES = [
+  "Alimentation",
+  "Mobilité électrique",
+  "Prêt-à-porter",
+  "Électronique",
+  "Beauté & Bien-être",
+  "Maison & Déco",
+];
 
 export default function Produits() {
-  // États boutique
-  const [boutique, setBoutique] = useState({
+  const {
+    boutiques,
+    loading: boutiquesLoading,
+    error: boutiquesError,
+    fetchAllBoutiques,
+    saveBoutique,
+    deleteBoutique,
+  } = useBoutiques();
+
+  const {
+    produits,
+    loading: produitsLoading,
+    error: produitsError,
+    fetchProduitsByBoutique,
+    createProduit,
+    updateProduit,
+    deleteProduit,
+  } = useProduits();
+
+  const [selectedBoutique, setSelectedBoutique] = useState(null);
+  const [showBoutiqueModal, setShowBoutiqueModal] = useState(false);
+  const [boutiqueForm, setBoutiqueForm] = useState({
+    _id: null,
     name: "",
     category: "",
     coverImage: null,
     coverImageUrl: "",
   });
-  const [boutiqueLoading, setBoutiqueLoading] = useState(true);
-  const [boutiqueError, setBoutiqueError] = useState(null);
+  const [collectionsDispo, setCollectionsDispo] = useState([]);
 
-  // États produits
-  const [produits, setProduits] = useState([]);
-  const [produitsLoading, setProduitsLoading] = useState(true);
-  const [produitsError, setProduitsError] = useState(null);
-
-  // Modale ajout/modification produit
-  const [showProduitModal, setShowProduitModal] = useState(false);
-  const [nouveauProduit, setNouveauProduit] = useState({
+  const [produitForm, setProduitForm] = useState({
     _id: null,
     name: "",
     price: "",
@@ -34,351 +59,174 @@ export default function Produits() {
     description: "",
     image: null,
   });
+  const [showProduitModal, setShowProduitModal] = useState(false);
 
-  // Notification globale
   const [notification, setNotification] = useState(null);
+  const closeNotification = () => setNotification(null);
 
-  const { getAccessTokenSilently } = useAuth0();
-
-  // --- Fonctions fetch ---
-
-  // Charger boutique (modification de l’URL)
-  async function fetchBoutique(token) {
-    setBoutiqueLoading(true);
-    setBoutiqueError(null);
-    try {
-      const res = await fetch(`${API_BASE}/boutiques/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Erreur chargement boutique");
-      const data = await res.json();
-      // Ajustement selon structure renvoyée
-      const b = data.boutique;
-      setBoutique({
-        name: b?.name || "",
-        category: b?.category || "",
-        coverImageUrl: b?.coverImageUrl || "",
-        coverImage: null,
-        _id: b?._id || null,
-      });
-    } catch (error) {
-      setBoutiqueError(error.message);
-      console.error(error);
-    } finally {
-      setBoutiqueLoading(false);
-    }
-  }
-
-// Charger produits
-async function fetchProduits(token) {
-  setProduitsLoading(true);
-  setProduitsError(null);
-  try {
-    const res = await fetch(`${API_BASE}/products/mine`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) throw new Error("Erreur chargement produits");
-    const data = await res.json();
-    // Si la réponse contient une clé "produits", l'utiliser, sinon utiliser data directement
-    setProduits(data.produits || data);
-  } catch (error) {
-    setProduitsError(error.message);
-    console.error(error);
-  } finally {
-    setProduitsLoading(false);
-  }
-}
-
-  // Charger données au montage
   useEffect(() => {
-    async function loadData() {
-      try {
-        const token = await getAccessTokenSilently({
-          audience: "https://api.riveltime.app",
-        });
-        await Promise.all([fetchBoutique(token), fetchProduits(token)]);
-      } catch (err) {
-        console.error("Erreur récupération token :", err);
-      }
+    fetchAllBoutiques();
+  }, [fetchAllBoutiques]);
+
+  useEffect(() => {
+    if (produits.length > 0) {
+      const uniqueCollections = [...new Set(
+        produits.map(p => p.collectionName).filter(Boolean)
+      )];
+      setCollectionsDispo(uniqueCollections);
+    } else {
+      setCollectionsDispo([]);
     }
-    loadData();
-  }, [getAccessTokenSilently]);
+  }, [produits]);
 
-  // --- Gestion boutique ---
+  const handleSelectBoutique = (boutique) => {
+    setSelectedBoutique(boutique);
+    setBoutiqueForm(boutique);
+    fetchProduitsByBoutique(boutique._id);
+  };
 
-  const handleBoutiqueChange = (e) => {
-    setBoutique({ ...boutique, [e.target.name]: e.target.value });
+  const handleCreateBoutique = () => {
+    setBoutiqueForm({ _id: null, name: "", category: "", coverImage: null, coverImageUrl: "" });
+    setShowBoutiqueModal(true);
+  };
+
+  const handleChangeBoutiqueForm = (e) => {
+    setBoutiqueForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleBoutiqueFileChange = (e) => {
-    setBoutique({ ...boutique, coverImage: e.target.files[0] });
+    setBoutiqueForm((prev) => ({ ...prev, coverImage: e.target.files[0] }));
   };
 
-  const sauvegarderBoutique = async () => {
-    if (!boutique.name.trim() || !boutique.category.trim()) {
-      setNotification({ message: "Nom et catégorie sont requis.", type: "error" });
-      return;
-    }
+  const handleSaveBoutique = async () => {
     try {
-      const token = await getAccessTokenSilently({
-        audience: "https://api.riveltime.app",
-      });
-      const formData = new FormData();
-      formData.append("name", boutique.name);
-      formData.append("category", boutique.category);
-      if (boutique.coverImage) formData.append("coverImage", boutique.coverImage);
-
-      const res = await fetch(`${API_BASE}/boutiques/me`, {  // URL corrigée ici aussi
-        method: "POST", // ou PUT selon backend (vérifie)
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Erreur sauvegarde boutique");
-      const data = await res.json();
-      setBoutique((b) => ({
-        ...b,
-        coverImageUrl: data.coverImageUrl || b.coverImageUrl,
-        coverImage: null,
-      }));
-      setNotification({ message: "Boutique mise à jour avec succès.", type: "success" });
+      const saved = await saveBoutique(boutiqueForm);
+      setNotification({ message: "Boutique enregistrée.", type: "success" });
+      setShowBoutiqueModal(false);
+      fetchAllBoutiques();
     } catch (err) {
-      console.error(err);
-      setNotification({ message: "Erreur lors de la sauvegarde.", type: "error" });
+      setNotification({ message: err.message, type: "error" });
     }
   };
 
-  // --- Gestion produit ---
+  const handleDeleteBoutique = async () => {
+    if (!window.confirm("Supprimer cette boutique ?")) return;
+    try {
+      await deleteBoutique(boutiqueForm._id);
+      setNotification({ message: "Boutique supprimée.", type: "success" });
+      setShowBoutiqueModal(false);
+      setSelectedBoutique(null);
+      fetchAllBoutiques();
+    } catch (err) {
+      setNotification({ message: err.message, type: "error" });
+    }
+  };
 
-  const handleProduitChange = (e) => {
-    setNouveauProduit({ ...nouveauProduit, [e.target.name]: e.target.value });
+  const handleAjouterProduit = () => {
+    setProduitForm({ _id: null, name: "", price: "", category: "", description: "", image: null, collectionName: "" });
+    setShowProduitModal(true);
+  };
+
+  const handleModifierProduit = (produit) => {
+    setProduitForm({
+      _id: produit._id,
+      name: produit.name,
+      price: produit.price,
+      category: produit.category,
+      description: produit.description,
+      collectionName: produit.collectionName || "",
+      image: null,
+    });
+    setShowProduitModal(true);
+  };
+
+  const handleChangeProduitForm = (e) => {
+    setProduitForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleProduitFileChange = (e) => {
-    setNouveauProduit({ ...nouveauProduit, image: e.target.files[0] });
+    setProduitForm((prev) => ({ ...prev, image: e.target.files[0] }));
   };
 
-  // Ajouter ou modifier un produit
-  const saveProduit = async () => {
-    if (!nouveauProduit.name.trim() || !nouveauProduit.price) {
-      setNotification({ message: "Nom et prix sont requis.", type: "error" });
-      return;
-    }
-
+  const handleSaveProduit = async () => {
     try {
-      const token = await getAccessTokenSilently({ audience: "https://api.riveltime.app" });
       const formData = new FormData();
-      formData.append("name", nouveauProduit.name);
-      formData.append("price", nouveauProduit.price);
-      formData.append("category", nouveauProduit.category);
-      formData.append("description", nouveauProduit.description || "");
-      if (nouveauProduit.image) formData.append("image", nouveauProduit.image);
-
-      // 🔁 Ajout de l'ID de la boutique
-      formData.append("boutiqueId", boutique._id);
-
-      const method = nouveauProduit._id ? "PUT" : "POST";
-      const url = nouveauProduit._id
-        ? `${API_BASE}/products/${nouveauProduit._id}`
-        : `${API_BASE}/products`;
-
-      const res = await fetch(url, {
-        method,
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Erreur sauvegarde produit");
-      await fetchProduits(token);
+      formData.append("name", produitForm.name);
+      formData.append("price", produitForm.price);
+      formData.append("category", produitForm.category);
+      formData.append("description", produitForm.description);
+      formData.append("boutiqueId", selectedBoutique._id);
+      formData.append("collectionName", produitForm.collectionName);
+      if (produitForm.image) formData.append("image", produitForm.image);
+      if (produitForm._id) {
+        await updateProduit(produitForm._id, formData);
+      } else {
+        await createProduit(formData);
+      }
+      setNotification({ message: "Produit enregistré.", type: "success" });
       setShowProduitModal(false);
-      setNouveauProduit({
-        _id: null,
-        name: "",
-        price: "",
-        category: "",
-        description: "",
-        image: null,
-      });
-      setNotification({ message: "Produit sauvegardé avec succès.", type: "success" });
+      fetchProduitsByBoutique(selectedBoutique._id);
     } catch (err) {
-      console.error(err);
-      setNotification({ message: "Erreur lors de la sauvegarde du produit.", type: "error" });
+      setNotification({ message: err.message, type: "error" });
     }
   };
 
-  // Supprimer un produit
-  const supprimerProduit = async (id) => {
+  const handleSupprimerProduit = async (id) => {
     try {
-      const token = await getAccessTokenSilently({ audience: "https://api.riveltime.app" });
-      const res = await fetch(`${API_BASE}/products/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Erreur suppression produit");
-      await fetchProduits(token);
+      await deleteProduit(id);
       setNotification({ message: "Produit supprimé.", type: "success" });
+      fetchProduitsByBoutique(selectedBoutique._id);
     } catch (err) {
-      console.error(err);
-      setNotification({ message: "Erreur lors de la suppression du produit.", type: "error" });
+      setNotification({ message: err.message, type: "error" });
     }
   };
-
-  // --- Gestion notification ---
-  const closeNotification = () => setNotification(null);
-
-  // --- UI modale produit (simple exemple) ---
-  const ProduitModal = () => (
-    <div className="modal">
-      <Card className="p-4">
-        <Title level={3}>{nouveauProduit._id ? "Modifier" : "Ajouter"} un produit</Title>
-        <Input
-          label="Nom"
-          name="name"
-          value={nouveauProduit.name}
-          onChange={handleProduitChange}
-        />
-        <Input
-          label="Prix"
-          name="price"
-          type="number"
-          value={nouveauProduit.price}
-          onChange={handleProduitChange}
-        />
-        <Input
-          label="Catégorie"
-          name="category"
-          value={nouveauProduit.category}
-          onChange={handleProduitChange}
-        />
-        <Input
-          label="Description"
-          name="description"
-          value={nouveauProduit.description}
-          onChange={handleProduitChange}
-        />
-        <Input
-          label="Image"
-          name="image"
-          type="file"
-          accept="image/*"
-          onChange={handleProduitFileChange}
-        />
-        <Button onClick={saveProduit} variant="success" className="mt-4">
-          {nouveauProduit._id ? "Modifier" : "Ajouter"}
-        </Button>
-        <Button onClick={() => setShowProduitModal(false)} className="mt-2">
-          Annuler
-        </Button>
-      </Card>
-    </div>
-  );
 
   return (
     <>
       {notification && (
-        <NotificationBanner
-          message={notification.message}
-          type={notification.type}
-          onClose={closeNotification}
+        <NotificationBanner message={notification.message} type={notification.type} onClose={closeNotification} />
+      )}
+
+      <BoutiqueSelector
+        boutiques={boutiques || []}
+        selectedId={selectedBoutique?._id}
+        onSelect={handleSelectBoutique}
+        onCreate={handleCreateBoutique}
+      />
+
+      {showBoutiqueModal && (
+        <BoutiqueModal
+          boutique={boutiqueForm}
+          onChange={handleChangeBoutiqueForm}
+          onFileChange={handleBoutiqueFileChange}
+          onSave={handleSaveBoutique}
+          onDelete={handleDeleteBoutique}
+          onClose={() => setShowBoutiqueModal(false)}
         />
       )}
 
-      <Card className="mb-6 p-4">
-        <Title level={3}>Ma boutique</Title>
-        {boutiqueLoading ? (
-          <p>Chargement de la boutique...</p>
-        ) : boutiqueError ? (
-          <p className="text-red-600">Erreur : {boutiqueError}</p>
-        ) : (
-          <>
-            <Input
-              label="Nom de la boutique"
-              name="name"
-              value={boutique.name}
-              onChange={handleBoutiqueChange}
-            />
-            <label className="block mt-4 font-semibold">Catégorie</label>
-            <select
-              name="category"
-              value={boutique.category}
-              onChange={handleBoutiqueChange}
-              className="w-full border rounded px-3 py-2 mt-1"
-            >
-              <option value="">-- Sélectionner une catégorie --</option>
-              <option value="Alimentation">Alimentation</option>
-              <option value="Mobilité électrique">Mobilité électrique</option>
-              <option value="Prêt-à-porter">Prêt-à-porter</option>
-              <option value="Électronique">Électronique</option>
-              <option value="Beauté & Bien-être">Beauté & Bien-être</option>
-              <option value="Maison & Déco">Maison & Déco</option>
-            </select>
-            <div>
-              {boutique.coverImageUrl && (
-                <img
-                  src={boutique.coverImageUrl}
-                  alt="Image de couverture boutique"
-                  className="w-full h-40 object-cover rounded mt-2"
-                />
-              )}
-              <Input
-                label="Image de couverture"
-                name="coverImage"
-                type="file"
-                accept="image/*"
-                onChange={handleBoutiqueFileChange}
-              />
-            </div>
-            <Button className="mt-4" variant="success" onClick={sauvegarderBoutique}>
-              Sauvegarder la boutique
-            </Button>
-          </>
-        )}
-      </Card>
+      <ProduitSection
+        produits={produits}
+        produitsLoading={produitsLoading}
+        produitsError={produitsError}
+        boutique={selectedBoutique}
+        onAjouterProduit={handleAjouterProduit}
+        onModifierProduit={handleModifierProduit}
+        onSupprimerProduit={handleSupprimerProduit}
+      />
 
-      <Card className="p-4">
-        <Title level={3}>Mes produits</Title>
-        {produitsLoading ? (
-          <p>Chargement des produits...</p>
-        ) : produitsError ? (
-          <p className="text-red-600">Erreur : {produitsError}</p>
-        ) : produits.length === 0 ? (
-          <p>Aucun produit disponible.</p>
-        ) : (
-          <ul>
-            {produits.map((prod) => (
-              <li key={prod._id} className="mb-4 border-b pb-2">
-                <strong>{prod.name}</strong> — {prod.category} — {prod.price} €
-                <div className="mt-1 flex gap-2">
-                  <Button
-                    variant="warning"
-                    onClick={() => {
-                      setNouveauProduit({
-                        _id: prod._id,
-                        name: prod.name,
-                        price: prod.price,
-                        category: prod.category,
-                        description: prod.description,
-                        image: null,
-                      });
-                      setShowProduitModal(true);
-                    }}
-                  >
-                    Modifier
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => {
-                      if (window.confirm("Supprimer ce produit ?")) supprimerProduit(prod._id);
-                    }}
-                  >
-                    Supprimer
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      {showProduitModal && <ProduitModal />}
+      {showProduitModal && (
+        <ProduitModal
+          boutique={selectedBoutique}
+          produit={produitForm}
+          onChange={handleChangeProduitForm}
+          onFileChange={handleProduitFileChange}
+          onSave={handleSaveProduit}
+          onCancel={() => setShowProduitModal(false)}
+          categories={CATEGORIES}
+          collectionsDispo={collectionsDispo}
+        />
+      )}
     </>
   );
 }

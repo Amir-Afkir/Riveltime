@@ -1,11 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+
 const boutiqueController = require('../controllers/boutiqueController');
+const productController = require('../controllers/productController');
 
-const { jwtCheck, injectUser, createUserIfNotExists } = require('../middleware/auth');
-const { validateBoutiqueData, requireVendeurRole, multerErrorHandler } = require('../middleware/boutiqueMiddleware');
+const {
+  jwtCheck,
+  injectUser,
+  createUserIfNotExists,
+} = require('../middleware/auth');
 
+const {
+  validateBoutiqueData,
+  requireVendeurRole,
+  multerErrorHandler,
+} = require('../middleware/boutiqueMiddleware');
+
+// 📦 Multer config
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
@@ -13,17 +25,17 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true);
     else cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE'));
-  }
+  },
 });
 
-// Routes publiques
+// 🌐 Routes publiques
 router.get('/', boutiqueController.getAllBoutiques);
-router.get('/me', jwtCheck, injectUser, createUserIfNotExists, requireVendeurRole, boutiqueController.getMyBoutique);
 router.get('/:id', boutiqueController.getBoutiqueById);
+router.get('/:id/produits', productController.getProduitsParBoutique);
 
-// Routes sécurisées pour le vendeur connecté
+// 🔒 Routes protégées
 router.post(
-  '/me',
+  '/',
   jwtCheck,
   injectUser,
   createUserIfNotExists,
@@ -31,9 +43,28 @@ router.post(
   upload.single('coverImage'),
   multerErrorHandler,
   validateBoutiqueData,
-  boutiqueController.createOrUpdateBoutique
+  boutiqueController.createBoutique
 );
 
-router.delete('/me', jwtCheck, injectUser, createUserIfNotExists, requireVendeurRole, boutiqueController.deleteMyBoutique);
+router.put(
+  '/:id',
+  jwtCheck,
+  injectUser,
+  createUserIfNotExists,
+  requireVendeurRole,
+  upload.single('coverImage'),
+  multerErrorHandler,
+  validateBoutiqueData,
+  boutiqueController.updateBoutique
+);
+
+router.delete(
+  '/:id',
+  jwtCheck,
+  injectUser,
+  createUserIfNotExists,
+  requireVendeurRole,
+  boutiqueController.deleteBoutiqueById
+);
 
 module.exports = router;
