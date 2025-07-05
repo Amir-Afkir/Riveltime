@@ -7,7 +7,7 @@ import { jwtDecode } from "jwt-decode";
 const UserContext = createContext();
 
 export function UserProvider({ children }) {
-  const { getAccessTokenSilently, user: auth0User, isLoading: auth0Loading, isAuthenticated, logout } = useAuth0();
+  const { getAccessTokenSilently, user: auth0User, isLoading: auth0Loading, isAuthenticated, logout, loginWithRedirect } = useAuth0();
 
   const [token, setToken] = useState(null);
   const [decodedToken, setDecodedToken] = useState(null);
@@ -98,6 +98,7 @@ export function UserProvider({ children }) {
         isAuthenticated,
         auth0User,
         logout,
+        loginWithRedirect,
         deleteAccount, // 👈 ajouté ici
       }}
     >

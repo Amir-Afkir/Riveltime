@@ -1,6 +1,5 @@
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState } from "react";
 import { useUser } from "../../context/UserContext";
-import { useAuth0 } from "@auth0/auth0-react";
 
 
 export default function AvatarHeader() {
@@ -8,7 +7,6 @@ export default function AvatarHeader() {
   const fileInputRef = useRef();
   const [avatarVersion, setAvatarVersion] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const { getAccessTokenSilently } = useAuth0();
   const hasAvatar = userData?.avatarUrl && userData.avatarUrl.length > 5;
 
   const handleAvatarUpload = async (file) => {
@@ -17,7 +15,7 @@ export default function AvatarHeader() {
     formData.append("avatar", file);
     setIsUploading(true);
     try {
-      const token = await getAccessTokenSilently();
+      const token = sessionStorage.getItem("accessToken");
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me/avatar`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },

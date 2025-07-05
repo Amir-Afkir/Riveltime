@@ -1,7 +1,6 @@
 
 
 import React from "react";
-import Button from "../../components/ui/Button";
 
 export default function BoutiqueCard({ boutique, isSelected, onSelect }) {
   return (

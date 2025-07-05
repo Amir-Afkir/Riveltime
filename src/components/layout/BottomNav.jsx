@@ -47,7 +47,7 @@ export default function BottomNav() {
   } else if (path.startsWith("/vendeur")) {
     navItems = [
       { label: "Dashboard", path: "/vendeur/dashboard", icon: Store },
-      { label: "Produits", path: "/vendeur/produits", icon: Package },
+      { label: "inventaire", path: "/vendeur/produits", icon: Package },
       { label: "Commandes", path: "/vendeur/commandes", icon: FileText },
       { label: "Profil", path: "/vendeur/profil", icon: User },
     ];

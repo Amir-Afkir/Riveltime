@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import useBoutiques from "../../components/gestionMagasin/hooks/useBoutiques";
+import useBoutiques from "../../components/gestionMagasin/hooks/useBoutiques.js";
 import useProduits from "../../components/gestionMagasin/hooks/useProduits.js";
 
 import {
@@ -7,9 +7,9 @@ import {
   BoutiqueModal,
   ProduitModal,
   ProduitSection,
-} from "../../components/gestionMagasin";
+} from "../../components/gestionMagasin/index.js";
 
-import NotificationBanner from "../../components/ui/NotificationBanner";
+import NotificationBanner from "../../components/ui/NotificationBanner.jsx";
 
 const CATEGORIES = [
   "Alimentation",
@@ -82,11 +82,17 @@ export default function Produits() {
   const handleSelectBoutique = (boutique) => {
     setSelectedBoutique(boutique);
     setBoutiqueForm(boutique);
-    fetchProduitsByBoutique(boutique._id);
+    if (boutique?._id) {
+      fetchProduitsByBoutique(boutique._id);
+    }
   };
 
-  const handleCreateBoutique = () => {
-    setBoutiqueForm({ _id: null, name: "", category: "", coverImage: null, coverImageUrl: "" });
+  const handleCreateBoutique = (b = null) => {
+    setBoutiqueForm(
+      b
+        ? { ...b, coverImage: null } // modification existante
+        : { _id: null, name: "", category: "", coverImage: null, coverImageUrl: "" } // création
+    );
     setShowBoutiqueModal(true);
   };
 
@@ -182,7 +188,7 @@ export default function Produits() {
   };
 
   return (
-    <>
+    <div className="pt-4 px-4 pb-10">
       {notification && (
         <NotificationBanner message={notification.message} type={notification.type} onClose={closeNotification} />
       )}
@@ -192,16 +198,26 @@ export default function Produits() {
         selectedId={selectedBoutique?._id}
         onSelect={handleSelectBoutique}
         onCreate={handleCreateBoutique}
+        onEdit={handleCreateBoutique}
       />
 
-      {showBoutiqueModal && (
+      {showBoutiqueModal && boutiqueForm && (
         <BoutiqueModal
           boutique={boutiqueForm}
           onChange={handleChangeBoutiqueForm}
           onFileChange={handleBoutiqueFileChange}
           onSave={handleSaveBoutique}
           onDelete={handleDeleteBoutique}
-          onClose={() => setShowBoutiqueModal(false)}
+          onClose={() => {
+            setShowBoutiqueModal(false);
+            setBoutiqueForm({
+              _id: null,
+              name: "",
+              category: "",
+              coverImage: null,
+              coverImageUrl: "",
+            });
+          }}
         />
       )}
 
@@ -227,6 +243,6 @@ export default function Produits() {
           collectionsDispo={collectionsDispo}
         />
       )}
-    </>
+    </div>
   );
 }

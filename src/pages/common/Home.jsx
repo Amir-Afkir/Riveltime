@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
 import { useUser } from "../../context/UserContext";
 import Button from "../../components/ui/Button";
 import { User, Store, Bike } from "lucide-react";
@@ -13,8 +12,7 @@ const roles = [
 
 export default function Home() {
   const navigate = useNavigate();
-  const { loginWithRedirect, isAuthenticated, user: auth0User } = useAuth0();
-  const { logout, userData, loadingUser } = useUser();
+  const { loginWithRedirect, isAuthenticated, logout, userData, loadingUser } = useUser();
 
   useEffect(() => {
     if (!loadingUser && isAuthenticated && userData?.role) {
@@ -81,7 +79,7 @@ export default function Home() {
           ) : (
             <div className="flex flex-col items-center gap-4 w-full max-w-xs">
               <h2 className="text-xl font-semibold text-gray-900">
-                Bonjour {userData?.fullname || auth0User?.name || auth0User?.email} !
+                Bonjour {userData?.fullname || userData?.name || userData?.email} !
               </h2>
               {userData?.role && (
                 <p className="text-gray-600 italic">
