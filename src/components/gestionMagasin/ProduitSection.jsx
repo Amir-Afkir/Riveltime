@@ -13,6 +13,7 @@ export default function ProduitSection({
   onAjouterProduit,
   onModifierProduit,
   onSupprimerProduit,
+  onAjouterBoutique,
 }) {
   const hasBoutique = !!boutique?._id;
 
@@ -34,7 +35,7 @@ export default function ProduitSection({
         </div>
         <Button
           variant="secondary"
-          onClick={onAjouterProduit}
+          onClick={onAjouterBoutique}
         >
           Créer une boutique
         </Button>
@@ -104,4 +105,5 @@ ProduitSection.propTypes = {
   onAjouterProduit: PropTypes.func.isRequired,
   onModifierProduit: PropTypes.func.isRequired,
   onSupprimerProduit: PropTypes.func.isRequired,
+  onAjouterBoutique: PropTypes.func.isRequired,
 };

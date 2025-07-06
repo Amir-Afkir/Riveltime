@@ -236,6 +236,7 @@ export default function Produits() {
         onAjouterProduit={handleAjouterProduit}
         onModifierProduit={handleModifierProduit}
         onSupprimerProduit={handleSupprimerProduit}
+        onAjouterBoutique={handleCreateBoutique}
       />
 
     </div>
