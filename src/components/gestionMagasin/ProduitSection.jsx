@@ -45,9 +45,9 @@ export default function ProduitSection({
 
   const renderProduits = () => (
     <>
-      <div>
+      <div className="mb-6 text-center">
         <Title level={3}>Mes produits</Title>
-        <p className="text-sm text-gray-500 mb-4">Catalogue</p>
+        <p className="text-sm text-gray-500">Catalogue</p>
       </div>
 
       {produitsLoading && <p>Chargement des produits...</p>}
@@ -57,38 +57,51 @@ export default function ProduitSection({
       {!produitsLoading && !produitsError && (
         <>
           {produits.length === 0 ? (
-            <p className="text-gray-600">Aucun produit pour cette boutique.</p>
+            <p className="text-gray-600 text-center">Aucun produit pour cette boutique.</p>
           ) : (
             <ul>
               {produits.map((prod) => (
-                <li key={prod._id} className="mb-4 border-b pb-2">
-                  <strong>{prod.name}</strong> — {prod.category} — {prod.price} €
-                  <div className="mt-1 flex gap-2">
-                    <Button variant="warning" onClick={() => onModifierProduit(prod)}>
-                      Modifier
-                    </Button>
-                    <Button
-                      variant="danger"
+                <li key={prod._id} className="flex items-center bg-white shadow-sm hover:shadow-md transition-shadow duration-200 rounded-2xl p-4 mb-3">
+                  <div className="w-14 h-14 mr-4 rounded-xl overflow-hidden bg-neutral-100 flex items-center justify-center">
+                    {prod.imageUrl ? (
+                      <img src={prod.imageUrl} alt={prod.name} className="object-cover w-full h-full" />
+                    ) : (
+                      <span className="text-xl text-gray-400">🧸</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[17px] font-semibold text-gray-900 leading-tight">{prod.name}</p>
+                    <p className="text-[15px] text-gray-500">{prod.price} €</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onModifierProduit(prod)}
+                      className="p-2 bg-[#ffe4e6] rounded-xl hover:bg-[#ffd2d7] transition-all shadow-sm"
+                    >
+                      <Pencil className="w-5 h-5 text-[#ed354f]" />
+                    </button>
+                    <button
                       onClick={() => {
-                        if (window.confirm("Supprimer ce produit ?")) {
+                        if (window.confirm('Supprimer ce produit ?')) {
                           onSupprimerProduit(prod._id);
                         }
                       }}
+                      className="p-2 bg-[#ffe4e6] rounded-xl hover:bg-[#ffd2d7] transition-all shadow-sm"
                     >
-                      Supprimer
-                    </Button>
+                      <svg className="w-5 h-5 text-[#ed354f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                   </div>
                 </li>
               ))}
             </ul>
           )}
 
-          <Button
-            variant="primary"
+          <button
             onClick={onAjouterProduit}
+            className="w-full bg-neutral-50 !text-black border border-gray-300 hover:bg-neutral-100 active:scale-[0.97] active:shadow-inner focus-visible:ring-2 focus-visible:ring-red-300 rounded-full flex items-center justify-center py-2.5 text-[15px] transition-transform mt-5"
           >
             Ajouter un produit
-          </Button>
+          </button>
         </>
       )}
     </>

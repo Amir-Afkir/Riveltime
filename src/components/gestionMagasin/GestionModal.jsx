@@ -41,7 +41,9 @@ export default function GestionModal({
     >
       <div
         ref={modalRef}
-        className="w-full max-w-sm md:max-w-md bg-white rounded-t-2xl rounded-b-none px-5 py-6 shadow-xl animate-slide-up"
+        role="dialog"
+        aria-modal="true"
+        className="w-full max-w-sm md:max-w-md bg-white rounded-t-2xl rounded-b-none px-4 py-5 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto"
       >
         <div className="flex justify-between items-center border-b pb-3 mb-5">
           <h3 className="text-base md:text-lg font-semibold text-gray-800">
@@ -83,6 +85,7 @@ export default function GestionModal({
               id="name"
               name="name"
               type="text"
+              aria-label="Nom de la boutique"
               value={data.name}
               onChange={onChange}
               className="w-full px-4 py-2.5 border rounded-xl shadow-sm text-sm text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary mb-3"
@@ -90,6 +93,7 @@ export default function GestionModal({
             <label className="block mb-3 font-medium text-sm text-gray-700">Catégorie</label>
             <select
               name="category"
+              aria-label="Catégorie"
               value={data.category}
               onChange={onChange}
               className="w-full border rounded-xl px-4 py-2.5 text-sm text-gray-800 mb-3 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
@@ -107,8 +111,9 @@ export default function GestionModal({
               name="coverImage"
               type="file"
               accept="image/*"
+              aria-label="Image de couverture"
               onChange={onFileChange}
-              className="w-full text-sm text-gray-800 mb-3"
+              className="w-full text-sm text-gray-800 mb-3 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-[#d12e47]"
             />
             <p className="text-xs text-gray-500 mt-1 mb-3">Image JPG ou PNG, max 2 Mo</p>
           </>
@@ -116,13 +121,14 @@ export default function GestionModal({
 
         {isProduit && (
           <>
-            <Input label="Nom" name="name" value={data.name} onChange={onChange} />
-            <Input label="Prix" name="price" type="number" value={data.price} onChange={onChange} />
+            <Input label="Nom" name="name" aria-label="Nom" value={data.name} onChange={onChange} />
+            <Input label="Prix" name="price" type="number" aria-label="Prix" value={data.price} onChange={onChange} />
 
             <label className="block mt-4 mb-3 font-semibold text-sm text-gray-700">Collection</label>
             <input
               list="collections"
               name="collectionName"
+              aria-label="Collection"
               value={data.collectionName || ""}
               onChange={onChange}
               className="w-full border rounded-xl px-4 py-2.5 mt-1 mb-3 text-sm text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
@@ -133,8 +139,8 @@ export default function GestionModal({
               ))}
             </datalist>
 
-            <Input label="Description" name="description" value={data.description} onChange={onChange} />
-            <Input label="Image" name="image" type="file" accept="image/*" onChange={onFileChange} />
+            <Input label="Description" name="description" aria-label="Description" value={data.description} onChange={onChange} />
+            <Input label="Image" name="image" type="file" aria-label="Image" accept="image/*" onChange={onFileChange} className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-[#d12e47]" />
           </>
         )}
       </div>
