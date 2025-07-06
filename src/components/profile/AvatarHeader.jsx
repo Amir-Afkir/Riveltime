@@ -39,7 +39,7 @@ export default function AvatarHeader() {
   return (
     <div className="flex flex-col items-center justify-center text-center w-full gap-3">
       <div
-        className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md cursor-pointer"
+        className="relative w-[96px] h-[96px] rounded-full overflow-hidden border-4 border-white shadow-md cursor-pointer"
         onClick={handleClickAvatar}
         title="Modifier votre avatar"
       >
