@@ -13,15 +13,9 @@ export default function Layout() {
   const { bodyBg } = getTheme();
 
   useEffect(() => {
-    // Sauvegarder les valeurs précédentes pour nettoyage
-    const previousColor = document.body.style.backgroundColor;
-
-    // Appliquer couleur de fond au body
-    document.body.style.backgroundColor = bodyBg;
-
-    // Nettoyage au démontage / changement thème
+    document.documentElement.style.setProperty("--body-bg", bodyBg);
     return () => {
-      document.body.style.backgroundColor = previousColor;
+      document.documentElement.style.removeProperty("--body-bg");
     };
   }, [bodyBg]);
 
@@ -34,11 +28,13 @@ export default function Layout() {
   }, []);
 
   return (
-    <div className={`min-h-screen ${pathname !== "/" ? "pb-28" : "pb-0"}`}>
-      <div
-        className="fixed bottom-0 left-0 w-full h-[70vh] z-[-10] bg-[#ffe4e6]"
-      />
-      <main className="p-0 max-w-md mx-auto">
+    <div className={`min-h-screen ${pathname !== "/" ? "pb-[calc(7rem+env(safe-area-inset-bottom))]" : "pb-0"}`}>
+      {/* Fond en deux couches */}
+      <div className="fixed inset-0 z-[-10] pointer-events-none">
+        <div className="absolute inset-0 bg-[#ed354f]" />
+        <div className="absolute bottom-0 w-full h-[70vh] bg-[#ffe4e6]" />
+      </div>
+      <main className="p-0 max-w-md mx-auto px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <Outlet />
       </main>
       {/* Ne pas afficher BottomNav sur home ("/") */}

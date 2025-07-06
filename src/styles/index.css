@@ -1,4 +1,8 @@
 @tailwind base;
+
+:root {
+  --body-bg: #fff;
+}
 @tailwind components;
 @tailwind utilities;
 
@@ -9,6 +13,10 @@
              env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
     min-height: calc(100% + env(safe-area-inset-top));
     touch-action: manipulation;
+    scroll-behavior: smooth;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    scroll-padding-top: 80px;
   }
 
   body, #root {
@@ -16,6 +24,8 @@
     margin: 0;
     padding: 0;
     position: relative;
+    background-color: var(--body-bg, white);
+    overscroll-behavior-y: contain;
   }
 
   input, select, textarea {
