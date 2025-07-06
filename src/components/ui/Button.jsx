@@ -20,10 +20,10 @@ export default function Button({
   ...props
 }) {
   const primaryStyle =
-    "w-full bg-[#ed354f] text-white rounded-full hover:bg-[#d12e47] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#f58ba0] py-2.5 text-[15px] transition-all";
+  "w-full bg-neutral-50 !text-black border border-gray-300 hover:bg-neutral-100 active:scale-[0.97] active:shadow-inner focus-visible:ring-2 focus-visible:ring-red-300 rounded-full flex items-center justify-center gap-2 py-2.5 text-[15px] transition-transform";
 
   const secondaryStyle =
-    "w-full bg-neutral-50 !text-black border border-gray-300 hover:bg-neutral-100 active:scale-[0.97] active:shadow-inner focus-visible:ring-2 focus-visible:ring-red-300 rounded-full flex items-center justify-center gap-2 py-2.5 text-[15px] transition-transform";
+  "w-full bg-[#ed354f] text-white rounded-full hover:bg-[#d12e47] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#f58ba0] py-2.5 text-[15px] transition-all";
 
   const selectedStyle = variant === "secondary" ? secondaryStyle : primaryStyle;
 
