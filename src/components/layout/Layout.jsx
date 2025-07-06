@@ -1,19 +1,16 @@
 import { Outlet, useLocation } from "react-router-dom";
 import BottomNav from "./BottomNav";
-import { useUser } from "../../context/UserContext";
 import { useEffect } from "react";
 
 export default function Layout() {
   const { pathname } = useLocation();
-  const { userData } = useUser();
-  
 
   // Détermine le thème couleur & background selon le rôle/page
   const getTheme = () => {
-    return { color: "rose", bodyBg: "#ffe4e6" }; // rose-50 de Tailwind
+    return { bodyBg: "#ed354f" };
   };
 
-  const { color, bodyBg } = getTheme();
+  const { bodyBg } = getTheme();
 
   useEffect(() => {
     // Sauvegarder les valeurs précédentes pour nettoyage
@@ -26,7 +23,7 @@ export default function Layout() {
     return () => {
       document.body.style.backgroundColor = previousColor;
     };
-  }, [bodyBg, color]);
+  }, [bodyBg]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -39,10 +36,7 @@ export default function Layout() {
   return (
     <div className={`min-h-screen ${pathname !== "/" ? "pb-28" : "pb-0"}`}>
       <div
-        className="fixed top-0 left-0 w-full h-[30vh] z-[-10]"
-        style={{
-          backgroundColor: "#ed354f",
-        }}
+        className="fixed bottom-0 left-0 w-full h-[70vh] z-[-10] bg-[#ffe4e6]"
       />
       <main className="p-0 max-w-md mx-auto">
         <Outlet />
