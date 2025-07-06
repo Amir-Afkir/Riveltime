@@ -31,8 +31,10 @@ export default function Layout() {
     <div className={`min-h-screen ${pathname !== "/" ? "pb-[calc(7rem+env(safe-area-inset-bottom))]" : "pb-0"}`}>
       {/* Fond en deux couches */}
       <div className="fixed inset-0 z-[-10] pointer-events-none">
-        <div className="absolute inset-0 bg-[#ed354f]" />
-        <div className="absolute bottom-0 w-full h-[70vh] bg-[#ffe4e6]" />
+        <div className="absolute inset-0">
+          <div className="h-[30vh] bg-[#ed354f]" />
+          <div className="h-[70vh] bg-[#ffe4e6]" />
+        </div>
       </div>
       <main className="p-0 max-w-md mx-auto px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <Outlet />
