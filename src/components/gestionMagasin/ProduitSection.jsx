@@ -33,7 +33,7 @@ export default function ProduitSection({
           <ArrowRight className="h-8 w-8 text-red-500 animate-bounce" />
         </div>
         <Button
-          variant="primary"
+          variant="secondary"
           onClick={onAjouterProduit}
         >
           Créer une boutique

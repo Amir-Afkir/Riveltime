@@ -41,42 +41,42 @@ export default function GestionModal({
     >
       <div
         ref={modalRef}
-        className="w-full max-w-md md:max-w-lg bg-white rounded-t-2xl rounded-b-none px-4 py-5 shadow-lg animate-slide-up"
+        className="w-full max-w-sm md:max-w-md bg-white rounded-t-2xl rounded-b-none px-5 py-6 shadow-xl animate-slide-up"
       >
-        <div className="flex justify-between items-center border-b pb-4 mb-6">
-          <h3 className="text-base md:text-lg font-semibold">
+        <div className="flex justify-between items-center border-b pb-3 mb-5">
+          <h3 className="text-base md:text-lg font-semibold text-gray-800">
             {data._id ? "Modifier" : "Créer"} {isBoutique ? "une boutique" : `un produit${boutique ? ` dans « ${boutique.name} »` : ""}`}
           </h3>
           <div className="flex gap-1">
             <button
               onClick={onClose}
               title="Annuler"
-              className="p-1.5 rounded hover:bg-gray-100 transition"
+              className="p-2 rounded-xl hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition"
             >
-              <X className="w-4 h-4 text-gray-600" />
+              <X className="w-5 h-5 text-gray-700" />
             </button>
             {isBoutique && data._id && (
               <button
                 onClick={onDelete}
                 title="Supprimer"
-                className="p-1.5 rounded hover:bg-red-50 transition"
+                className="p-2 rounded-xl hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition"
               >
-                <Trash2 className="w-4 h-4 text-red-600" />
+                <Trash2 className="w-5 h-5 text-red-600" />
               </button>
             )}
             <button
               onClick={onSave}
               title="Sauvegarder"
-              className="p-1.5 rounded hover:bg-green-50 transition"
+              className="p-2 rounded-xl hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 transition"
             >
-              <Save className="w-4 h-4 text-green-600" />
+              <Save className="w-5 h-5 text-green-600" />
             </button>
           </div>
         </div>
 
         {isBoutique && (
           <>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-3">
               Nom de la boutique
             </label>
             <input
@@ -85,21 +85,21 @@ export default function GestionModal({
               type="text"
               value={data.name}
               onChange={onChange}
-              className="w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+              className="w-full px-4 py-2.5 border rounded-xl shadow-sm text-sm text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary mb-3"
             />
-            <label className="block mb-1 font-medium text-sm text-gray-700">Catégorie</label>
+            <label className="block mb-3 font-medium text-sm text-gray-700">Catégorie</label>
             <select
               name="category"
               value={data.category}
               onChange={onChange}
-              className="w-full border rounded-md px-3 py-2 text-sm mb-4"
+              className="w-full border rounded-xl px-4 py-2.5 text-sm text-gray-800 mb-3 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
             >
               <option value="">-- Sélectionner une catégorie --</option>
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
-            <label htmlFor="coverImage" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="coverImage" className="block text-sm font-medium text-gray-700 mb-3">
               Image de couverture
             </label>
             <input
@@ -108,9 +108,9 @@ export default function GestionModal({
               type="file"
               accept="image/*"
               onChange={onFileChange}
-              className="w-full text-sm"
+              className="w-full text-sm text-gray-800 mb-3"
             />
-            <p className="text-xs text-gray-500 mt-1 mb-1">Image JPG ou PNG, max 2 Mo</p>
+            <p className="text-xs text-gray-500 mt-1 mb-3">Image JPG ou PNG, max 2 Mo</p>
           </>
         )}
 
@@ -119,13 +119,13 @@ export default function GestionModal({
             <Input label="Nom" name="name" value={data.name} onChange={onChange} />
             <Input label="Prix" name="price" type="number" value={data.price} onChange={onChange} />
 
-            <label className="block mt-4 font-semibold text-sm">Collection</label>
+            <label className="block mt-4 mb-3 font-semibold text-sm text-gray-700">Collection</label>
             <input
               list="collections"
               name="collectionName"
               value={data.collectionName || ""}
               onChange={onChange}
-              className="w-full border rounded px-3 py-2 mt-1 mb-4 text-sm"
+              className="w-full border rounded-xl px-4 py-2.5 mt-1 mb-3 text-sm text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
             />
             <datalist id="collections">
               {collectionsDispo.map((col) => (
