@@ -1,6 +1,6 @@
-
-
 import PropTypes from "prop-types";
+import { Plus, Pencil, ArrowRight } from "lucide-react";
+
 import Card from "../../components/ui/Card";
 import Title from "../../components/ui/Title";
 import Button from "../../components/ui/Button";
@@ -14,21 +14,49 @@ export default function ProduitSection({
   onModifierProduit,
   onSupprimerProduit,
 }) {
-  return (
-    <Card className="p-4">
-      <Title level={3}>Mes produits</Title>
+  const hasBoutique = !!boutique?._id;
 
-      {!boutique?._id ? (
-        <p className="text-gray-600">Veuillez sélectionner une boutique.</p>
-      ) : (
+  const renderNoBoutique = () => (
+    <>
+      <div className="text-center">
+        <Title level={3}>Aucune boutique sélectionnée</Title>
+        <p className="text-sm text-gray-500 mb-4">
+          Choisissez une boutique ci-dessus pour gérer vos produits.
+        </p>
+      </div>
+
+      <div className="flex flex-col items-center justify-center text-center">
+        <div className="w-full flex justify-center mb-4">
+          <img src="/boutique.webp" alt="Aucune boutique" className="w-40 h-auto opacity-90" />
+        </div>
+        <div className="mb-4">
+          <ArrowRight className="h-8 w-8 text-red-500 animate-bounce" />
+        </div>
+        <Button
+          variant="primary"
+          onClick={onAjouterProduit}
+        >
+          Créer une boutique
+        </Button>
+      </div>
+    </>
+  );
+
+  const renderProduits = () => (
+    <>
+      <div>
+        <Title level={3}>Mes produits</Title>
+        <p className="text-sm text-gray-500 mb-4">Catalogue</p>
+      </div>
+
+      {produitsLoading && <p>Chargement des produits...</p>}
+
+      {produitsError && <p className="text-red-600">Erreur : {produitsError}</p>}
+
+      {!produitsLoading && !produitsError && (
         <>
-
-          {produitsLoading ? (
-            <p>Chargement des produits...</p>
-          ) : produitsError ? (
-            <p className="text-red-600">Erreur : {produitsError}</p>
-          ) : produits.length === 0 ? (
-            <p>Aucun produit pour cette boutique.</p>
+          {produits.length === 0 ? (
+            <p className="text-gray-600">Aucun produit pour cette boutique.</p>
           ) : (
             <ul>
               {produits.map((prod) => (
@@ -53,17 +81,19 @@ export default function ProduitSection({
               ))}
             </ul>
           )}
+
           <Button
             variant="primary"
-            className="mb-4"
             onClick={onAjouterProduit}
           >
             Ajouter un produit
           </Button>
         </>
       )}
-    </Card>
+    </>
   );
+
+  return <Card className="p-4">{hasBoutique ? renderProduits() : renderNoBoutique()}</Card>;
 }
 
 ProduitSection.propTypes = {
