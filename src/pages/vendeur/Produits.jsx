@@ -4,9 +4,8 @@ import useProduits from "../../components/gestionMagasin/hooks/useProduits.js";
 
 import {
   BoutiqueSelector,
-  BoutiqueModal,
-  ProduitModal,
   ProduitSection,
+  GestionModal,
 } from "../../components/gestionMagasin/index.js";
 
 import NotificationBanner from "../../components/ui/NotificationBanner.jsx";
@@ -201,23 +200,31 @@ export default function Produits() {
         onEdit={handleCreateBoutique}
       />
 
-      {showBoutiqueModal && boutiqueForm && (
-        <BoutiqueModal
-          boutique={boutiqueForm}
-          onChange={handleChangeBoutiqueForm}
-          onFileChange={handleBoutiqueFileChange}
-          onSave={handleSaveBoutique}
-          onDelete={handleDeleteBoutique}
+      {(showBoutiqueModal || showProduitModal) && (
+        <GestionModal
+          type={showBoutiqueModal ? "boutique" : "produit"}
+          data={showBoutiqueModal ? boutiqueForm : produitForm}
+          boutique={selectedBoutique}
+          onChange={showBoutiqueModal ? handleChangeBoutiqueForm : handleChangeProduitForm}
+          onFileChange={showBoutiqueModal ? handleBoutiqueFileChange : handleProduitFileChange}
+          onSave={showBoutiqueModal ? handleSaveBoutique : handleSaveProduit}
+          onDelete={showBoutiqueModal ? handleDeleteBoutique : undefined}
           onClose={() => {
-            setShowBoutiqueModal(false);
-            setBoutiqueForm({
-              _id: null,
-              name: "",
-              category: "",
-              coverImage: null,
-              coverImageUrl: "",
-            });
+            if (showBoutiqueModal) {
+              setShowBoutiqueModal(false);
+              setBoutiqueForm({
+                _id: null,
+                name: "",
+                category: "",
+                coverImage: null,
+                coverImageUrl: "",
+              });
+            } else {
+              setShowProduitModal(false);
+            }
           }}
+          categories={CATEGORIES}
+          collectionsDispo={collectionsDispo}
         />
       )}
 
@@ -231,18 +238,6 @@ export default function Produits() {
         onSupprimerProduit={handleSupprimerProduit}
       />
 
-      {showProduitModal && (
-        <ProduitModal
-          boutique={selectedBoutique}
-          produit={produitForm}
-          onChange={handleChangeProduitForm}
-          onFileChange={handleProduitFileChange}
-          onSave={handleSaveProduit}
-          onCancel={() => setShowProduitModal(false)}
-          categories={CATEGORIES}
-          collectionsDispo={collectionsDispo}
-        />
-      )}
     </div>
   );
 }

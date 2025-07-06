@@ -22,13 +22,6 @@ export default function ProduitSection({
         <p className="text-gray-600">Veuillez sélectionner une boutique.</p>
       ) : (
         <>
-          <Button
-            variant="primary"
-            className="mb-4"
-            onClick={onAjouterProduit}
-          >
-            Ajouter un produit
-          </Button>
 
           {produitsLoading ? (
             <p>Chargement des produits...</p>
@@ -60,6 +53,13 @@ export default function ProduitSection({
               ))}
             </ul>
           )}
+          <Button
+            variant="primary"
+            className="mb-4"
+            onClick={onAjouterProduit}
+          >
+            Ajouter un produit
+          </Button>
         </>
       )}
     </Card>
