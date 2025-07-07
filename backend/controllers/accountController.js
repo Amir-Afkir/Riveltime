@@ -44,6 +44,41 @@ exports.deleteMyAccount = async (req, res) => {
       console.warn(`⚠️ Erreur Cloudinary : ${cloudErr.message}`);
     }
 
+    // 🔥 Supprimer les boutiques et produits associés
+    const Boutique = require('../models/Boutique');
+    const Product = require('../models/Product');
+
+    const boutiques = await Boutique.find({ owner: dbUser._id });
+
+    for (const boutique of boutiques) {
+      // Supprimer les produits de la boutique
+      const produits = await Product.find({ boutique: boutique._id });
+      for (const produit of produits) {
+        if (produit.imagePublicId) {
+          await cloudinary.uploader.destroy(produit.imagePublicId);
+        }
+      }
+      await Product.deleteMany({ boutique: boutique._id });
+
+      // Supprimer l'image de couverture de la boutique
+      if (boutique.coverImagePublicId) {
+        await cloudinary.uploader.destroy(boutique.coverImagePublicId);
+      }
+
+      // Supprimer le dossier Cloudinary de la boutique
+      const boutiqueFolder = `riveltime/${userId}/boutiques/${boutique._id}`;
+      try {
+        await cloudinary.api.delete_resources_by_prefix(boutiqueFolder);
+        await cloudinary.api.delete_folder(boutiqueFolder);
+      } catch (err) {
+        console.warn(`⚠️ Erreur suppression dossier Cloudinary boutique : ${err.message}`);
+      }
+
+      await boutique.deleteOne();
+    }
+
+    console.log(`🧹 Boutiques et produits liés à l'utilisateur supprimés`);
+
     // 3. Supprimer dans MongoDB
     const result = await User.findOneAndDelete({ auth0Id: userId });
 

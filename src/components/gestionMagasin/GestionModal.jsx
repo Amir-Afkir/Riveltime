@@ -116,9 +116,6 @@ export default function GestionModal({
 
         {isProduit && (
           <>
-            <Input label="Nom" name="name" aria-label="Nom" value={safeValue(data.name)} onChange={onChange} />
-            <Input label="Prix" name="price" type="number" aria-label="Prix" value={safeValue(data.price, "")} onChange={onChange} />
-
             <label className="block mt-4 mb-3 font-semibold text-sm text-gray-700">Collection</label>
             <input
               list="collections"
@@ -133,6 +130,9 @@ export default function GestionModal({
                 <option key={col} value={col} />
               ))}
             </datalist>
+
+            <Input label="Nom" name="name" aria-label="Nom" value={safeValue(data.name)} onChange={onChange} />
+            <Input label="Prix" name="price" type="number" aria-label="Prix" value={safeValue(data.price, "")} onChange={onChange} />
 
             <Input label="Description" name="description" aria-label="Description" value={safeValue(data.description)} onChange={onChange} />
             <label className="block text-sm font-medium text-gray-700 mt-4 mb-2" htmlFor="image">Image</label>
