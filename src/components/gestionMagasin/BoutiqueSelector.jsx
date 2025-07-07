@@ -13,7 +13,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
 
     return (
       <div
-        className={`relative w-full max-w-[220px] mx-auto rounded-xl overflow-hidden border-4 border-gray-100 ${
+        className={`relative w-full max-w-[250px] mx-auto rounded-xl overflow-hidden border-4 border-gray-100 ${
           isDeselecting ? 'animate-fade-shrink-out' : 'animate-expand-card'
         }`}
         key={selectedBoutique._id}

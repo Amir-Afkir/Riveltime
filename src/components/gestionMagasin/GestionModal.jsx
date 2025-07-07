@@ -1,6 +1,7 @@
 import { X, Trash2, Save } from "lucide-react";
 import { useRef } from "react";
 import Input from "../ui/Input";
+import Button from "../ui/Button";
 
 const safeValue = (val, fallback = "") => (val === undefined || val === null ? fallback : val);
 
@@ -46,33 +47,26 @@ export default function GestionModal({
         role="dialog"
         aria-modal="true"
         className="w-full max-w-screen-sm md:max-w-screen-md bg-white rounded-t-2xl rounded-b-none px-4 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto"      >
-        <div className="flex justify-between items-center border-b pb-3 mb-5">
+        <div className="flex justify-between items-center border-b pb-4 mb-6">
           <h3 className="text-base md:text-lg font-semibold text-gray-800">
             {data._id ? "Modifier" : "Créer"} {isBoutique ? "une boutique" : `un produit${boutique ? ` dans « ${boutique.name} »` : ""}`}
           </h3>
-          <div className="flex gap-1">
-            <button
-              onClick={onClose}
-              title="Annuler"
-              className="p-2 rounded-xl hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition"
-            >
-              <X className="w-5 h-5 text-gray-700" />
-            </button>
+          <div className="flex gap-2">
             {isBoutique && data._id && (
-              <button
+              <Button
                 onClick={onDelete}
-                title="Supprimer"
-                className="p-2 rounded-xl hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition"
+                aria-label="Supprimer la boutique"
+                className="p-2.5 border border-red-200 text-red-500 bg-red-50/40 hover:bg-red-100 transition rounded-xl"
               >
-                <Trash2 className="w-5 h-5 text-red-600" />
-              </button>
+                <Trash2 className="w-5 h-5" />
+              </Button>
             )}
             <button
-              onClick={onSave}
-              title="Sauvegarder"
-              className="p-2 rounded-xl hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 transition"
+              onClick={onClose}
+              aria-label="Fermer la fenêtre"
+              className="p-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 transition rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-              <Save className="w-5 h-5 text-green-600" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -114,7 +108,7 @@ export default function GestionModal({
               accept="image/*"
               aria-label="Image de couverture"
               onChange={onFileChange}
-              className="w-full text-base text-gray-800 mb-3 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-[#d12e47]"
+              className="block w-full text-sm text-gray-800 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border file:border-gray-300 file:font-semibold file:bg-neutral-50 file:text-black hover:file:bg-neutral-100 file:cursor-pointer file:leading-tight file:focus-visible:outline-none file:focus-visible:ring-2 file:focus-visible:ring-primary transition mb-3"
             />
             <p className="text-xs text-gray-500 mt-1 mb-3">Image JPG ou PNG, max 2 Mo</p>
           </>
@@ -141,9 +135,24 @@ export default function GestionModal({
             </datalist>
 
             <Input label="Description" name="description" aria-label="Description" value={safeValue(data.description)} onChange={onChange} />
-            <Input label="Image" name="image" type="file" aria-label="Image" accept="image/*" onChange={onFileChange} className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-[#d12e47]" />
+            <label className="block text-sm font-medium text-gray-700 mt-4 mb-2" htmlFor="image">Image</label>
+            <input
+              id="image"
+              name="image"
+              type="file"
+              accept="image/*"
+              onChange={onFileChange}
+              aria-label="Image"
+              className="block w-full text-sm text-gray-800 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border file:border-gray-300 file:font-semibold file:bg-neutral-50 file:text-black hover:file:bg-neutral-100 file:cursor-pointer file:leading-tight file:focus-visible:outline-none file:focus-visible:ring-2 file:focus-visible:ring-primary transition"
+            />
           </>
         )}
+
+        <div className="mt-6 border-t pt-4">
+          <Button onClick={onSave} aria-label="Sauvegarder" variant="secondary">
+            Sauvegarder
+          </Button>
+        </div>
       </div>
     </div>
   );
