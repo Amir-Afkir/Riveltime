@@ -90,7 +90,7 @@ export default function GestionModal({
               aria-label="Nom de la boutique"
               value={safeValue(data.name)}
               onChange={onChange}
-              className="w-full px-4 py-2.5 border rounded-xl shadow-sm text-sm text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary mb-3"
+              className="w-full px-4 py-2.5 border rounded-xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary mb-3"
             />
             <label className="block mb-3 font-medium text-sm text-gray-700">Catégorie</label>
             <select
@@ -98,7 +98,7 @@ export default function GestionModal({
               aria-label="Catégorie"
               value={safeValue(data.category)}
               onChange={onChange}
-              className="w-full border rounded-xl px-4 py-2.5 text-sm text-gray-800 mb-3 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+              className="w-full border rounded-xl px-4 py-2.5 text-base text-gray-800 mb-3 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
             >
               <option value="">-- Sélectionner une catégorie --</option>
               {CATEGORIES.map((cat) => (
@@ -115,7 +115,7 @@ export default function GestionModal({
               accept="image/*"
               aria-label="Image de couverture"
               onChange={onFileChange}
-              className="w-full text-sm text-gray-800 mb-3 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-[#d12e47]"
+              className="w-full text-base text-gray-800 mb-3 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-[#d12e47]"
             />
             <p className="text-xs text-gray-500 mt-1 mb-3">Image JPG ou PNG, max 2 Mo</p>
           </>
@@ -133,7 +133,7 @@ export default function GestionModal({
               aria-label="Collection"
               value={safeValue(data.collectionName)}
               onChange={onChange}
-              className="w-full border rounded-xl px-4 py-2.5 mt-1 mb-3 text-sm text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+              className="w-full border rounded-xl px-4 py-2.5 mt-1 mb-3 text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
             />
             <datalist id="collections">
               {collectionsDispo.map((col) => (
