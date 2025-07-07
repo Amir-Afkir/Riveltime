@@ -1,5 +1,5 @@
 import { X, Trash2, Save, Store, Tag, FolderSearch, Image, PackageSearch, Euro, FileText } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 
@@ -30,6 +30,13 @@ export default function GestionModal({
 
   const isBoutique = type === "boutique";
   const isProduit = type === "produit";
+
+  const [showCategoryList, setShowCategoryList] = useState(false);
+  const toggleCategoryList = () => setShowCategoryList(!showCategoryList);
+  const handleSelectCategory = (cat) => {
+    onChange({ target: { name: "category", value: cat } });
+    setShowCategoryList(false);
+  };
 
   const handleBackdropClick = (e) => {
     if (modalRef.current && !modalRef.current.contains(e.target)) {
@@ -73,7 +80,7 @@ export default function GestionModal({
 
         {isBoutique && (
           <>
-            <div className="relative mb-3">
+            <div className="relative mb-4 pl-10">
               <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 id="name"
@@ -83,21 +90,23 @@ export default function GestionModal({
                 aria-label="Nom de la boutique"
                 value={safeValue(data.name)}
                 onChange={onChange}
-                className="w-full pl-10 pr-4 py-2.5 border rounded-xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+                className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
               />
             </div>
-            <div className="relative mb-3">
+            <div className="relative mb-4 pl-10">
               <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <select
                 name="category"
                 aria-label="Catégorie"
                 value={safeValue(data.category)}
                 onChange={onChange}
-                className="w-full pl-10 pr-4 py-2.5 border rounded-xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+                className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
               >
                 <option value="">Sélectionner une catégorie</option>
                 {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
                 ))}
               </select>
             </div>
