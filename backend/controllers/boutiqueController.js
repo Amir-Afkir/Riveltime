@@ -173,6 +173,15 @@ exports.deleteBoutiqueById = async (req, res) => {
       await cloudinary.uploader.destroy(boutique.coverImagePublicId);
     }
 
+    // Supprimer tout le dossier Cloudinary associé à la boutique
+    try {
+      const folderPath = `riveltime/${req.dbUser.auth0Id}/boutiques/${id}`;
+      await cloudinary.api.delete_resources_by_prefix(folderPath);
+      await cloudinary.api.delete_folder(folderPath);
+    } catch (cloudErr) {
+      console.error("❌ Erreur suppression dossier Cloudinary :", cloudErr);
+    }
+
     await boutique.deleteOne();
 
     res.status(200).json({ message: 'Boutique et ses produits supprimés avec succès.' });
