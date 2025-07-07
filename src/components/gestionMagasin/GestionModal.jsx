@@ -1,4 +1,4 @@
-import { X, Trash2, Save } from "lucide-react";
+import { X, Trash2, Save, Store, Tag, FolderSearch, Image, PackageSearch, Euro, FileText } from "lucide-react";
 import { useRef } from "react";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
@@ -73,78 +73,94 @@ export default function GestionModal({
 
         {isBoutique && (
           <>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-3">
-              Nom de la boutique
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              aria-label="Nom de la boutique"
-              value={safeValue(data.name)}
-              onChange={onChange}
-              className="w-full px-4 py-2.5 border rounded-xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary mb-3"
-            />
-            <label className="block mb-3 font-medium text-sm text-gray-700">Catégorie</label>
-            <select
-              name="category"
-              aria-label="Catégorie"
-              value={safeValue(data.category)}
-              onChange={onChange}
-              className="w-full border rounded-xl px-4 py-2.5 text-base text-gray-800 mb-3 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
-            >
-              <option value="">-- Sélectionner une catégorie --</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            <label htmlFor="coverImage" className="block text-sm font-medium text-gray-700 mb-3">
-              Image de couverture
-            </label>
-            <input
-              id="coverImage"
-              name="coverImage"
-              type="file"
-              accept="image/*"
-              aria-label="Image de couverture"
-              onChange={onFileChange}
-              className="block w-full text-sm text-gray-800 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border file:border-gray-300 file:font-semibold file:bg-neutral-50 file:text-black hover:file:bg-neutral-100 file:cursor-pointer file:leading-tight file:focus-visible:outline-none file:focus-visible:ring-2 file:focus-visible:ring-primary transition mb-3"
-            />
+            <div className="relative mb-3">
+              <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Nom de la boutique"
+                aria-label="Nom de la boutique"
+                value={safeValue(data.name)}
+                onChange={onChange}
+                className="w-full pl-10 pr-4 py-2.5 border rounded-xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+              />
+            </div>
+            <div className="relative mb-3">
+              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <select
+                name="category"
+                aria-label="Catégorie"
+                value={safeValue(data.category)}
+                onChange={onChange}
+                className="w-full pl-10 pr-4 py-2.5 border rounded-xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+              >
+                <option value="">Sélectionner une catégorie</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-3">
+              <input
+                id="coverImage"
+                name="coverImage"
+                type="file"
+                accept="image/*"
+                aria-label="Image de couverture"
+                onChange={onFileChange}
+                className="block w-full text-sm text-gray-800 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border file:border-gray-300 file:font-semibold file:bg-neutral-50 file:text-black hover:file:bg-neutral-100 file:cursor-pointer file:leading-tight file:focus-visible:outline-none file:focus-visible:ring-2 file:focus-visible:ring-primary transition"
+              />
+            </div>
             <p className="text-xs text-gray-500 mt-1 mb-3">Image JPG ou PNG, max 2 Mo</p>
           </>
         )}
 
         {isProduit && (
           <>
-            <label className="block mt-4 mb-3 font-semibold text-sm text-gray-700">Collection</label>
-            <input
-              list="collections"
-              name="collectionName"
-              aria-label="Collection"
-              value={safeValue(data.collectionName)}
-              onChange={onChange}
-              className="w-full border rounded-xl px-4 py-2.5 mt-1 mb-3 text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
-            />
+            <div className="relative mb-4 pl-10">
+              <FolderSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                list="collections"
+                name="collectionName"
+                placeholder="Collection"
+                aria-label="Collection"
+                value={safeValue(data.collectionName)}
+                onChange={onChange}
+                className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+                />
+            </div>
             <datalist id="collections">
               {collectionsDispo.map((col) => (
                 <option key={col} value={col} />
               ))}
             </datalist>
 
-            <Input label="Nom" name="name" aria-label="Nom" value={safeValue(data.name)} onChange={onChange} />
-            <Input label="Prix" name="price" type="number" aria-label="Prix" value={safeValue(data.price, "")} onChange={onChange} />
+            <div className="relative mb-3">
+              <PackageSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input name="name" placeholder="Nom du produit" aria-label="Nom" value={safeValue(data.name)} onChange={onChange} className="pl-10" />
+            </div>
+            <div className="relative mb-3">
+              <Euro className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input name="price" placeholder="Prix" type="number" aria-label="Prix" value={safeValue(data.price, "")} onChange={onChange} className="pl-10" />
+            </div>
 
-            <Input label="Description" name="description" aria-label="Description" value={safeValue(data.description)} onChange={onChange} />
-            <label className="block text-sm font-medium text-gray-700 mt-4 mb-2" htmlFor="image">Image</label>
-            <input
-              id="image"
-              name="image"
-              type="file"
-              accept="image/*"
-              onChange={onFileChange}
-              aria-label="Image"
-              className="block w-full text-sm text-gray-800 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border file:border-gray-300 file:font-semibold file:bg-neutral-50 file:text-black hover:file:bg-neutral-100 file:cursor-pointer file:leading-tight file:focus-visible:outline-none file:focus-visible:ring-2 file:focus-visible:ring-primary transition"
-            />
+            <div className="relative mb-3">
+              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input name="description" placeholder="Description" aria-label="Description" value={safeValue(data.description)} onChange={onChange} className="pl-10" />
+            </div>
+            <div className="mb-3">
+              <input
+                id="image"
+                name="image"
+                type="file"
+                accept="image/*"
+                onChange={onFileChange}
+                aria-label="Image"
+                className="block w-full text-sm text-gray-800 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border file:border-gray-300 file:font-semibold file:bg-neutral-50 file:text-black hover:file:bg-neutral-100 file:cursor-pointer file:leading-tight file:focus-visible:outline-none file:focus-visible:ring-2 file:focus-visible:ring-primary transition"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1 mb-3">🖼️ Image du produit (JPG ou PNG, max 2 Mo)</p>
           </>
         )}
 
