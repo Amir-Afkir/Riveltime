@@ -57,7 +57,9 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
     return (
       <div
         key={b._id}
-        className={`flex flex-col items-center w-[96px] flex-shrink-0 snap-center transition-all ease-in-out ${isShrinking ? 'animate-shrink-fade-out' : ''}`}
+        className={`flex flex-col items-center w-[96px] flex-shrink-0 snap-center transition-all duration-100 ease-in-out ${
+          isShrinking ? 'animate-shrink-fade-out' : 'animate-expand-card'
+        }`}
       >
         <button
           onClick={() => {
@@ -67,7 +69,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
               setShrinkingId(null);
             }, 200); // attendre la fin de shrink
           }}
-          className="relative w-full h-[96px] rounded-xl overflow-hidden border-4 ring-0 shadow-[0_2px_6px_rgba(0,0,0,0.08)] transition-transform ease-out hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-primary"
+          className="relative w-full h-[96px] rounded-xl overflow-hidden border-4 ring-0 shadow-[0_2px_6px_rgba(0,0,0,0.08)] transition-transform duration-100 ease-out hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-primary"
           style={{
             backgroundImage: b.coverImageUrl ? `url(${b.coverImageUrl})` : undefined,
             backgroundSize: "cover",
