@@ -1,20 +1,7 @@
 const mongoose = require('mongoose');
-const streamifier = require('streamifier');
 const Product = require('../models/Product');
 const Boutique = require('../models/Boutique');
 const cloudinary = require('../config/cloudinary');
-
-// 📤 Upload image produit vers Cloudinary
-async function uploadProductImage(userId, fileBuffer, boutiqueId) {
-  const folderPath = `riveltime/${boutiqueId}/vitrine`;
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: folderPath },
-      (error, result) => (result ? resolve(result) : reject(error))
-    );
-    streamifier.createReadStream(fileBuffer).pipe(stream);
-  });
-}
 
 // 🚀 Créer un produit
 exports.createProduct = async (req, res) => {
@@ -38,11 +25,11 @@ exports.createProduct = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Accès non autorisé à cette boutique.' });
     }
 
-    if (!req.file?.buffer) {
+    if (!req.imageData?.secure_url || !req.imageData?.public_id) {
       return res.status(400).json({ success: false, error: 'Image produit requise.' });
     }
 
-    const result = await uploadProductImage(req.dbUser._id, req.file.buffer, boutiqueId);
+    const result = req.imageData;
 
     const produit = new Product({
       name,
@@ -105,11 +92,11 @@ exports.updateProduct = async (req, res) => {
 
     const { name, price, collectionName, description } = req.body;
 
-    if (req.file?.buffer) {
+    if (req.imageData?.secure_url && req.imageData?.public_id) {
       if (produit.imagePublicId) {
         await cloudinary.uploader.destroy(produit.imagePublicId);
       }
-      const result = await uploadProductImage(req.dbUser._id, req.file.buffer, produit.boutique._id);
+      const result = req.imageData;
       produit.imageUrl = result.secure_url;
       produit.imagePublicId = result.public_id;
     }

@@ -125,33 +125,17 @@ exports.updateMyProfile = async (req, res) => {
 exports.uploadAvatar = async (req, res) => {
   try {
     const dbUser = req.dbUser;
-    if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
-
-    const folder = `riveltime/${dbUser.auth0Id}/profil`;
-
-    // Supprimer l’ancien avatar
-    if (dbUser.avatarUrl) {
-      const parts = dbUser.avatarUrl.split('/');
-      const publicId = parts[parts.length - 1].split('.')[0];
-      await cloudinary.uploader.destroy(`${folder}/${publicId}`);
+    if (!req.imageData?.secure_url) {
+      return res.status(400).json({ error: 'Image non traitée par Cloudinary' });
     }
 
-    // Upload du nouvel avatar
-    const streamUpload = () => {
-      return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder, public_id: "avatar", overwrite: true },
-          (error, result) => {
-            if (result) resolve(result);
-            else reject(error);
-          }
-        );
-        streamifier.createReadStream(req.file.buffer).pipe(stream);
-      });
-    };
+    // Supprimer l'ancien avatar si présent
+    if (dbUser.avatarPublicId) {
+      await cloudinary.uploader.destroy(dbUser.avatarPublicId);
+    }
 
-    const result = await streamUpload();
-    dbUser.avatarUrl = result.secure_url;
+    dbUser.avatarUrl = req.imageData.secure_url;
+    dbUser.avatarPublicId = req.imageData.public_id;
     await dbUser.save();
 
     res.json({ message: '✅ Avatar mis à jour', avatarUrl: dbUser.avatarUrl });

@@ -1,7 +1,8 @@
+const upload = require('../middleware/multerConfig');
 // ✅ routes/productRoutes.js
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
+const cloudinaryUpload = require('../middleware/cloudinaryUpload');
 
 const {
   createProduct,
@@ -18,20 +19,11 @@ const {
 
 const {
   requireVendeurRole,
-  multerErrorHandler,
   validateProductData,
-} = require('../middleware/productMiddleware');
+} = require('../middleware/validationMiddleware');
 
-// 📦 Multer pour upload image produit
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE'), false);
-  },
-});
+const multerErrorHandler = require('../middleware/multerErrorHandler');
+
 
 // 🔒 Routes privées (vendeur connecté)
 router.get(
@@ -43,6 +35,7 @@ router.get(
   getMyProducts
 );
 
+// Utilise un dossier Cloudinary basé sur le nom de la boutique (slugifié) pour une meilleure lisibilité
 router.post(
   '/',
   jwtCheck,
@@ -51,10 +44,14 @@ router.post(
   requireVendeurRole,
   upload.single('image'),
   multerErrorHandler,
+  cloudinaryUpload((req) => {
+    return `riveltime/${req.dbUser.auth0Id}/boutiques/${req.body.boutiqueId}/vitrine`;
+  }),
   validateProductData,
   createProduct
 );
 
+// Utilise un dossier Cloudinary basé sur le nom de la boutique (slugifié) pour une meilleure lisibilité
 router.put(
   '/:id',
   jwtCheck,
@@ -63,6 +60,9 @@ router.put(
   requireVendeurRole,
   upload.single('image'),
   multerErrorHandler,
+  cloudinaryUpload((req) => {
+    return `riveltime/${req.dbUser.auth0Id}/boutiques/${req.body.boutiqueId}/vitrine`;
+  }),
   validateProductData,
   updateProduct
 );

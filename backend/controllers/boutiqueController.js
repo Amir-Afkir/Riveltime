@@ -2,19 +2,8 @@
 const Boutique = require('../models/Boutique');
 const Product = require('../models/Product');
 const cloudinary = require('../config/cloudinary');
-const streamifier = require('streamifier');
 const mongoose = require('mongoose');
 
-// 📁 Upload image de couverture boutique
-async function uploadCoverImage(userId, fileBuffer) {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: `riveltime/users/${userId}/boutiques` },
-      (error, result) => (result ? resolve(result) : reject(error))
-    );
-    streamifier.createReadStream(fileBuffer).pipe(stream);
-  });
-}
 
 function isValidObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -70,15 +59,7 @@ exports.createBoutique = async (req, res) => {
     const { name, category, description, address, location } = req.body;
     const userId = req.dbUser._id;
 
-    let coverImageUrl = null;
-    let coverImagePublicId = null;
-
-    if (req.file?.buffer) {
-      const result = await uploadCoverImage(userId, req.file.buffer);
-      coverImageUrl = result.secure_url;
-      coverImagePublicId = result.public_id;
-    }
-
+    // Créer la boutique sans image de couverture
     const boutique = new Boutique({
       owner: userId,
       name,
@@ -86,12 +67,47 @@ exports.createBoutique = async (req, res) => {
       description,
       address,
       location,
-      coverImageUrl,
-      coverImagePublicId,
     });
 
     await boutique.save();
-    res.status(201).json({ boutique });
+
+    // Si l'image est déjà uploadée via un middleware (ex: Cloudinary), utiliser req.imageData
+    if (req.imageData) {
+      boutique.coverImageUrl = req.imageData.secure_url;
+      boutique.coverImagePublicId = req.imageData.public_id;
+      await boutique.save();
+      return res.status(201).json({ boutique });
+    }
+
+    // Sinon, gérer l'upload après la création si une image est présente dans req.file
+    if (req.file?.buffer) {
+      const streamifier = require('streamifier');
+      const folderPath = `riveltime/${req.dbUser.auth0Id}/boutiques/${boutique._id}`;
+      const uploadOptions = {
+        folder: folderPath,
+        public_id: 'cover',
+        resource_type: 'image',
+        format: 'webp',
+        transformation: [{ quality: 'auto:eco' }],
+      };
+
+      const uploadStream = cloudinary.uploader.upload_stream(uploadOptions, async (err, result) => {
+        if (err) {
+          console.error('❌ Erreur upload cover boutique :', err);
+          return res.status(500).json({ error: 'Erreur upload image couverture.' });
+        }
+
+        boutique.coverImageUrl = result.secure_url;
+        boutique.coverImagePublicId = result.public_id;
+        await boutique.save();
+
+        return res.status(201).json({ boutique });
+      });
+
+      streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+    } else {
+      res.status(201).json({ boutique });
+    }
   } catch (err) {
     handleServerError(res, err, 'Erreur création boutique');
   }
@@ -109,13 +125,12 @@ exports.updateBoutique = async (req, res) => {
 
     const { name, category, description, address, location } = req.body;
 
-    if (req.file?.buffer) {
+    if (req.imageData) {
       if (boutique.coverImagePublicId) {
         await cloudinary.uploader.destroy(boutique.coverImagePublicId);
       }
-      const result = await uploadCoverImage(req.dbUser._id, req.file.buffer);
-      boutique.coverImageUrl = result.secure_url;
-      boutique.coverImagePublicId = result.public_id;
+      boutique.coverImageUrl = req.imageData.secure_url;
+      boutique.coverImagePublicId = req.imageData.public_id;
     }
 
     boutique.name = name;
@@ -145,8 +160,9 @@ exports.deleteBoutiqueById = async (req, res) => {
     const produits = await Product.find({ boutique: id });
 
     for (const produit of produits) {
-      if (produit.image?.public_id) {
-        await cloudinary.uploader.destroy(produit.image.public_id);
+      // Correction: Suppression via produit.imagePublicId pour cohérence
+      if (produit.imagePublicId) {
+        await cloudinary.uploader.destroy(produit.imagePublicId);
       }
     }
 

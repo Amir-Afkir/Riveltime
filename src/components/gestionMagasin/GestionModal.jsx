@@ -2,6 +2,8 @@ import { X, Trash2, Save } from "lucide-react";
 import { useRef } from "react";
 import Input from "../ui/Input";
 
+const safeValue = (val, fallback = "") => (val === undefined || val === null ? fallback : val);
+
 const CATEGORIES = [
   "Alimentation",
   "Mobilité électrique",
@@ -86,7 +88,7 @@ export default function GestionModal({
               name="name"
               type="text"
               aria-label="Nom de la boutique"
-              value={data.name}
+              value={safeValue(data.name)}
               onChange={onChange}
               className="w-full px-4 py-2.5 border rounded-xl shadow-sm text-sm text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary mb-3"
             />
@@ -94,7 +96,7 @@ export default function GestionModal({
             <select
               name="category"
               aria-label="Catégorie"
-              value={data.category}
+              value={safeValue(data.category)}
               onChange={onChange}
               className="w-full border rounded-xl px-4 py-2.5 text-sm text-gray-800 mb-3 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
             >
@@ -121,15 +123,15 @@ export default function GestionModal({
 
         {isProduit && (
           <>
-            <Input label="Nom" name="name" aria-label="Nom" value={data.name} onChange={onChange} />
-            <Input label="Prix" name="price" type="number" aria-label="Prix" value={data.price} onChange={onChange} />
+            <Input label="Nom" name="name" aria-label="Nom" value={safeValue(data.name)} onChange={onChange} />
+            <Input label="Prix" name="price" type="number" aria-label="Prix" value={safeValue(data.price, "")} onChange={onChange} />
 
             <label className="block mt-4 mb-3 font-semibold text-sm text-gray-700">Collection</label>
             <input
               list="collections"
               name="collectionName"
               aria-label="Collection"
-              value={data.collectionName || ""}
+              value={safeValue(data.collectionName)}
               onChange={onChange}
               className="w-full border rounded-xl px-4 py-2.5 mt-1 mb-3 text-sm text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
             />
@@ -139,7 +141,7 @@ export default function GestionModal({
               ))}
             </datalist>
 
-            <Input label="Description" name="description" aria-label="Description" value={data.description} onChange={onChange} />
+            <Input label="Description" name="description" aria-label="Description" value={safeValue(data.description)} onChange={onChange} />
             <Input label="Image" name="image" type="file" aria-label="Image" accept="image/*" onChange={onFileChange} className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-[#d12e47]" />
           </>
         )}

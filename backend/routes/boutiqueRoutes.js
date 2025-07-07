@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
 
 const boutiqueController = require('../controllers/boutiqueController');
 const productController = require('../controllers/productController');
@@ -14,19 +13,11 @@ const {
 const {
   validateBoutiqueData,
   requireVendeurRole,
-  multerErrorHandler,
-} = require('../middleware/boutiqueMiddleware');
+} = require('../middleware/validationMiddleware');
 
-// 📦 Multer config
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE'));
-  },
-});
+const cloudinaryUpload = require('../middleware/cloudinaryUpload');
+const multerErrorHandler = require('../middleware/multerErrorHandler');
+const upload = require('../middleware/multerConfig');
 
 // 🌐 Routes publiques
 router.get('/', boutiqueController.getAllBoutiques);
@@ -42,6 +33,10 @@ router.post(
   requireVendeurRole,
   upload.single('coverImage'),
   multerErrorHandler,
+  async (req, res, next) => {
+    req.deferCloudinaryUpload = true;
+    next();
+  },
   validateBoutiqueData,
   boutiqueController.createBoutique
 );
@@ -54,6 +49,7 @@ router.put(
   requireVendeurRole,
   upload.single('coverImage'),
   multerErrorHandler,
+  cloudinaryUpload((req) => `riveltime/${req.dbUser.auth0Id}/boutiques/${req.params.id}`),
   validateBoutiqueData,
   boutiqueController.updateBoutique
 );

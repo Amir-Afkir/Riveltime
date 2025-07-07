@@ -6,12 +6,15 @@ import { useUser } from '../../../context/UserContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const createFormData = ({ name, category, coverImage }) => {
+const createFormData = ({ name, category, coverImage, location }) => {
   const formData = new FormData();
   formData.append("name", name);
   formData.append("category", category);
   if (coverImage) {
     formData.append("coverImage", coverImage);
+  }
+  if (location) {
+    formData.append("location", JSON.stringify(location));
   }
   return formData;
 };
