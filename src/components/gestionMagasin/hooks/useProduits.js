@@ -13,9 +13,13 @@ export default function useProduits() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const getHeaders = () => (token ? { Authorization: `Bearer ${token}` } : {});
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-  // 🔒 Récupérer tous les produits de mes boutiques
+  const handleAxiosError = (err, defaultMsg) => {
+    console.error(err);
+    setError(err?.response?.data?.error || defaultMsg);
+  };
+
   const fetchMyProduits = useCallback(async () => {
     if (!isAuthenticated || !token) return;
 
@@ -23,88 +27,77 @@ export default function useProduits() {
     setError(null);
 
     try {
-      const res = await axios.get(`${API_URL}/produits/mine`, {
-        headers: getHeaders(),
-      });
-
-      if (res.data.success) {
-        setProduits(res.data.produits);
-      } else {
-        setError(res.data.error || 'Erreur lors du chargement');
-      }
+      const res = await axios.get(`${API_URL}/produits/mine`, { headers });
+      setProduits(res.data.success ? res.data.produits : []);
+      if (!res.data.success) setError(res.data.error || 'Erreur lors du chargement');
     } catch (err) {
-      console.error(err);
-      setError('Erreur réseau lors du chargement des produits');
+      handleAxiosError(err, 'Erreur réseau lors du chargement des produits');
     } finally {
       setLoading(false);
     }
   }, [token, isAuthenticated]);
 
-  // 🌐 Récupérer les produits publics d’une boutique
   const fetchProduitsByBoutique = useCallback(async (boutiqueId) => {
     setLoading(true);
     setError(null);
     try {
       const res = await axios.get(`${API_URL}/produits/boutique/${boutiqueId}`);
-      if (res.data.success) {
-        setProduits(res.data.produits);
-      } else {
-        setError(res.data.error || 'Erreur chargement produits');
-      }
+      setProduits(res.data.success ? res.data.produits : []);
+      if (!res.data.success) setError(res.data.error || 'Erreur chargement produits');
     } catch (err) {
-      console.error(err);
-      setError('Erreur réseau lors du chargement des produits');
+      handleAxiosError(err, 'Erreur réseau lors du chargement des produits');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // 📥 Créer un nouveau produit
   const createProduit = async (formData) => {
-    const res = await axios.post(`${API_URL}/produits`, formData, {
-      headers: {
-        ...getHeaders(),
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-
-    if (res.data.success) {
-      setProduits((prev) => [...prev, res.data.produit]);
-      return res.data.produit;
-    } else {
-      throw new Error(res.data.error || 'Erreur lors de la création');
+    try {
+      const res = await axios.post(`${API_URL}/produits`, formData, {
+        headers: { ...headers, 'Content-Type': 'multipart/form-data' },
+      });
+      if (res.data.success) {
+        setProduits((prev) => [...prev, res.data.produit]);
+        return res.data.produit;
+      } else {
+        throw new Error(res.data.error);
+      }
+    } catch (err) {
+      handleAxiosError(err, 'Erreur lors de la création');
+      throw err;
     }
   };
 
-  // ✏️ Modifier un produit
   const updateProduit = async (id, formData) => {
-    const res = await axios.put(`${API_URL}/produits/${id}`, formData, {
-      headers: {
-        ...getHeaders(),
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-
-    if (res.data.success) {
-      setProduits((prev) =>
-        prev.map((p) => (p._id === id ? res.data.produit : p))
-      );
-      return res.data.produit;
-    } else {
-      throw new Error(res.data.error || 'Erreur lors de la modification');
+    try {
+      const res = await axios.put(`${API_URL}/produits/${id}`, formData, {
+        headers: { ...headers, 'Content-Type': 'multipart/form-data' },
+      });
+      if (res.data.success) {
+        setProduits((prev) =>
+          prev.map((p) => (p._id === id ? res.data.produit : p))
+        );
+        return res.data.produit;
+      } else {
+        throw new Error(res.data.error);
+      }
+    } catch (err) {
+      handleAxiosError(err, 'Erreur lors de la modification');
+      throw err;
     }
   };
 
-  // 🗑️ Supprimer un produit
   const deleteProduit = async (id) => {
-    const res = await axios.delete(`${API_URL}/produits/${id}`, {
-      headers: getHeaders(),
-    });
-
-    if (res.data.success) {
-      setProduits((prev) => prev.filter((p) => p._id !== id));
-    } else {
-      throw new Error(res.data.error || 'Erreur lors de la suppression');
+    try {
+      const res = await axios.delete(`${API_URL}/produits/${id}`, { headers });
+      if (res.data.success) {
+        setProduits((prev) => prev.filter((p) => p._id !== id));
+      } else {
+        throw new Error(res.data.error);
+      }
+    } catch (err) {
+      handleAxiosError(err, 'Erreur lors de la suppression');
+      throw err;
     }
   };
 

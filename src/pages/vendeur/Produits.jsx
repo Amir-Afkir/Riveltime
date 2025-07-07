@@ -19,6 +19,24 @@ const CATEGORIES = [
   "Maison & Déco",
 ];
 
+const INITIAL_BOUTIQUE_FORM = {
+  _id: null,
+  name: "",
+  category: "",
+  coverImage: null,
+  coverImageUrl: "",
+};
+
+const INITIAL_PRODUIT_FORM = {
+  _id: null,
+  name: "",
+  price: "",
+  category: "",
+  description: "",
+  image: null,
+  collectionName: "",
+};
+
 export default function Produits() {
   const {
     boutiques,
@@ -41,28 +59,20 @@ export default function Produits() {
 
   const [selectedBoutique, setSelectedBoutique] = useState(null);
   const [showBoutiqueModal, setShowBoutiqueModal] = useState(false);
-  const [boutiqueForm, setBoutiqueForm] = useState({
-    _id: null,
-    name: "",
-    category: "",
-    coverImage: null,
-    coverImageUrl: "",
-  });
+  const [boutiqueForm, setBoutiqueForm] = useState(INITIAL_BOUTIQUE_FORM);
   const [collectionsDispo, setCollectionsDispo] = useState([]);
 
-  const [produitForm, setProduitForm] = useState({
-    _id: null,
-    name: "",
-    price: "",
-    category: "",
-    description: "",
-    image: null,
-  });
+  const [produitForm, setProduitForm] = useState(INITIAL_PRODUIT_FORM);
   const [showProduitModal, setShowProduitModal] = useState(false);
 
   const [notification, setNotification] = useState(null);
   const closeNotification = () => setNotification(null);
 
+  // Reset functions
+  const resetBoutiqueForm = () => setBoutiqueForm(INITIAL_BOUTIQUE_FORM);
+  const resetProduitForm = () => setProduitForm(INITIAL_PRODUIT_FORM);
+
+  // Effects
   useEffect(() => {
     fetchAllBoutiques();
   }, [fetchAllBoutiques]);
@@ -78,9 +88,10 @@ export default function Produits() {
     }
   }, [produits]);
 
+  // Handle functions for boutiques
   const handleSelectBoutique = (boutique) => {
     setSelectedBoutique(boutique);
-    setBoutiqueForm(boutique);
+    setBoutiqueForm(boutique || INITIAL_BOUTIQUE_FORM);
     if (boutique?._id) {
       fetchProduitsByBoutique(boutique._id);
     }
@@ -90,7 +101,7 @@ export default function Produits() {
     setBoutiqueForm(
       b
         ? { ...b, coverImage: null } // modification existante
-        : { _id: null, name: "", category: "", coverImage: null, coverImageUrl: "" } // création
+        : INITIAL_BOUTIQUE_FORM // création
     );
     setShowBoutiqueModal(true);
   };
@@ -127,8 +138,9 @@ export default function Produits() {
     }
   };
 
+  // Handle functions for produits
   const handleAjouterProduit = () => {
-    setProduitForm({ _id: null, name: "", price: "", category: "", description: "", image: null, collectionName: "" });
+    resetProduitForm();
     setShowProduitModal(true);
   };
 
@@ -189,9 +201,14 @@ export default function Produits() {
   return (
     <div className="pt-4 px-4 pb-10">
       {notification && (
-        <NotificationBanner message={notification.message} type={notification.type} onClose={closeNotification} />
+        <NotificationBanner
+          message={notification.message}
+          type={notification.type}
+          onClose={closeNotification}
+        />
       )}
 
+      {/* Boutique Selector */}
       <BoutiqueSelector
         boutiques={boutiques || []}
         selectedId={selectedBoutique?._id}
@@ -200,6 +217,7 @@ export default function Produits() {
         onEdit={handleCreateBoutique}
       />
 
+      {/* Gestion Modal */}
       {(showBoutiqueModal || showProduitModal) && (
         <GestionModal
           type={showBoutiqueModal ? "boutique" : "produit"}
@@ -212,15 +230,10 @@ export default function Produits() {
           onClose={() => {
             if (showBoutiqueModal) {
               setShowBoutiqueModal(false);
-              setBoutiqueForm({
-                _id: null,
-                name: "",
-                category: "",
-                coverImage: null,
-                coverImageUrl: "",
-              });
+              resetBoutiqueForm();
             } else {
               setShowProduitModal(false);
+              resetProduitForm();
             }
           }}
           categories={CATEGORIES}
@@ -228,6 +241,7 @@ export default function Produits() {
         />
       )}
 
+      {/* Produit Section */}
       <ProduitSection
         produits={produits}
         produitsLoading={produitsLoading}
@@ -238,7 +252,6 @@ export default function Produits() {
         onSupprimerProduit={handleSupprimerProduit}
         onAjouterBoutique={handleCreateBoutique}
       />
-
     </div>
   );
 }

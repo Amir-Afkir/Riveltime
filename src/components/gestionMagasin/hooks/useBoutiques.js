@@ -6,6 +6,16 @@ import { useUser } from '../../../context/UserContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+const createFormData = ({ name, category, coverImage }) => {
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("category", category);
+  if (coverImage) {
+    formData.append("coverImage", coverImage);
+  }
+  return formData;
+};
+
 export default function useBoutiques() {
   const { token, isAuthenticated } = useUser(); // ✅ utilisé ici
   const [boutiques, setBoutiques] = useState([]);
@@ -15,9 +25,7 @@ export default function useBoutiques() {
 
   useEffect(() => {
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      abortControllerRef.current?.abort();
     };
   }, []);
 
@@ -66,7 +74,8 @@ export default function useBoutiques() {
     }
   }, [token, isAuthenticated]);
 
-  const createBoutique = async (formData) => {
+  const createBoutique = async (boutiqueData) => {
+    const formData = createFormData(boutiqueData);
     const res = await axios.post(`${API_URL}/boutiques`, formData, {
       headers: {
         ...getHeaders(),
@@ -77,7 +86,8 @@ export default function useBoutiques() {
     return res.data.boutique;
   };
 
-  const updateBoutique = async (id, formData) => {
+  const updateBoutique = async (id, boutiqueData) => {
+    const formData = createFormData(boutiqueData);
     const res = await axios.put(`${API_URL}/boutiques/${id}`, formData, {
       headers: {
         ...getHeaders(),
@@ -98,18 +108,9 @@ export default function useBoutiques() {
   };
 
   const saveBoutique = async (boutiqueForm) => {
-    const formData = new FormData();
-    formData.append("name", boutiqueForm.name);
-    formData.append("category", boutiqueForm.category);
-    if (boutiqueForm.coverImage) {
-      formData.append("coverImage", boutiqueForm.coverImage);
-    }
-
-    if (boutiqueForm._id) {
-      return await updateBoutique(boutiqueForm._id, formData);
-    } else {
-      return await createBoutique(formData);
-    }
+    return boutiqueForm._id
+      ? await updateBoutique(boutiqueForm._id, boutiqueForm)
+      : await createBoutique(boutiqueForm);
   };
 
   return {
