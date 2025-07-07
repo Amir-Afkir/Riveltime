@@ -30,9 +30,6 @@ export default function ProduitSection({
         <div className="w-full flex justify-center mb-4">
           <img src="/boutique.webp" alt="Aucune boutique" className="w-40 h-auto opacity-90" />
         </div>
-        <div className="mb-4">
-          <ArrowRight className="h-8 w-8 text-red-500 animate-bounce" />
-        </div>
         <Button
           variant="secondary"
           onClick={onAjouterBoutique}
@@ -96,12 +93,12 @@ export default function ProduitSection({
             </ul>
           )}
 
-          <button
+          <Button
             onClick={onAjouterProduit}
-            className="w-full bg-neutral-50 !text-black border border-gray-300 hover:bg-neutral-100 active:scale-[0.97] active:shadow-inner focus-visible:ring-2 focus-visible:ring-red-300 rounded-full flex items-center justify-center py-2.5 text-[15px] transition-transform mt-5"
+            variant="secondary"
           >
             Ajouter un produit
-          </button>
+          </Button>
         </>
       )}
     </>
