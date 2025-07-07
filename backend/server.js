@@ -42,20 +42,12 @@ app.get('/', (req, res) => {
 // ====================================
 // 🌐 ROUTES PUBLIQUES (AVANT jwtCheck)
 // ====================================
-console.log('📦 Mounting / (testRoutes)');
 app.use('/', require('./routes/testRoutes'));
-
-console.log('📦 Mounting /account');
 app.use('/account', require('./routes/accountRoutes'));
-
-console.log('📦 Mounting /address');
 app.use('/address', require('./routes/addressRoutes'));
-
-console.log('📦 Mounting /client/accueil');
 app.use('/client/accueil', require('./routes/vendorRoutes'));
 
 // ✅ ROUTE PRODUITS PUBLIQUE (produits d’une boutique)
-console.log('📦 Mounting /produits (publiques)');
 app.use('/produits', require('./routes/publicProductRoutes')); // uniquement get /produits/boutique/:id
 
 
@@ -68,16 +60,9 @@ app.use(jwtCheck, injectUser, createUserIfNotExists);
 // ====================================
 // 🔐 ROUTES PRIVÉES (PROTÉGÉES PAR JWT)
 // ====================================
-console.log('📦 Mounting /users');
 app.use('/users', require('./routes/userRoutes'));
-
-console.log('📦 Mounting /boutiques');
 app.use('/boutiques', require('./routes/boutiqueRoutes'));
-
-console.log('📦 Mounting /produits (privées)');
 app.use('/produits', require('./routes/productRoutes')); // create/update/delete/mine
-
-console.log('📦 Mounting /notifications');
 app.use('/notifications', require('./routes/notificationRoutes'));
 
 
