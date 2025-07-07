@@ -45,8 +45,7 @@ export default function GestionModal({
         ref={modalRef}
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-sm md:max-w-md bg-white rounded-t-2xl rounded-b-none px-4 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto"
-      >
+        className="w-full max-w-screen-sm md:max-w-screen-md bg-white rounded-t-2xl rounded-b-none px-4 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto"      >
         <div className="flex justify-between items-center border-b pb-3 mb-5">
           <h3 className="text-base md:text-lg font-semibold text-gray-800">
             {data._id ? "Modifier" : "Créer"} {isBoutique ? "une boutique" : `un produit${boutique ? ` dans « ${boutique.name} »` : ""}`}
