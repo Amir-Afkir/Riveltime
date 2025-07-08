@@ -26,7 +26,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
                 setTimeout(() => {
                   onSelect(null);
                   setIsDeselecting(false);
-                }, 100); // doit correspondre à la durée de l'animation CSS
+                });
               }}
               className="absolute inset-0 w-full h-full focus:outline-none"
               aria-label={`Désélectionner ${selectedBoutique.name}`}
@@ -40,7 +40,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
             </button>
           </div>
         </div>
-        <div className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 w-[72px] h-[72px] rounded-full border border-white shadow-md overflow-hidden bg-white z-[60]">
+        <div className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 w-[72px] h-[72px] rounded-full border-2 border-white shadow-md overflow-hidden bg-white z-[60]">
           <img
             src={selectedBoutique.owner?.avatarUrl || "/src/assets/avatar-default.png"}
             alt={`Avatar de ${selectedBoutique.owner?.fullname || 'vendeur'}`}
