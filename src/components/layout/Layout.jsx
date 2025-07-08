@@ -29,7 +29,17 @@ export default function Layout() {
 
   return (
     <div className={`min-h-screen ${pathname !== "/" ? "pb-[calc(7rem+env(safe-area-inset-bottom))]" : "pb-0"}`}>
-      {/* Fond spécial pour la page profil et ses sous-chemins */}
+      
+      
+      {pathname && (
+        <div className="fixed inset-0 z-[-10] pointer-events-none">
+          <div className="absolute inset-0">
+            <div className="h-[0vh] bg-[#ed354f]" />
+            <div className="h-[100vh] bg-[#f3f4f6]" />
+          </div>
+        </div>
+      )}
+      
       {pathname.includes("profil") && (
         <div className="fixed inset-0 z-[-10] pointer-events-none">
           <div className="absolute inset-0">
