@@ -146,10 +146,11 @@ export default function GestionModal({
             {data._id ? "Modifier" : "Créer"} {isBoutique ? "une boutique" : `un produit${boutique ? ` dans « ${boutique.name} »` : ""}`}
           </h3>
           <div className="flex gap-2">
-            {isBoutique && data._id && (
+            {data._id && (
               <Button
                 onClick={onDelete}
-                aria-label="Supprimer la boutique"
+                aria-label="Supprimer l'élément"
+                title="Supprimer l'élément"
                 className="p-2.5 border border-red-200 text-red-500 bg-red-50/40 hover:bg-red-100 transition rounded-xl"
               >
                 <Trash2 className="w-5 h-5" />

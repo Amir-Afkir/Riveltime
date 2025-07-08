@@ -226,7 +226,7 @@ export default function Produits() {
           onChange={showBoutiqueModal ? handleChangeBoutiqueForm : handleChangeProduitForm}
           onFileChange={showBoutiqueModal ? handleBoutiqueFileChange : handleProduitFileChange}
           onSave={showBoutiqueModal ? handleSaveBoutique : handleSaveProduit}
-          onDelete={showBoutiqueModal ? handleDeleteBoutique : undefined}
+          onDelete={showBoutiqueModal ? handleDeleteBoutique : () => handleSupprimerProduit(produitForm._id)}
           onClose={() => {
             if (showBoutiqueModal) {
               setShowBoutiqueModal(false);
