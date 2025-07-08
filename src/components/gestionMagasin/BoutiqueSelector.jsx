@@ -50,10 +50,11 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
         </div>
         <button
           onClick={() => onEdit(selectedBoutique)}
-          className="absolute top-2.5 right-2.5 z-[70] bg-white p-1.5 rounded-full shadow hover:bg-gray-100 transition w-[32px] h-[32px]"
+          className="absolute top-2.5 right-2.5 z-[70] bg-white/70 backdrop-blur-sm p-3 rounded-full shadow hover:bg-white transition w-12 h-12 flex items-center justify-center"
           title="Modifier la boutique"
+          aria-label="Modifier la boutique"
         >
-          <Settings className="w-5 h-5 text-gray-700" />
+          <Settings className="w-6 h-6 text-gray-700" />
         </button>
       </div>
     );
@@ -86,7 +87,10 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
           aria-label={`Boutique ${b.name}`}
         >
         </button>
-        <span className="mt-2 text-center text-sm font-medium text-white truncate w-full">
+        <span
+          className="mt-2 text-center text-sm font-medium text-white truncate w-full"
+          title={b.name}
+        >
           {b.name}
         </span>
       </div>

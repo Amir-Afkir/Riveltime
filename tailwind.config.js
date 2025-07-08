@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+      primary: '#ef4444', // ou la couleur souhaitée
+      },
       animation: {
         spinY: 'spinY 6s linear infinite',
         avatarFadeIn: 'fadeInScale 0.3s ease-out forwards',
