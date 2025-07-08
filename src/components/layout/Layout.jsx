@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from "react-router-dom";
+import Header from "./Header";
 import BottomNav from "./BottomNav";
 import { useEffect } from "react";
 
@@ -54,7 +55,10 @@ export default function Layout() {
           </div>
         </div>
       )}
-      <main className="p-0 max-w-md mx-auto px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+      {pathname !== "/" && !pathname.includes("profil") && <Header />}
+      <main className={`p-0 max-w-md mx-auto px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] ${
+        pathname !== "/" && !pathname.includes("profil") ? "mt-[56px]" : ""
+      }`}>
         <Outlet />
       </main>
       {/* Ne pas afficher BottomNav sur home ("/") */}

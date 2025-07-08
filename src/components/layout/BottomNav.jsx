@@ -1,7 +1,7 @@
 // ✅ src/components/BottomNav.jsx
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
-import { Home, ShoppingCart, Boxes, User, Store, FileText, Bike, Mail, Scroll } from "lucide-react";
+import { Home, ShoppingCart, Boxes, User, Store, FileText, Bike, Mail, Scroll, Package } from "lucide-react";
 
 function BottomNavItem({ label, path, icon: Icon, isActive, onClick, color, badge }) {
   return (

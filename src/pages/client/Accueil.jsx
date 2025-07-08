@@ -1,62 +1,40 @@
 // src/pages/client/Accueil.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, LogIn } from "lucide-react";
 import MerchantCard from "../../components/MerchantCard";
 
 export default function Accueil() {
   const [query, setQuery] = useState("");
-  const [vendors, setVendors] = useState([]);
+  const [boutiques, setBoutiques] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchVendors() {
+    async function fetchBoutiques() {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/client/accueil/vendeurs`);
-        if (!res.ok) throw new Error("Erreur lors du fetch vendeurs");
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/client/accueil/boutiques`);
+        if (!res.ok) throw new Error("Erreur lors du fetch boutiques");
         const data = await res.json();
-        setVendors(data);
+        setBoutiques(data);
       } catch (error) {
-        console.error("Erreur fetch vendeurs", error);
+        console.error("Erreur fetch boutiques", error);
       }
     }
-    fetchVendors();
+    fetchBoutiques();
   }, []);
 
-  const filteredVendors = vendors.filter(
-    (v) =>
-      v.fullname.toLowerCase().includes(query.toLowerCase()) ||
-      (v.infosVendeur?.categorie || "").toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredBoutiques = boutiques.filter((b) => {
+    const nom = typeof b.name === "string" ? b.name.toLowerCase() : "";
+    const categorie = typeof b.category === "string" ? b.category.toLowerCase() : "";
+    const search = query.toLowerCase();
+    return nom.includes(search) || categorie.includes(search);
+  });
 
   return (
     <>
-      {/* Header fixe */}
-      <div
-        className="fixed top-0 left-0 right-0 z-10 flex justify-between items-center px-5 bg-transparent"
-        style={{
-          paddingTop: "env(safe-area-inset-top, 20px)",
-          paddingBottom: "env(safe-area-inset-top, 10px)",
-        }}
-      >
-        <img
-          src="/icon.svg"
-          alt="Riveltime logo"
-          className="h-11 w-auto shrink-0 cursor-pointer"
-          onClick={() => navigate("/")}
-        />
-        <button
-          className="bg-neutral-50 !text-black border border-gray-300 hover:bg-neutral-100 active:scale-[0.98] active:shadow-inner focus-visible:ring-2 focus-visible:ring-red-300 rounded-full flex items-center justify-center gap-2 px-5 py-2 text-sm font-medium transition-all min-w-[120px]"
-          onClick={() => navigate("/connexion")}
-          aria-label="Se connecter à son compte"
-        >
-          Se connecter
-        </button>
-      </div>
-
       {/* Container principal */}
       <div
-        className="bg-[#ffe4e6] w-full rounded-t-[2rem] p-4 mt-[56px] z-20 relative"
+        className="w-full rounded-t-[2rem] p-4 mt-[56px] z-20 relative"
         style={{ minHeight: "100vh" }}
       >
         <div className="mb-3" aria-hidden="true" />
@@ -81,7 +59,7 @@ export default function Accueil() {
           />
         </div>
 
-        <div className="grid grid-cols-4 gap-4 my-6">
+        <div className="flex overflow-x-auto gap-3 my-6 px-1 whitespace-nowrap no-scrollbar">
           {[
             { name: "Alimentation", icon: "🛒" },
             { name: "Mobilité électrique", icon: "🛴" },
@@ -92,30 +70,68 @@ export default function Accueil() {
             { name: "Bricolage", icon: "🧰" },
             { name: "Jardin", icon: "🌸" },
           ].map(({ name, icon }) => (
-            <button
-              key={name}
-              onClick={() => setQuery(name)}
-              className="aspect-square min-w-[70px] min-h-[70px] rounded-lg flex flex-col items-center justify-center hover:bg-neutral-200 transition text-center px-2 shadow-md hover:shadow-lg hover:shadow-red-300/50"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.7)" }}
-            >
-              <span className="text-xl">{icon}</span>
-              <span className="text-[11px] mt-1">{name}</span>
-            </button>
+            <div className="aspect-square w-[72px] shrink-0 mb-4" key={name}>
+              <button
+                onClick={() => setQuery(name)}
+                className="w-full h-full rounded-lg flex flex-col items-center justify-center hover:bg-neutral-200 transition text-center px-2 shadow-md hover:shadow-lg hover:shadow-red-300/50"
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.7)" }}
+              >
+                <span className="text-xl">{icon}</span>
+                <span
+                  className="text-[10px] leading-tight text-center mt-1 w-full truncate block"
+                  title={name}
+                >
+                  {name}
+                </span>
+              </button>
+            </div>
           ))}
         </div>
 
-        <main className="max-w-md mx-auto space-y-5 mt-6">
-          {filteredVendors.map((v) => (
+        {/* Section En vedette */}
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-1">
+            ✨ En vedette
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Notre sélection du moment
+          </p>
+          {filteredBoutiques[0] && (
             <MerchantCard
-              key={v._id}
-              id={v._id}
-              name={v.fullname}
-              category={v.infosVendeur?.categorie || "Non renseigné"}
-              distance={v.distance || null}
-              onClick={() => navigate(`/vitrine/${v._id}`)}
+              key={filteredBoutiques[0]._id}
+              id={filteredBoutiques[0]._id}
+              name={filteredBoutiques[0].name}
+              category={filteredBoutiques[0].category || "Non renseignée"}
+              distance={filteredBoutiques[0].distance || null}
+              coverImage={filteredBoutiques[0].coverImageUrl || null}
+              onClick={() => navigate(`/vitrine/${filteredBoutiques[0]._id}`)}
             />
-          ))}
-        </main>
+          )}
+        </section>
+
+        {/* Section Populaires */}
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-1">
+            🔥 Populaires
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Les commerces préférés des utilisateurs
+          </p>
+          <div className="overflow-x-auto whitespace-nowrap px-1 space-x-4 flex">
+            {filteredBoutiques.slice(1, 5).map((b) => (
+              <div key={b._id} className="inline-block w-[260px]">
+                <MerchantCard
+                  id={b._id}
+                  name={b.name}
+                  category={b.category || "Non renseignée"}
+                  distance={b.distance || null}
+                  coverImage={b.coverImageUrl || null}
+                  onClick={() => navigate(`/vitrine/${b._id}`)}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </>
   );
