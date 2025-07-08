@@ -143,7 +143,8 @@ export default function GestionModal({
       >
         <div className="flex justify-between items-center border-b pb-4 mb-6">
           <h3 className="text-base md:text-lg font-semibold text-gray-800">
-            {data._id ? "Modifier" : "Créer"} {isBoutique ? "une boutique" : `un produit${boutique ? ` dans « ${boutique.name} »` : ""}`}
+            {data._id ? "Modifier" : "Créer"} {isBoutique ? "boutique" : "produit"}
+            {!isBoutique && boutique?.name && ` – ${boutique.name}`}
           </h3>
           <div className="flex gap-2">
             {data._id && (

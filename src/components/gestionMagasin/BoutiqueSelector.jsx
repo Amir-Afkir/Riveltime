@@ -1,4 +1,4 @@
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
 import PropTypes from "prop-types";
 import { useState } from "react";
 
@@ -13,40 +13,48 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
 
     return (
       <div
-        className={`relative w-full max-w-[250px] mx-auto rounded-xl overflow-hidden border-4 border-gray-100 ${
+        className={`relative w-full max-w-[350px] mx-auto overflow-visible mb-6 ${
           isDeselecting ? 'animate-fade-shrink-out' : 'animate-expand-card'
         }`}
         key={selectedBoutique._id}
       >
-        <div className="aspect-video w-full relative">
-          <button
-            onClick={() => {
-              setIsDeselecting(true);
-              setTimeout(() => {
-                onSelect(null);
-                setIsDeselecting(false);
-              }, 100); // doit correspondre à la durée de l'animation CSS
-            }}
-            className="absolute inset-0 w-full h-full focus:outline-none"
-            aria-label={`Désélectionner ${selectedBoutique.name}`}
-          >
-            <img
-              src={selectedBoutique.coverImageUrl}
-              alt={`Image de ${selectedBoutique.name}`}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </button>
+        <div className="rounded-xl border-2 border-gray-100 overflow-hidden max-h-[120px]">
+          <div className="aspect-[2.5/1] w-full relative">
+            <button
+              onClick={() => {
+                setIsDeselecting(true);
+                setTimeout(() => {
+                  onSelect(null);
+                  setIsDeselecting(false);
+                }, 100); // doit correspondre à la durée de l'animation CSS
+              }}
+              className="absolute inset-0 w-full h-full focus:outline-none"
+              aria-label={`Désélectionner ${selectedBoutique.name}`}
+            >
+              <img
+                src={selectedBoutique.coverImageUrl}
+                alt={`Image de ${selectedBoutique.name}`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </button>
+          </div>
         </div>
-        <div className="bg-white text-center pt-3 pb-4 px-4">
-          <div className="text-lg font-bold text-gray-900">{selectedBoutique.name}</div>
-          <button
-            onClick={() => onEdit(selectedBoutique)}
-            className="text-xs text-primary mt-1 underline underline-offset-2"
-          >
-            Modifier la boutique
-          </button>
+        <div className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 w-[72px] h-[72px] rounded-full border border-white shadow-md overflow-hidden bg-white z-[60]">
+          <img
+            src={selectedBoutique.owner?.avatarUrl || "/src/assets/avatar-default.png"}
+            alt={`Avatar de ${selectedBoutique.owner?.fullname || 'vendeur'}`}
+            title={selectedBoutique.owner?.fullname || 'Vendeur'}
+            className="w-full h-full object-cover rounded-full"
+          />
         </div>
+        <button
+          onClick={() => onEdit(selectedBoutique)}
+          className="absolute top-2.5 right-2.5 z-[70] bg-white p-1.5 rounded-full shadow hover:bg-gray-100 transition w-[32px] h-[32px]"
+          title="Modifier la boutique"
+        >
+          <Settings className="w-5 h-5 text-gray-700" />
+        </button>
       </div>
     );
   };
@@ -69,7 +77,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
               setShrinkingId(null);
             }, 200); // attendre la fin de shrink
           }}
-          className="relative w-full h-[96px] rounded-xl overflow-hidden border-4 ring-0 shadow-[0_2px_6px_rgba(0,0,0,0.08)] transition-transform duration-100 ease-out hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-primary"
+          className="relative w-full h-[96px] rounded-xl overflow-hidden border-2 ring-0 shadow-[0_2px_6px_rgba(0,0,0,0.08)] transition-transform duration-100 ease-out hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-primary"
           style={{
             backgroundImage: b.coverImageUrl ? `url(${b.coverImageUrl})` : undefined,
             backgroundSize: "cover",
@@ -86,7 +94,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
   };
 
   return (
-    <div className="relative py-3 px-4 overflow-x-auto flex gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap scroll-smooth">
+    <div className="relative py-3 px-4 overflow-x-auto overflow-y-visible flex gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap scroll-smooth pb-12">
       {selectedId
         ? renderSelectedBoutique()
         : boutiques.filter((b) => !b.isPlaceholder).map(renderBoutique)}

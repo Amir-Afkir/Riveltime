@@ -21,7 +21,9 @@ function isOwner(user, doc) {
 // 🌐 GET - Toutes les boutiques (public)
 exports.getAllBoutiques = async (_req, res) => {
   try {
-    const boutiques = await Boutique.find().lean();
+    const boutiques = await Boutique.find()
+      .populate('owner', 'avatarUrl fullname')
+      .lean();
     res.json(boutiques);
   } catch (err) {
     handleServerError(res, err, 'Erreur récupération boutiques');
@@ -33,7 +35,9 @@ exports.getBoutiqueById = async (req, res) => {
   const { id } = req.params;
   if (!isValidObjectId(id)) return res.status(400).json({ error: 'ID de boutique invalide.' });
   try {
-    const boutique = await Boutique.findById(id).lean();
+    const boutique = await Boutique.findById(id)
+      .populate('owner', 'avatarUrl fullname')
+      .lean();
     if (!boutique) return res.status(404).json({ error: 'Boutique non trouvée.' });
     res.json({ boutique });
   } catch (err) {

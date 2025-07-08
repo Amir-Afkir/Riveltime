@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 
 export default function ProduitCard({ produit, onModifier }) {
   return (
-    <li
+    <div
       onClick={() => onModifier(produit)}
       role="button"
       tabIndex={0}
@@ -29,7 +29,7 @@ export default function ProduitCard({ produit, onModifier }) {
           <p className="text-sm text-gray-500 line-clamp-2">{produit.description}</p>
         )}
       </div>
-    </li>
+    </div>
   );
 }
 
