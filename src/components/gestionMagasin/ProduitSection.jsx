@@ -101,6 +101,7 @@ export default function ProduitSection({
         <button
           onClick={onAjouterProduit}
           className="fixed bottom-20 right-5 z-10 bg-primary bg-opacity-100 text-white w-[56px] h-[56px] flex items-center justify-center rounded-full shadow-xl hover:bg-primary/90 active:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           aria-label="Ajouter un produit"
           title="Ajouter un produit"
         >
