@@ -43,8 +43,8 @@ export default function Layout() {
       {pathname.includes("profil") && (
         <div className="fixed inset-0 z-[-10] pointer-events-none">
           <div className="absolute inset-0">
-            <div className="h-[30vh] bg-[#ed354f]" />
-            <div className="h-[70vh] bg-[#f3f4f6]" />
+            <div className="h-[28vh] bg-[#ed354f]" />
+            <div className="h-[72vh] bg-[#f3f4f6]" />
           </div>
         </div>
       )}
