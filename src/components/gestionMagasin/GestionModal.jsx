@@ -1,7 +1,9 @@
-import { X, Trash2, Save, Store, Tag, FolderSearch, Image, PackageSearch, Euro, FileText } from "lucide-react";
+import { X, Trash2, Store, Tag, FolderSearch, PackageSearch, Euro, FileText } from "lucide-react";
 import { useRef, useState } from "react";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
+import IconFieldWrapper from "../ui/IconFieldWrapper";
+import FileInput from "../ui/FileInput";
 
 const safeValue = (val, fallback = "") => (val === undefined || val === null ? fallback : val);
 
@@ -23,7 +25,6 @@ export default function GestionModal({
   onSave,
   onDelete,
   onClose,
-  categories = [],
   collectionsDispo = []
 }) {
   const modalRef = useRef();
@@ -31,18 +32,103 @@ export default function GestionModal({
   const isBoutique = type === "boutique";
   const isProduit = type === "produit";
 
-  const [showCategoryList, setShowCategoryList] = useState(false);
-  const toggleCategoryList = () => setShowCategoryList(!showCategoryList);
-  const handleSelectCategory = (cat) => {
-    onChange({ target: { name: "category", value: cat } });
-    setShowCategoryList(false);
-  };
 
   const handleBackdropClick = (e) => {
     if (modalRef.current && !modalRef.current.contains(e.target)) {
       onClose();
     }
   };
+
+  const renderBoutiqueFields = () => (
+    <>
+      <div className="relative mb-4 pl-10">
+        <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <input
+          id="name"
+          name="name"
+          type="text"
+          placeholder="Nom de la boutique"
+          aria-label="Nom de la boutique"
+          value={safeValue(data.name)}
+          onChange={onChange}
+          className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+        />
+      </div>
+
+      <div className="relative mb-4 pl-10">
+        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <select
+          name="category"
+          aria-label="Catégorie"
+          value={safeValue(data.category)}
+          onChange={onChange}
+          className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+        >
+          <option value="">Sélectionner une catégorie</option>
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-3">
+        <FileInput
+          id="coverImage"
+          name="coverImage"
+          onChange={onFileChange}
+          ariaLabel="Image de couverture"
+        />
+      </div>
+      <p className="text-xs text-gray-500 mt-1 mb-3">Image JPG ou PNG, max 2 Mo</p>
+    </>
+  );
+
+  const renderProduitFields = () => (
+    <>
+      <div className="relative mb-4 pl-10">
+        <FolderSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <input
+          list="collections"
+          name="collectionName"
+          placeholder="Collection"
+          aria-label="Collection"
+          value={safeValue(data.collectionName)}
+          onChange={onChange}
+          className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+        />
+      </div>
+
+      <datalist id="collections">
+        {collectionsDispo.map((col) => (
+          <option key={col} value={col} />
+        ))}
+      </datalist>
+
+      <IconFieldWrapper icon={PackageSearch}>
+        <Input name="name" placeholder="Nom du produit" aria-label="Nom" value={safeValue(data.name)} onChange={onChange} className="pl-10" />
+      </IconFieldWrapper>
+
+      <IconFieldWrapper icon={Euro}>
+        <Input name="price" placeholder="Prix" type="number" aria-label="Prix" value={safeValue(data.price, "")} onChange={onChange} className="pl-10" />
+      </IconFieldWrapper>
+
+      <IconFieldWrapper icon={FileText}>
+        <Input name="description" placeholder="Description" aria-label="Description" value={safeValue(data.description)} onChange={onChange} className="pl-10" />
+      </IconFieldWrapper>
+
+      <div className="mb-3">
+        <FileInput
+          id="image"
+          name="image"
+          onChange={onFileChange}
+          ariaLabel="Image"
+        />
+      </div>
+      <p className="text-xs text-gray-500 mt-1 mb-3">Image JPG ou PNG, max 2 Mo</p>
+    </>
+  );
 
   return (
     <div
@@ -53,7 +139,8 @@ export default function GestionModal({
         ref={modalRef}
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-screen-sm md:max-w-screen-md bg-white rounded-t-2xl rounded-b-none px-4 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto"      >
+        className="w-full max-w-screen-sm md:max-w-screen-md bg-white rounded-t-2xl rounded-b-none px-4 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto"
+      >
         <div className="flex justify-between items-center border-b pb-4 mb-6">
           <h3 className="text-base md:text-lg font-semibold text-gray-800">
             {data._id ? "Modifier" : "Créer"} {isBoutique ? "une boutique" : `un produit${boutique ? ` dans « ${boutique.name} »` : ""}`}
@@ -78,100 +165,9 @@ export default function GestionModal({
           </div>
         </div>
 
-        {isBoutique && (
-          <>
-            <div className="relative mb-4 pl-10">
-              <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Nom de la boutique"
-                aria-label="Nom de la boutique"
-                value={safeValue(data.name)}
-                onChange={onChange}
-                className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
-              />
-            </div>
-            <div className="relative mb-4 pl-10">
-              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <select
-                name="category"
-                aria-label="Catégorie"
-                value={safeValue(data.category)}
-                onChange={onChange}
-                className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
-              >
-                <option value="">Sélectionner une catégorie</option>
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="mb-3">
-              <input
-                id="coverImage"
-                name="coverImage"
-                type="file"
-                accept="image/*"
-                aria-label="Image de couverture"
-                onChange={onFileChange}
-                className="block w-full text-sm text-gray-800 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border file:border-gray-300 file:font-semibold file:bg-neutral-50 file:text-black hover:file:bg-neutral-100 file:cursor-pointer file:leading-tight file:focus-visible:outline-none file:focus-visible:ring-2 file:focus-visible:ring-primary transition"
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1 mb-3">Image JPG ou PNG, max 2 Mo</p>
-          </>
-        )}
+        {isBoutique && renderBoutiqueFields()}
 
-        {isProduit && (
-          <>
-            <div className="relative mb-4 pl-10">
-              <FolderSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                list="collections"
-                name="collectionName"
-                placeholder="Collection"
-                aria-label="Collection"
-                value={safeValue(data.collectionName)}
-                onChange={onChange}
-                className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
-                />
-            </div>
-            <datalist id="collections">
-              {collectionsDispo.map((col) => (
-                <option key={col} value={col} />
-              ))}
-            </datalist>
-
-            <div className="relative mb-3">
-              <PackageSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input name="name" placeholder="Nom du produit" aria-label="Nom" value={safeValue(data.name)} onChange={onChange} className="pl-10" />
-            </div>
-            <div className="relative mb-3">
-              <Euro className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input name="price" placeholder="Prix" type="number" aria-label="Prix" value={safeValue(data.price, "")} onChange={onChange} className="pl-10" />
-            </div>
-
-            <div className="relative mb-3">
-              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input name="description" placeholder="Description" aria-label="Description" value={safeValue(data.description)} onChange={onChange} className="pl-10" />
-            </div>
-            <div className="mb-3">
-              <input
-                id="image"
-                name="image"
-                type="file"
-                accept="image/*"
-                onChange={onFileChange}
-                aria-label="Image"
-                className="block w-full text-sm text-gray-800 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border file:border-gray-300 file:font-semibold file:bg-neutral-50 file:text-black hover:file:bg-neutral-100 file:cursor-pointer file:leading-tight file:focus-visible:outline-none file:focus-visible:ring-2 file:focus-visible:ring-primary transition"
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1 mb-3">🖼️ Image du produit (JPG ou PNG, max 2 Mo)</p>
-          </>
-        )}
+        {isProduit && renderProduitFields()}
 
         <div className="mt-6 border-t pt-4">
           <Button onClick={onSave} aria-label="Sauvegarder" variant="secondary">
