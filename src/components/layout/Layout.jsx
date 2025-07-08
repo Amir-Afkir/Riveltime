@@ -40,8 +40,14 @@ export default function Layout() {
         </div>
       )}
       
-      {pathname.includes("profil") && (
-        <div className="fixed inset-0 z-[-10] pointer-events-none">
+      {pathname && (
+        <div
+          className={`fixed inset-0 z-[-10] pointer-events-none transition-all ${
+            pathname.includes("profil")
+              ? "animate-slide-down"
+              : pathname !== "/" ? "animate-slide-up-exit" : ""
+          }`}
+        >
           <div className="absolute inset-0">
             <div className="h-[28vh] bg-[#ed354f]" />
             <div className="h-[72vh] bg-[#f3f4f6]" />
