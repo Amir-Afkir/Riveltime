@@ -1,9 +1,9 @@
 import PropTypes from "prop-types";
-import { Plus, Pencil, ArrowRight } from "lucide-react";
 
 import Card from "../../components/ui/Card";
 import Title from "../../components/ui/Title";
 import Button from "../../components/ui/Button";
+import ProduitListe from "./ProduitListe";
 
 export default function ProduitSection({
   produits,
@@ -40,69 +40,55 @@ export default function ProduitSection({
     </>
   );
 
-  const renderProduits = () => (
-    <>
-      <div className="mb-6 text-center">
-        <Title level={3}>Mes produits</Title>
-        <p className="text-sm text-gray-500">Catalogue</p>
-      </div>
+  const renderProduits = () => {
+    const produitsParCollection = produits.reduce((acc, produit) => {
+      const key = produit.collectionName || "Sans collection";
+      acc[key] = acc[key] || [];
+      acc[key].push(produit);
+      return acc;
+    }, {});
 
-      {produitsLoading && <p>Chargement des produits...</p>}
+    return (
+      <>
+        <div className="mb-6 text-center">
+  <Title level={3} className="text-[19px] font-semibold text-gray-800 leading-snug">
+    {boutique?.name ? `${boutique.name}` : "Votre boutique"}
+  </Title>
+  <p className="text-sm text-gray-500 mt-1 leading-tight">
+    Ajoutez ou gérez vos produits en quelques clics.
+  </p>
+</div>
 
-      {produitsError && <p className="text-red-600">Erreur : {produitsError}</p>}
+        {produitsLoading && <p>Chargement des produits...</p>}
+        {produitsError && <p className="text-red-600">Erreur : {produitsError}</p>}
 
-      {!produitsLoading && !produitsError && (
-        <>
-          {produits.length === 0 ? (
-            <p className="text-gray-600 text-center">Aucun produit pour cette boutique.</p>
-          ) : (
-            <ul>
-              {produits.map((prod) => (
-                <li key={prod._id} className="flex items-center bg-white shadow-sm hover:shadow-md transition-shadow duration-200 rounded-2xl p-4 mb-3">
-                  <div className="w-14 h-14 mr-4 rounded-xl overflow-hidden bg-neutral-100 flex items-center justify-center">
-                    {prod.imageUrl ? (
-                      <img src={prod.imageUrl} alt={prod.name} className="object-cover w-full h-full" />
-                    ) : (
-                      <span className="text-xl text-gray-400">🧸</span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[17px] font-semibold text-gray-900 leading-tight">{prod.name}</p>
-                    <p className="text-[15px] text-gray-500">{prod.price} €</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => onModifierProduit(prod)}
-                      className="p-2 bg-[#ffe4e6] rounded-xl hover:bg-[#ffd2d7] transition-all shadow-sm"
-                    >
-                      <Pencil className="w-5 h-5 text-[#ed354f]" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (window.confirm('Supprimer ce produit ?')) {
-                          onSupprimerProduit(prod._id);
-                        }
-                      }}
-                      className="p-2 bg-[#ffe4e6] rounded-xl hover:bg-[#ffd2d7] transition-all shadow-sm"
-                    >
-                      <svg className="w-5 h-5 text-[#ed354f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+        {!produitsLoading && !produitsError && (
+          <>
+            {produits.length === 0 ? (
+              <p className="text-gray-600 text-center">Aucun produit pour cette boutique.</p>
+            ) : (
+              Object.entries(produitsParCollection).map(([collection, produitsGroupe]) => (
+                <ProduitListe
+                  key={collection}
+                  collectionName={collection}
+                  produits={produitsGroupe}
+                  onModifier={onModifierProduit}
+                  onSupprimer={onSupprimerProduit}
+                />
+              ))
+            )}
 
-          <Button
-            onClick={onAjouterProduit}
-            variant="secondary"
-          >
-            Ajouter un produit
-          </Button>
-        </>
-      )}
-    </>
-  );
+            <Button
+              onClick={onAjouterProduit}
+              variant="secondary"
+            >
+              Ajouter un produit
+            </Button>
+          </>
+        )}
+      </>
+    );
+  };
 
   return <Card className="p-4">{hasBoutique ? renderProduits() : renderNoBoutique()}</Card>;
 }

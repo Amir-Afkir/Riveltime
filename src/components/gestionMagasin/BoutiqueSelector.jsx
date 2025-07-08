@@ -78,7 +78,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
           aria-label={`Boutique ${b.name}`}
         >
         </button>
-        <span className="mt-2 text-center text-sm font-medium text-gray-800 truncate w-full">
+        <span className="mt-2 text-center text-sm font-medium text-white truncate w-full">
           {b.name}
         </span>
       </div>
