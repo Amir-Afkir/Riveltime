@@ -285,6 +285,7 @@ export default function ProfilCommun({ isLoading }) {
 
   return (
     <div className="relative z-10 pt-4">
+      <div className="absolute top-0 left-0 w-full h-[30%] bg-[#ed354f] -z-10" />
       <AvatarHeader />
       {notif.message && (
         <NotificationBanner

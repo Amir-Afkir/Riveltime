@@ -51,15 +51,6 @@ export default function ProduitSection({
 
     return (
       <>
-        <div className="mb-6 text-center">
-  <Title level={3} className="text-[19px] font-semibold text-gray-800 leading-snug">
-    {boutique?.name ? `${boutique.name}` : "Votre boutique"}
-  </Title>
-  <p className="text-sm text-gray-500 mt-1 leading-tight">
-    Ajoutez ou gérez vos produits en quelques clics.
-  </p>
-</div>
-
         {produitsLoading && <p>Chargement des produits...</p>}
         {produitsError && <p className="text-red-600">Erreur : {produitsError}</p>}
 
@@ -95,6 +86,16 @@ export default function ProduitSection({
 
   return (
     <>
+      {hasBoutique && (
+        <section className="mt-0 mb-6 text-center">
+          <Title level={3} className="text-xl font-semibold leading-tight text-black">
+            {boutique?.name ? `${boutique.name}` : "Votre boutique"}
+          </Title>
+          <p className="text-sm text-black/80">
+            Ajoutez ou gérez vos produits en quelques clics.
+          </p>
+        </section>
+      )}
       <Card className="p-4">{hasBoutique ? renderProduits() : renderNoBoutique()}</Card>
 
       {hasBoutique && (

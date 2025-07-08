@@ -13,7 +13,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
 
     return (
       <div
-        className={`relative w-full max-w-[350px] mx-auto overflow-visible mb-6 ${
+        className={`relative w-full max-w-[350px] mx-auto overflow-visible ${
           isDeselecting ? 'animate-fade-shrink-out' : 'animate-expand-card'
         }`}
         key={selectedBoutique._id}
@@ -88,7 +88,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
         >
         </button>
         <span
-          className="mt-2 text-center text-sm font-medium text-white truncate w-full"
+          className="mt-2 text-center text-sm font-medium text-black truncate w-full"
           title={b.name}
         >
           {b.name}
