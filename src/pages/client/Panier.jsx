@@ -20,9 +20,11 @@ export default function Panier() {
   return (
     <>
       {cart.length === 0 ? (
-        <Title level={4} className="text-center text-gray-500">
-          Votre panier est vide.
-        </Title>
+        <div className="flex items-center justify-center h-[60vh]">
+          <Title level={4} className="text-center text-gray-500">
+            Votre panier est vide.
+          </Title>
+        </div>
       ) : (
         <>
           <div className="space-y-2 mb-6">

@@ -8,7 +8,7 @@ export default function CommandesClient() {
 
   return (
     <div className="space-y-4">
-      <div className="p-4 max-w-md mx-auto">
+      <div className="flex items-center justify-center h-[60vh]">
         {orders.length === 0 ? (
           <Title level={4} className="text-center text-gray-500">
             Aucune commande pour le moment.
