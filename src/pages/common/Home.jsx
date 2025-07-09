@@ -51,12 +51,12 @@ export default function Home() {
       
       <div className="relative min-h-screen flex items-center justify-center p-4">
       <div
-        className="fixed top-20 left-1/2 -translate-x-1/2 z-0 flex flex-col items-center"
+        className="absolute top-[0vh] left-1/2 -translate-x-1/2 z-0 flex flex-col items-center"
       >
         <img
           src="/icon-txt.svg"
           alt="Logo Riveltime"
-          className="h-[10vh] mb-[-1]"
+          className="h-[200px] w-auto mb-6 sm:mb-8 md:mb-10"
         />
       </div>
         <div className="bg-white/80 backdrop-blur-sm shadow-xl border border-gray-100 rounded-3xl p-6 w-full text-center flex flex-col items-center gap-6 animate-[riseFade_600ms_ease-out_forwards] z-10">

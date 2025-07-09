@@ -10,7 +10,6 @@ export function UserProvider({ children }) {
   const { getAccessTokenSilently, user: auth0User, isLoading: auth0Loading, isAuthenticated, logout, loginWithRedirect } = useAuth0();
 
   const [token, setToken] = useState(null);
-  const [decodedToken, setDecodedToken] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
@@ -18,34 +17,32 @@ export function UserProvider({ children }) {
     try {
       if (!silent) setLoadingUser(true);
 
-      const accessToken = await getAccessTokenSilently().catch((err) => {
+      let accessToken = null;
+      try {
+        accessToken = await getAccessTokenSilently();
+      } catch (err) {
         console.error("❌ Auth0 Token Error:", err);
-        return null;
-      });
+        if (!silent) setUserData(null);
+        setLoadingUser(false);
+        return;
+      }
 
       if (!accessToken) {
         if (!silent) setUserData(null);
+        setLoadingUser(false);
         return; // ⛔ stop ici si pas de token
       }
 
       setToken(accessToken);
-      sessionStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("accessToken", accessToken);
 
-      try {
-        const decoded = jwtDecode(accessToken);
-        setDecodedToken(decoded);
-        sessionStorage.setItem("decodedToken", JSON.stringify(decoded));
-      } catch (err) {
-        console.warn("❌ Impossible de décoder l'access token :", err);
-      }
       const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
       if (!response.ok) throw new Error("Échec récupération utilisateur");
 
-      const raw = await response.text();
-      const data = JSON.parse(raw);
+      const data = await response.json();
       setUserData(data.user || data);
     } catch (error) {
       console.error("❌ Erreur fetchUser:", error);
@@ -57,6 +54,7 @@ export function UserProvider({ children }) {
 
   useEffect(() => {
     if (!auth0Loading && isAuthenticated) {
+      console.log("✅ Auth0 prêt, on fetch l'utilisateur");
       fetchUser();
     }
   }, [auth0Loading, isAuthenticated]);
@@ -67,7 +65,7 @@ export function UserProvider({ children }) {
     if (!confirm) return;
 
     try {
-      const token = sessionStorage.getItem("accessToken");
+      const token = localStorage.getItem("accessToken");
       const response = await fetch(`${import.meta.env.VITE_API_URL}/account/delete/me`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -75,8 +73,7 @@ export function UserProvider({ children }) {
 
       if (!response.ok) throw new Error("Erreur serveur");
 
-      sessionStorage.removeItem("accessToken");
-      sessionStorage.removeItem("decodedToken");
+      localStorage.removeItem("accessToken");
       setUserData(null);
       logout({ returnTo: import.meta.env.VITE_BASE_URL });
     } catch (err) {
@@ -90,7 +87,6 @@ export function UserProvider({ children }) {
       value={{
         token,
         setToken,
-        decodedToken,
         userData,
         setUserData,
         refreshUser: fetchUser,

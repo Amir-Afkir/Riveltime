@@ -20,7 +20,7 @@ const createFormData = ({ name, category, coverImage, location }) => {
 };
 
 export default function useBoutiques() {
-  const { token, isAuthenticated } = useUser(); // ✅ utilisé ici
+  const { token, isAuthenticated, loadingUser } = useUser(); // ✅ utilisé ici
   const [boutiques, setBoutiques] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -34,48 +34,39 @@ export default function useBoutiques() {
 
   const getHeaders = () => (token ? { Authorization: `Bearer ${token}` } : {});
 
-  const fetchAllBoutiques = useCallback(async () => {
+  // Utilitaire pour fetch avec gestion du signal d'annulation, loading, error
+  const fetchWithSignal = async (url, errorMessage) => {
     setLoading(true);
     setError(null);
     abortControllerRef.current = new AbortController();
 
     try {
-      const res = await axios.get(`${API_URL}/boutiques`, {
+      const res = await axios.get(url, {
         headers: getHeaders(),
         signal: abortControllerRef.current.signal,
       });
-      setBoutiques(res.data);
+      return res.data;
     } catch (err) {
       if (!axios.isCancel(err)) {
         console.error(err);
-        setError('Erreur lors du chargement des boutiques.');
+        setError(errorMessage);
       }
+      return null;
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchAllBoutiques = useCallback(async () => {
+    const data = await fetchWithSignal(`${API_URL}/boutiques`, 'Erreur lors du chargement des boutiques.');
+    if (data) setBoutiques(data);
   }, [token]);
 
   const fetchMyBoutiques = useCallback(async () => {
-    if (!isAuthenticated || !token) return;
-    setLoading(true);
-    setError(null);
-    abortControllerRef.current = new AbortController();
-
-    try {
-      const res = await axios.get(`${API_URL}/boutiques/mine`, {
-        headers: getHeaders(),
-        signal: abortControllerRef.current.signal,
-      });
-      setBoutiques(res.data);
-    } catch (err) {
-      if (!axios.isCancel(err)) {
-        console.error(err);
-        setError('Erreur lors du chargement de vos boutiques.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [token, isAuthenticated]);
+    if (loadingUser || !isAuthenticated || !token) return;
+    const data = await fetchWithSignal(`${API_URL}/boutiques/mine`, 'Erreur lors du chargement de vos boutiques.');
+    if (data) setBoutiques(data);
+  }, [token, isAuthenticated, loadingUser]);
 
   const createBoutique = async (boutiqueData) => {
     const formData = createFormData(boutiqueData);
@@ -118,7 +109,7 @@ export default function useBoutiques() {
 
   return {
     boutiques,
-    loading,
+    loading: loading || loadingUser,
     error,
     fetchAllBoutiques,
     fetchMyBoutiques,

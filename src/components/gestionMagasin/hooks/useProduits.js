@@ -7,7 +7,7 @@ import { useUser } from '../../../context/UserContext';
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function useProduits() {
-  const { token, isAuthenticated } = useUser();
+  const { token, isAuthenticated, loadingUser } = useUser();
 
   const [produits, setProduits] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,35 +20,30 @@ export default function useProduits() {
     setError(err?.response?.data?.error || defaultMsg);
   };
 
-  const fetchMyProduits = useCallback(async () => {
-    if (!isAuthenticated || !token) return;
-
+  const fetchProduitsFrom = async (url, errorMsg) => {
     setLoading(true);
     setError(null);
-
     try {
-      const res = await axios.get(`${API_URL}/produits/mine`, { headers });
-      setProduits(res.data.success ? res.data.produits : []);
-      if (!res.data.success) setError(res.data.error || 'Erreur lors du chargement');
+      const res = await axios.get(url, { headers });
+      if (res.data.success) {
+        setProduits(res.data.produits);
+      } else {
+        setError(res.data.error || errorMsg);
+      }
     } catch (err) {
-      handleAxiosError(err, 'Erreur réseau lors du chargement des produits');
+      handleAxiosError(err, errorMsg);
     } finally {
       setLoading(false);
     }
-  }, [token, isAuthenticated]);
+  };
+
+  const fetchMyProduits = useCallback(async () => {
+    if (loadingUser || !isAuthenticated || !token) return;
+    await fetchProduitsFrom(`${API_URL}/produits/mine`, 'Erreur lors du chargement');
+  }, [token, isAuthenticated, loadingUser]);
 
   const fetchProduitsByBoutique = useCallback(async (boutiqueId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axios.get(`${API_URL}/produits/boutique/${boutiqueId}`);
-      setProduits(res.data.success ? res.data.produits : []);
-      if (!res.data.success) setError(res.data.error || 'Erreur chargement produits');
-    } catch (err) {
-      handleAxiosError(err, 'Erreur réseau lors du chargement des produits');
-    } finally {
-      setLoading(false);
-    }
+    await fetchProduitsFrom(`${API_URL}/produits/boutique/${boutiqueId}`, 'Erreur chargement produits');
   }, []);
 
   const createProduit = async (formData) => {
@@ -103,7 +98,7 @@ export default function useProduits() {
 
   return {
     produits,
-    loading,
+    loading: loading || loadingUser,
     error,
     fetchMyProduits,
     fetchProduitsByBoutique,
