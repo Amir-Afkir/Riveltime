@@ -57,7 +57,7 @@ export default function Layout() {
       )}
       {pathname !== "/" && !pathname.includes("profil") && <Header />}
       <main className={`p-0 max-w-md mx-auto px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] ${
-        pathname !== "/" && !pathname.includes("profil") ? "mt-[48px]" : ""
+        pathname !== "/" && !pathname.includes("profil") ? "mt-[50px]" : ""
       }`}>
         <Outlet />
       </main>
