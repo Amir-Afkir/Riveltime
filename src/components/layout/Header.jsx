@@ -7,7 +7,7 @@ export default function Header() {
   return (
     <header
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 px-5 bg-[#ed354f] shadow-md"
-      style={{ paddingTop: "env(safe-area-inset-top)", height: "56px" }}
+      style={{ paddingTop: "env(safe-area-inset-top)", height: "48px" }}
     >
       <img
         src="/icon.svg"
