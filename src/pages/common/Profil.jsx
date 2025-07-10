@@ -118,7 +118,7 @@ export default function ProfilCommun({ isLoading }) {
   const handleUpdate = async (formData) => {
     try {
       setIsUpdating(true);
-      const token = sessionStorage.getItem("accessToken");
+      const token = localStorage.getItem("accessToken");
 
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
         method: "PUT",
