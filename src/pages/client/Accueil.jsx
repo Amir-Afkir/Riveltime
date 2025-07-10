@@ -34,7 +34,7 @@ export default function Accueil() {
     <>
       {/* Container principal */}
       <div
-        className="w-full rounded-t-[2rem] p-4 mt-[56px] z-20 relative"
+        className="w-full rounded-t-[2rem] p-4 z-20 relative"
         style={{ minHeight: "100vh" }}
       >
         <div className="mb-3" aria-hidden="true" />
@@ -51,25 +51,25 @@ export default function Accueil() {
             className="w-full pr-4 py-2 pl-10 border border-gray-300 rounded-3xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
           />
         </div> 
-        <div className="flex overflow-x-auto overflow-visible gap-3 py-3 -mx-4 px-4 whitespace-nowrap no-scrollbar snap-x">
+        <div className="-mx-4 px-10 pl-4 flex overflow-x-auto overflow-visible gap-3 py-3 whitespace-nowrap no-scrollbar snap-x">
           {[
-            { name: "Alimentation", icon: <ShoppingCart size={20} />, bg: "#4F9CF9" },
-            { name: "Restaurant", icon: <Utensils size={20} />, bg: "#FF7744" },
-            { name: "Santé", icon: <Pill size={20} />, bg: "#FF6A7B" },
-            { name: "Mobilité", icon: <Bike size={20} />, bg: "#38D9A9" },
-            { name: "Informatique", icon: <Laptop size={20} />, bg: "#A78BFA" },
-            { name: "Bricolage", icon: <Hammer size={20} />, bg: "#FBBF24" },
-            { name: "Jardin", icon: <Flower size={20} />, bg: "#34D399" },
+            { name: "Alimentation", icon: <ShoppingCart size={24} />, bg: "#4F9CF9" },
+            { name: "Restaurant", icon: <Utensils size={24} />, bg: "#FF7744" },
+            { name: "Santé", icon: <Pill size={24} />, bg: "#FF6A7B" },
+            { name: "Mobilité", icon: <Bike size={24} />, bg: "#38D9A9" },
+            { name: "Informatique", icon: <Laptop size={24} />, bg: "#A78BFA" },
+            { name: "Bricolage", icon: <Hammer size={24} />, bg: "#FBBF24" },
+            { name: "Jardin", icon: <Flower size={24} />, bg: "#34D399" },
           ].map(({ name, icon, bg }) => (
             <div className="w-[70px] shrink-0 snap-start flex flex-col items-center justify-center text-center" key={name}>
               <button
                 onClick={() => setQuery(name)}
-                className="w-[60px] h-[45px] min-h-[44px] rounded-full flex items-center justify-center transition shadow-md hover:shadow-lg hover:brightness-95"
+                className="w-[75px] h-[52px] min-h-[44px] rounded-full flex items-center justify-center transition shadow-md hover:shadow-lg hover:brightness-95"
                 style={{ backgroundColor: bg }}
               >
                 <span className="text-white">{icon}</span>
               </button>
-              <span className="text-xs mt-1 text-gray-700 leading-tight" title={name}>
+              <span className="text-sm mt-1 text-gray-700 leading-tight" title={name}>
                 {name}
               </span>
             </div>
