@@ -12,14 +12,14 @@ export default function Header() {
   return (
     <header
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 bg-[#ed354f] shadow-md"
-      style={{ paddingTop: "env(safe-area-inset-top)", height: "56px" }}
+      style={{ paddingTop: "env(safe-area-inset-top)", height: "48px" }}
     >
       <div className="flex items-center gap-2">
         <img
           src="/icon.svg"
           alt="Riveltime logo"
           title="Riveltime - Accueil"
-          className="h-6 w-auto cursor-pointer transition-transform duration-300 hover:scale-105"
+          className="h-5 w-auto cursor-pointer transition-transform duration-300 hover:scale-105"
           onClick={() => navigate("/")}
         />
         <span className="text-white text-base font-semibold tracking-wide">
@@ -27,12 +27,12 @@ export default function Header() {
         </span>
       </div>
       <span
-        className="flex items-center gap-1 bg-white text-[#c72d41] text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-sm cursor-pointer transition hover:brightness-95"
+        className="flex items-center gap-1.5 bg-white text-[#c72d41] text-sm font-semibold px-3 py-1.5 rounded-full shadow-sm cursor-pointer transition hover:brightness-95 min-h-[44px]"
         role="button"
         aria-label="Modifier la localisation"
         title="Modifier la localisation"
       >
-        <LocationEdit size={12} strokeWidth={2} />
+        <LocationEdit size={14} strokeWidth={2} />
         {ville}
       </span>
     </header>

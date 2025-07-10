@@ -51,7 +51,7 @@ export default function Accueil() {
             className="w-full pr-4 py-2 pl-10 border border-gray-300 rounded-3xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
           />
         </div> 
-        <div className="flex overflow-x-auto overflow-visible gap-3 my-6 -mx-4 px-6 whitespace-nowrap no-scrollbar snap-x">
+        <div className="flex overflow-x-auto overflow-visible gap-3 py-3 -mx-4 px-4 whitespace-nowrap no-scrollbar snap-x">
           {[
             { name: "Alimentation", icon: <ShoppingCart size={20} />, bg: "#4F9CF9" },
             { name: "Restaurant", icon: <Utensils size={20} />, bg: "#FF7744" },
@@ -105,7 +105,7 @@ export default function Accueil() {
           <p className="text-sm text-gray-500 mb-4">
             Les commerces préférés des utilisateurs
           </p>
-          <div className="overflow-x-auto whitespace-nowrap px-1 space-x-4 flex">
+          <div className="flex overflow-x-auto overflow-visible gap-3 py-3 -mx-4 px-4 whitespace-nowrap no-scrollbar snap-x">
             {filteredBoutiques.slice(1, 5).map((b) => (
               <div key={b._id} className="inline-block w-[260px]">
                 <MerchantCard
