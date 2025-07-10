@@ -1,7 +1,7 @@
 // src/pages/client/Accueil.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, LogIn } from "lucide-react";
+import { Search, LogIn, ShoppingCart, Bike, Shirt, Laptop, Utensils, Pill, Hammer, Flower } from "lucide-react";
 import MerchantCard from "../../components/MerchantCard";
 
 export default function Accueil() {
@@ -44,46 +44,41 @@ export default function Accueil() {
         <p className="text-sm font-normal text-gray-700 text-center max-w-lg mx-auto mb-5">
           Vos commerces locaux, livrés en un clin d'œil.
         </p>
-        <div className="relative w-full max-w-md mx-auto mt-4 mb-6">
+        <div className="relative mb-4 pl-0">
           <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none"
             size={20}
           />
           <input
             type="text"
-            placeholder="Rechercher un commerçant ou une catégorie..."
+            placeholder="Recherchez une boutique"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-lg bg-white py-3 pl-12 pr-4 text-base placeholder:text-gray-400 placeholder:font-medium shadow-md
-                       focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-offset-1 transition-shadow duration-300"
+            className="w-full pr-4 py-2 pl-10 border border-gray-300 rounded-3xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
           />
         </div>
 
         <div className="flex overflow-x-auto gap-3 my-6 px-1 whitespace-nowrap no-scrollbar">
           {[
-            { name: "Alimentation", icon: "🛒" },
-            { name: "Mobilité électrique", icon: "🛴" },
-            { name: "Prêt-à-porter", icon: "👕" },
-            { name: "Informatique", icon: "💻" },
-            { name: "Restaurant", icon: "🍽️" },
-            { name: "Santé", icon: "💊" },
-            { name: "Bricolage", icon: "🧰" },
-            { name: "Jardin", icon: "🌸" },
-          ].map(({ name, icon }) => (
-            <div className="aspect-square w-[72px] shrink-0 mb-4" key={name}>
+            { name: "Alimentation", icon: <ShoppingCart size={20} />, bg: "#4F9CF9" },
+            { name: "Restaurant", icon: <Utensils size={20} />, bg: "#FF7744" },
+            { name: "Santé", icon: <Pill size={20} />, bg: "#FF6A7B" },
+            { name: "Mobilité", icon: <Bike size={20} />, bg: "#38D9A9" },
+            { name: "Informatique", icon: <Laptop size={20} />, bg: "#A78BFA" },
+            { name: "Bricolage", icon: <Hammer size={20} />, bg: "#FBBF24" },
+            { name: "Jardin", icon: <Flower size={20} />, bg: "#34D399" },
+          ].map(({ name, icon, bg }) => (
+            <div className="w-[70px] shrink-0 flex flex-col items-center justify-center text-center" key={name}>
               <button
                 onClick={() => setQuery(name)}
-                className="w-full h-full rounded-lg flex flex-col items-center justify-center hover:bg-neutral-200 transition text-center px-2 shadow-md hover:shadow-lg hover:shadow-red-300/50"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.7)" }}
+                className="w-[60px] h-[45px] rounded-full flex items-center justify-center transition shadow-md hover:shadow-lg hover:brightness-95"
+                style={{ backgroundColor: bg }}
               >
-                <span className="text-xl">{icon}</span>
-                <span
-                  className="text-[10px] leading-tight text-center mt-1 w-full truncate block"
-                  title={name}
-                >
-                  {name}
-                </span>
+                <span className="text-white">{icon}</span>
               </button>
+              <span className="text-[10px] mt-1 text-gray-700 leading-tight" title={name}>
+                {name}
+              </span>
             </div>
           ))}
         </div>
