@@ -38,12 +38,6 @@ export default function Accueil() {
         style={{ minHeight: "100vh" }}
       >
         <div className="mb-3" aria-hidden="true" />
-        <h1 className="text-xl font-semibold leading-snug text-gray-700 text-center mb-1">
-          Bienvenue sur Riveltime
-        </h1>
-        <p className="text-sm font-normal text-gray-700 text-center max-w-lg mx-auto mb-5">
-          Vos commerces locaux, livrés en un clin d'œil.
-        </p>
         <div className="relative mb-4 pl-0">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none"
@@ -54,10 +48,9 @@ export default function Accueil() {
             placeholder="Recherchez une boutique"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pr-4 py-2 pl-10 border border-gray-300 rounded-3xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+            className="w-full pr-4 py-2 pl-10 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
           />
-        </div>
-
+        </div> 
         <div className="flex overflow-x-auto gap-3 my-6 px-1 whitespace-nowrap no-scrollbar">
           {[
             { name: "Alimentation", icon: <ShoppingCart size={20} />, bg: "#4F9CF9" },
