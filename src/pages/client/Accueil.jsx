@@ -48,10 +48,10 @@ export default function Accueil() {
             placeholder="Recherchez une boutique"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pr-4 py-2 pl-10 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+            className="w-full pr-4 py-2 pl-10 border border-gray-300 rounded-3xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
           />
         </div> 
-        <div className="flex overflow-x-auto gap-3 my-6 px-1 whitespace-nowrap no-scrollbar">
+        <div className="flex overflow-x-auto overflow-visible gap-3 my-6 -mx-4 px-6 whitespace-nowrap no-scrollbar snap-x">
           {[
             { name: "Alimentation", icon: <ShoppingCart size={20} />, bg: "#4F9CF9" },
             { name: "Restaurant", icon: <Utensils size={20} />, bg: "#FF7744" },
@@ -61,15 +61,15 @@ export default function Accueil() {
             { name: "Bricolage", icon: <Hammer size={20} />, bg: "#FBBF24" },
             { name: "Jardin", icon: <Flower size={20} />, bg: "#34D399" },
           ].map(({ name, icon, bg }) => (
-            <div className="w-[70px] shrink-0 flex flex-col items-center justify-center text-center" key={name}>
+            <div className="w-[70px] shrink-0 snap-start flex flex-col items-center justify-center text-center" key={name}>
               <button
                 onClick={() => setQuery(name)}
-                className="w-[60px] h-[45px] rounded-full flex items-center justify-center transition shadow-md hover:shadow-lg hover:brightness-95"
+                className="w-[60px] h-[45px] min-h-[44px] rounded-full flex items-center justify-center transition shadow-md hover:shadow-lg hover:brightness-95"
                 style={{ backgroundColor: bg }}
               >
                 <span className="text-white">{icon}</span>
               </button>
-              <span className="text-[10px] mt-1 text-gray-700 leading-tight" title={name}>
+              <span className="text-xs mt-1 text-gray-700 leading-tight" title={name}>
                 {name}
               </span>
             </div>

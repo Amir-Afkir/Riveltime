@@ -104,7 +104,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
   };
 
   return (
-    <div className="relative py-3 px-4 overflow-x-auto overflow-y-visible flex gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap scroll-smooth pb-12">
+    <div className="relative py-3 -mx-4 px-4 overflow-x-auto overflow-visible flex gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap scroll-smooth pb-12">
       {selectedId
         ? renderSelectedBoutique()
         : boutiques.filter((b) => !b.isPlaceholder).map(renderBoutique)}
