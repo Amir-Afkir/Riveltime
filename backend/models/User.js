@@ -7,7 +7,6 @@ const infosClientSchema = new mongoose.Schema({
 }, { _id: false });
 
 const infosVendeurSchema = new mongoose.Schema({
-  categorie: { type: String, trim: true },
   adresseComplete: { type: String, trim: true },
   latitude: Number,
   longitude: Number,

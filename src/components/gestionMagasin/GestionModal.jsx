@@ -1,5 +1,5 @@
-import { X, Trash2, Store, Tag, FolderSearch, PackageSearch, Euro, FileText } from "lucide-react";
-import { useRef, useState } from "react";
+import { X, Trash2, Store, Tag, FolderSearch, PackageSearch, Euro, FileText, MapPin } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import IconFieldWrapper from "../ui/IconFieldWrapper";
@@ -19,7 +19,7 @@ const CATEGORIES = [
 export default function GestionModal({
   type,
   data,
-  boutique, // utile uniquement pour type === "produit"
+  boutique,
   onChange,
   onFileChange,
   onSave,
@@ -28,6 +28,9 @@ export default function GestionModal({
   collectionsDispo = []
 }) {
   const modalRef = useRef();
+
+  const [adresseSuggestions, setAdresseSuggestions] = useState([]);
+  const adresseInputRef = useRef(null);
 
   const isBoutique = type === "boutique";
   const isProduit = type === "produit";
@@ -71,6 +74,60 @@ export default function GestionModal({
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="relative mb-4 pl-10">
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <input
+          id="address"
+          name="address"
+          type="text"
+          placeholder="Adresse complète"
+          aria-label="Adresse"
+          value={safeValue(data.address)}
+          onChange={async (e) => {
+            const value = e.target.value;
+            onChange({ target: { name: "address", value } });
+            onChange({ target: { name: "location", value: null } });
+
+            if (value.length > 3) {
+              const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${value}`);
+              const dataAPI = await res.json();
+              setAdresseSuggestions(dataAPI.features || []);
+            } else {
+              setAdresseSuggestions([]);
+            }
+          }}
+          className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+          autoComplete="off"
+          ref={adresseInputRef}
+        />
+        {adresseSuggestions.length > 0 && (
+          <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-48 overflow-auto text-sm">
+            {adresseSuggestions.map((sug) => (
+              <li
+                key={sug.properties.id}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange({ target: { name: "address", value: sug.properties.label } });
+                  onChange({
+                    target: {
+                      name: "location",
+                      value: {
+                        type: "Point",
+                        coordinates: sug.geometry.coordinates,
+                      },
+                    },
+                  });
+                  setAdresseSuggestions([]);
+                }}
+              >
+                {sug.properties.label}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="mb-3">
@@ -130,6 +187,7 @@ export default function GestionModal({
     </>
   );
 
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-end justify-center z-50"
@@ -172,7 +230,13 @@ export default function GestionModal({
         {isProduit && renderProduitFields()}
 
         <div className="mt-6 border-t pt-4">
-          <Button onClick={onSave} aria-label="Sauvegarder" variant="secondary">
+          <Button
+            onClick={onSave}
+            aria-label="Sauvegarder"
+            variant="secondary"
+            disabled={false}
+            title=""
+          >
             Sauvegarder
           </Button>
         </div>

@@ -1,20 +1,71 @@
 // ✅ ProfilCommun.jsx
+
+// 🛠️ Imports React et hooks
 import { useState, useRef, useEffect, useMemo } from "react";
+
+// 🛠️ Portail
+import { createPortal } from "react-dom";
+
+// 🛠️ Composants internes
 import NotificationBanner from "../../components/ui/NotificationBanner";
-import AddressSuggestionsPortal from "../../components/profile/AddressSuggestionsPortal";
 import AvatarHeader from "../../components/profile/AvatarHeader";
-import { useUser } from "../../context/UserContext";
 import InfoCard from "../../components/profile/InfoCard";
-import { User, Mail, Phone, MapPin, Truck, KeyRound, Pencil, CheckCircle } from "lucide-react";
 import UserFieldCard from "../../components/profile/UserFieldCard";
 import ToggleSwitch from "../../components/profile/ToggleSwitch";
-import Modal from "../../components/ui/Modal";
-import MoyenPaiementForm from "../../components/profile/MoyenPaiementForm";
+
+// 🛠️ Icônes externes
+import { User, Mail, Phone, MapPin, Truck, Pencil, CheckCircle } from "lucide-react";
+
+// 🛠️ Context
+import { useUser } from "../../context/UserContext";
+
+// 🪟 AddressSuggestionsPortal (portail suggestions d'adresse)
+function AddressSuggestionsPortal({ suggestions, onSelect, inputRef }) {
+  const [position, setPosition] = useState(null);
+
+  useEffect(() => {
+    if (!inputRef.current) return;
+    const rect = inputRef.current.getBoundingClientRect();
+    setPosition({
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width,
+    });
+  }, [inputRef, suggestions]);
+
+  if (!suggestions.length || !position) return null;
+
+  return createPortal(
+    <ul
+      className="bg-white border border-gray-300 rounded shadow max-h-48 overflow-auto z-[9999]"
+      style={{
+        position: "absolute",
+        top: `calc(${position.top}px - env(safe-area-inset-top, 0px))`,
+        left: position.left,
+        width: position.width,
+      }}
+    >
+      {suggestions.map((sug) => (
+        <li
+          key={sug.properties.id}
+          className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(sug.properties.label, sug.geometry.coordinates);
+          }}
+        >
+          {sug.properties.label}
+        </li>
+      ))}
+    </ul>,
+    document.body
+  );
+}
 
 
 export default function ProfilCommun({ isLoading }) {
+  // 🧠 Hooks d'état
   const { userData: user, loadingUser: loading, refreshUser, logout, deleteAccount } = useUser();
-  const [paiementModalOpen, setPaiementModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [notif, setNotif] = useState({ message: "", type: "success" });
@@ -23,11 +74,47 @@ export default function ProfilCommun({ isLoading }) {
     phone: user?.phone || "",
     adresseComplete: (user?.infosClient?.adresseComplete || user?.infosVendeur?.adresseComplete) || "",
     typeDeTransport: user?.infosLivreur?.typeDeTransport || "",
+    latitude: user?.infosClient?.latitude || user?.infosVendeur?.latitude || null,
+    longitude: user?.infosClient?.longitude || user?.infosVendeur?.longitude || null,
   });
-
   const [adresseSuggestions, setAdresseSuggestions] = useState([]);
+
+  // 🧠 Références DOM
   const adresseInputRef = useRef(null);
 
+  // 🧠 Calculs dérivés (profil, complétion)
+  const {
+    fullname,
+    email,
+    phone,
+    role,
+    notifications,
+    infosClient,
+    infosVendeur,
+    infosLivreur
+  } = useMemo(() => user || {}, [user]);
+
+  const profilCompletion = useMemo(() => {
+    let filled = 0;
+    if (fullname) filled++;
+    if (phone) filled++;
+    if (role === "client" && infosClient?.adresseComplete) filled++;
+    if (role === "vendeur") {
+      if (infosVendeur?.adresseComplete) filled++;
+    }
+    if (role === "livreur" && infosLivreur?.typeDeTransport) filled++;
+    const max = role === "vendeur" ? 3 : 3;
+    return Math.round((filled / max) * 100);
+  }, [fullname, phone, role, infosClient, infosVendeur, infosLivreur]);
+
+  const profilIncomplet = useMemo(() => {
+    if (role === "client") return !fullname || !phone || !infosClient?.adresseComplete;
+    if (role === "vendeur") return !fullname || !phone || !infosVendeur?.adresseComplete;
+    if (role === "livreur") return !fullname || !phone || !infosLivreur?.typeDeTransport;
+    return false;
+  }, [fullname, phone, role, infosClient, infosVendeur, infosLivreur]);
+
+  // 🧠 Fonctions de gestion (update, edit)
   const handleUpdate = async (formData) => {
     try {
       setIsUpdating(true);
@@ -54,55 +141,63 @@ export default function ProfilCommun({ isLoading }) {
     }
   };
 
-  // if (loading) return <p>Chargement...</p>;
-  if (!user) return <p>Erreur : utilisateur introuvable</p>;
-
-  // Regroupe la logique d'extraction des propriétés utilisateur dans un useMemo
-  const {
-    fullname,
-    email,
-    phone,
-    role,
-    notifications,
-    infosClient,
-    infosVendeur,
-    infosLivreur
-  } = useMemo(() => user || {}, [user]);
-
-  // Calcule la complétion de profil via un useMemo pour éviter les recalculs
-  const profilCompletion = useMemo(() => {
-    let filled = 0;
-    if (fullname) filled++;
-    if (phone) filled++;
-    if (role === "client" && infosClient?.adresseComplete) filled++;
-    if (role === "vendeur") {
-      if (infosVendeur?.categorie) filled++;
-      if (infosVendeur?.adresseComplete) filled++;
-    }
-    if (role === "livreur" && infosLivreur?.typeDeTransport) filled++;
-    const max = role === "vendeur" ? 4 : 3;
-    return Math.round((filled / max) * 100);
-  }, [fullname, phone, role, infosClient, infosVendeur, infosLivreur]);
-
-  // Crée une constante profilIncomplet pour éviter les appels répétés à isProfilIncomplet()
-  const profilIncomplet = useMemo(() => {
-    if (role === "client") return !fullname || !phone || !infosClient?.adresseComplete;
-    if (role === "vendeur") return !fullname || !phone || !infosVendeur?.categorie || !infosVendeur?.adresseComplete;
-    if (role === "livreur") return !fullname || !phone || !infosLivreur?.typeDeTransport;
-    return false;
-  }, [fullname, phone, role, infosClient, infosVendeur, infosLivreur]);
-
-
-  // Refactore handleEditToggle() pour simplifier la mise à jour des données.
   const handleEditToggle = async () => {
     if (isEditing) {
+      if (
+        (role === "client" || role === "vendeur") &&
+        editableData.adresseComplete &&
+        (editableData.latitude === null || editableData.longitude === null)
+      ) {
+        try {
+          const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${editableData.adresseComplete}`);
+          const data = await res.json();
+          const best = data?.features?.[0];
+          if (best) {
+            editableData.latitude = best.geometry.coordinates[1];
+            editableData.longitude = best.geometry.coordinates[0];
+          } else {
+            setNotif({
+              message: "❌ Adresse non trouvée. Veuillez saisir une adresse plus précise ou en choisir une dans les suggestions.",
+              type: "error",
+            });
+            return;
+          }
+        } catch (err) {
+          console.error("Géocodage échoué :", err);
+          setNotif({
+            message: "❌ Erreur de géocodage. Vérifiez votre connexion internet.",
+            type: "error",
+          });
+          return;
+        }
+      }
+
       const updatedUser = {
         ...user,
         fullname: editableData.fullname,
         phone: editableData.phone,
-        infosClient: role === "client" ? { ...infosClient, adresseComplete: editableData.adresseComplete } : infosClient,
-        infosVendeur: role === "vendeur" ? { ...infosVendeur, adresseComplete: editableData.adresseComplete } : infosVendeur,
-        infosLivreur: role === "livreur" ? { ...infosLivreur, typeDeTransport: editableData.typeDeTransport } : infosLivreur,
+        infosClient: role === "client"
+          ? {
+              ...infosClient,
+              adresseComplete: editableData.adresseComplete,
+              latitude: editableData.latitude,
+              longitude: editableData.longitude,
+            }
+          : infosClient,
+        infosVendeur: role === "vendeur"
+          ? {
+              ...infosVendeur,
+              adresseComplete: editableData.adresseComplete,
+              latitude: editableData.latitude,
+              longitude: editableData.longitude,
+            }
+          : infosVendeur,
+        infosLivreur: role === "livreur"
+          ? {
+              ...infosLivreur,
+              typeDeTransport: editableData.typeDeTransport,
+            }
+          : infosLivreur,
       };
       await handleUpdate(updatedUser);
     } else {
@@ -111,12 +206,17 @@ export default function ProfilCommun({ isLoading }) {
         phone: phone || "",
         adresseComplete: infosClient?.adresseComplete || infosVendeur?.adresseComplete || "",
         typeDeTransport: infosLivreur?.typeDeTransport || "",
+        latitude: infosClient?.latitude || infosVendeur?.latitude || null,
+        longitude: infosClient?.longitude || infosVendeur?.longitude || null,
       });
     }
     setIsEditing(!isEditing);
   };
 
-  // Remplace dans sections les appels à isProfilIncomplet() par profilIncomplet
+  // if (loading) return <p>Chargement...</p>;
+  if (!user) return <p>Erreur : utilisateur introuvable</p>;
+
+  // 📦 Données des sections
   const sections = [
     {
       key: "infos",
@@ -185,6 +285,7 @@ export default function ProfilCommun({ isLoading }) {
                     </select>
                   </div>
                 ) : (
+                  // Localisation de l'input adresse dans le bloc role !== "livreur"
                   <div className="flex items-center gap-2">
                     <MapPin size={18} />
                     <input
@@ -192,8 +293,12 @@ export default function ProfilCommun({ isLoading }) {
                       value={editableData.adresseComplete}
                       onChange={async (e) => {
                         const value = e.target.value;
-                        setEditableData({ ...editableData, adresseComplete: value });
-
+                        setEditableData({
+                          ...editableData,
+                          adresseComplete: value,
+                          latitude: null,
+                          longitude: null,
+                        });
                         if (value.length > 3) {
                           const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${value}`);
                           const data = await res.json();
@@ -209,8 +314,13 @@ export default function ProfilCommun({ isLoading }) {
                     />
                     <AddressSuggestionsPortal
                       suggestions={adresseSuggestions}
-                      onSelect={(label) => {
-                        setEditableData({ ...editableData, adresseComplete: label });
+                      onSelect={(label, coords) => {
+                        setEditableData({
+                          ...editableData,
+                          adresseComplete: label,
+                          latitude: coords[1],
+                          longitude: coords[0],
+                        });
                         setAdresseSuggestions([]);
                       }}
                       inputRef={adresseInputRef}
@@ -260,29 +370,10 @@ export default function ProfilCommun({ isLoading }) {
       title: "Notifications",
       content: <ToggleSwitch label="Recevoir les alertes e-mail" checked={notifications ?? false} role={role} />,
     },
-    ...(role === "vendeur" && !profilIncomplet
-      ? [
-          {
-            key: "paiement",
-            title: "Moyens de paiement",
-            content: infosVendeur?.moyensPaiement?.length > 0 ? (
-              <p>{infosVendeur.moyensPaiement.join(", ")}</p>
-            ) : (
-              <p className="text-gray-500 italic">Aucun moyen de paiement renseigné</p>
-            ),
-            action: (
-              <button
-                onClick={() => setPaiementModalOpen(true)}
-                className="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-700"
-              >
-                Modifier
-              </button>
-            ),
-          },
-        ]
-      : []),
+    // Section "Moyens de paiement" supprimée
   ];
 
+  // 🧩 Rendu
   return (
     <div className="relative z-10 pt-4">
       <AvatarHeader />
@@ -344,8 +435,7 @@ export default function ProfilCommun({ isLoading }) {
               }}
               className="inline-flex items-center justify-start gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
             >
-              <KeyRound size={16} className="text-indigo-600" />
-              <span>Modifier mon mot de passe</span>
+              <span className="text-indigo-600">Modifier mon mot de passe</span>
             </button>
 
             <hr className="border-gray-200" />
@@ -368,21 +458,6 @@ export default function ProfilCommun({ isLoading }) {
           </div>
         </InfoCard>
       </div>
-      <Modal open={paiementModalOpen} onClose={() => setPaiementModalOpen(false)} title="Modifier les moyens de paiement">
-        <MoyenPaiementForm
-          moyensPaiement={infosVendeur?.moyensPaiement || []}
-          onSubmit={async (updatedPaiements) => {
-            await handleUpdate({
-              ...user,
-              infosVendeur: {
-                ...infosVendeur,
-                moyensPaiement: updatedPaiements,
-              },
-            });
-            setPaiementModalOpen(false);
-          }}
-        />
-      </Modal>
     </div>
   );
 }

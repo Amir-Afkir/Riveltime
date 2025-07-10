@@ -60,7 +60,20 @@ exports.getProduitsParBoutique = async (req, res) => {
 // 🔐 POST - Créer une boutique (privée)
 exports.createBoutique = async (req, res) => {
   try {
-    const { name, category, description, address, location } = req.body;
+    let { name, category, description, address, location } = req.body;
+
+    if (typeof location === 'string') {
+      try {
+        location = JSON.parse(location);
+      } catch (e) {
+        return res.status(400).json({ error: 'Format de localisation invalide.' });
+      }
+    }
+
+    if (!location || location.type !== 'Point' || !Array.isArray(location.coordinates)) {
+      return res.status(400).json({ error: 'Coordonnées géographiques invalides.' });
+    }
+
     const userId = req.dbUser._id;
 
     // Créer la boutique sans image de couverture
@@ -127,7 +140,18 @@ exports.updateBoutique = async (req, res) => {
       return res.status(403).json({ error: 'Boutique introuvable ou accès interdit.' });
     }
 
-    const { name, category, description, address, location } = req.body;
+    let { name, category, description, address, location } = req.body;
+    if (typeof location === 'string') {
+      try {
+        location = JSON.parse(location);
+      } catch (e) {
+        return res.status(400).json({ error: 'Format de localisation invalide.' });
+      }
+    }
+
+    if (!location || location.type !== 'Point' || !Array.isArray(location.coordinates)) {
+      return res.status(400).json({ error: 'Coordonnées géographiques invalides.' });
+    }
 
     if (req.imageData) {
       if (boutique.coverImagePublicId) {

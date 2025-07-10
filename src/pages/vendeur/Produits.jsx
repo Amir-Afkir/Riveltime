@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import useBoutiques from "../../components/gestionMagasin/hooks/useBoutiques.js";
 import useProduits from "../../components/gestionMagasin/hooks/useProduits.js";
 
@@ -23,6 +23,8 @@ const INITIAL_BOUTIQUE_FORM = {
   _id: null,
   name: "",
   category: "",
+  address: "",
+  location: null,
   coverImage: null,
   coverImageUrl: "",
 };
@@ -116,10 +118,37 @@ export default function Produits() {
 
   const handleSaveBoutique = async () => {
     try {
+      // Si location manquante, essayer de la récupérer via géocodage
+      if (!boutiqueForm.location && boutiqueForm.address?.length > 3) {
+        const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(boutiqueForm.address)}`);
+        const dataAPI = await res.json();
+        const feature = dataAPI.features?.[0];
+        if (!feature) {
+          setNotification({ message: "Adresse non trouvée. Veuillez saisir une adresse plus précise.", type: "error" });
+          return;
+        }
+        boutiqueForm.location = {
+          type: "Point",
+          coordinates: feature.geometry.coordinates,
+        };
+      }
+
       const saved = await saveBoutique(boutiqueForm);
       setNotification({ message: "Boutique enregistrée.", type: "success" });
       setShowBoutiqueModal(false);
       fetchAllBoutiques();
+      if (
+        selectedBoutique &&
+        selectedBoutique._id === saved._id &&
+        (selectedBoutique.coverImageUrl !== saved.coverImageUrl ||
+          selectedBoutique.name !== saved.name ||
+          selectedBoutique.address !== saved.address)
+      ) {
+        setSelectedBoutique({
+          ...saved,
+          owner: selectedBoutique.owner,
+        });
+      }
     } catch (err) {
       setNotification({ message: err.message, type: "error" });
     }
@@ -198,6 +227,8 @@ export default function Produits() {
     }
   };
 
+  const memoizedSelectedId = useMemo(() => selectedBoutique?._id, [selectedBoutique?._id]);
+
   return (
     <div className="pt-4 px-4 pb-10">
       {notification && (
@@ -211,7 +242,7 @@ export default function Produits() {
       {/* Boutique Selector */}
       <BoutiqueSelector
         boutiques={boutiques || []}
-        selectedId={selectedBoutique?._id}
+        selectedId={memoizedSelectedId}
         onSelect={handleSelectBoutique}
         onCreate={handleCreateBoutique}
         onEdit={handleCreateBoutique}
