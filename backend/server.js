@@ -47,6 +47,8 @@ app.use('/account', require('./routes/accountRoutes'));
 app.use('/address', require('./routes/addressRoutes'));
 app.use('/client/accueil', require('./routes/vendorRoutes'));
 
+app.use('/boutiques', require('./routes/boutiqueRoutes'));
+
 // ✅ ROUTE PRODUITS PUBLIQUE (produits d’une boutique)
 app.use('/produits', require('./routes/publicProductRoutes')); // uniquement get /produits/boutique/:id
 
@@ -61,7 +63,6 @@ app.use(jwtCheck, injectUser, createUserIfNotExists);
 // 🔐 ROUTES PRIVÉES (PROTÉGÉES PAR JWT)
 // ====================================
 app.use('/users', require('./routes/userRoutes'));
-app.use('/boutiques', require('./routes/boutiqueRoutes'));
 app.use('/produits', require('./routes/productRoutes')); // create/update/delete/mine
 app.use('/notifications', require('./routes/notificationRoutes'));
 

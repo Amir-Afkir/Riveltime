@@ -36,7 +36,7 @@ exports.getBoutiqueById = async (req, res) => {
   if (!isValidObjectId(id)) return res.status(400).json({ error: 'ID de boutique invalide.' });
   try {
     const boutique = await Boutique.findById(id)
-      .populate('owner', 'avatarUrl fullname')
+      .populate('owner', 'avatarUrl picture fullname')
       .lean();
     if (!boutique) return res.status(404).json({ error: 'Boutique non trouvée.' });
     res.json({ boutique });

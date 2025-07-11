@@ -48,7 +48,7 @@ export default function Accueil() {
         style={{ minHeight: "100vh" }}
       >
         <div className="mb-3" aria-hidden="true" />
-        <div className="relative mb-4 pl-0">
+        <div className="relative mb-5 pl-0">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none"
             size={20}
@@ -62,7 +62,7 @@ export default function Accueil() {
           />
         </div> 
         <div className="-mx-4">
-          <div className="pl-5 pr-4 flex overflow-x-auto gap-3 py-3 whitespace-nowrap no-scrollbar snap-x scroll-pl-6">
+          <div className="pl-5 pr-4 flex overflow-x-auto gap-4 py-3 whitespace-nowrap no-scrollbar snap-x scroll-pl-6">
             {FILTERS.map(({ name, icon, bg }) => (
               <div
                 key={name}
