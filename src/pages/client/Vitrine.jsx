@@ -111,7 +111,7 @@ export default function Vitrine() {
                   : "bg-gray-100 text-gray-700"
               }`}
             >
-              Tous les produits
+              Tous
             </button>
             {collections.map((collection) => (
               <button

@@ -41,7 +41,7 @@ export default function BottomNav() {
     navItems = [
       { label: "Accueil", path: "/client/accueil", icon: Home },
       { label: "Panier", path: "/client/panier", icon: ShoppingCart },
-      { label: "Commandes", path: "/client/commandes", icon: Package },
+      { label: "Suivis", path: "/client/commandes", icon: Package },
       { label: "Profil", path: "/client/profil", icon: User },
     ];
   } else if (path.startsWith("/vendeur")) {
