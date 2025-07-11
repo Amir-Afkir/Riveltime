@@ -6,7 +6,7 @@ import Button from "../../components/ui/Button";
 import Title from "../../components/ui/Title";
 import Card from "../../components/ui/Card";
 import NotificationBanner from "../../components/ui/NotificationBanner";
-import { ShoppingCart, List, LayoutGrid } from "lucide-react";
+import { ShoppingCart, List, LayoutGrid, Search } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -22,6 +22,7 @@ export default function Vitrine() {
   const [collections, setCollections] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState("tout");
   const [viewMode, setViewMode] = useState("grid");
+  const [searchQuery, setSearchQuery] = useState("");
   const closeNotification = () => setNotification(null);
 
   useEffect(() => {
@@ -102,6 +103,19 @@ export default function Vitrine() {
         <p className="text-sm text-gray-500">{boutique.address}</p>
       </div>
 
+      <div className="mt-6 mb-2">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Rechercher un produit..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black"
+          />
+        </div>
+      </div>
+
       {collections.length > 0 && (
         <div className="-ml-4 mt-6 mb-4 whitespace-nowrap no-scrollbar snap-x scroll-pl-6 flex items-center justify-between gap-2">
           <div className="overflow-x-auto flex gap-2 flex-1 pl-4">
@@ -156,7 +170,10 @@ export default function Vitrine() {
         }`}
       >
         {produits
-          .filter(p => selectedCollection === "tout" || p.collectionName === selectedCollection)
+          .filter(p =>
+            (selectedCollection === "tout" || p.collectionName === selectedCollection) &&
+            p.name.toLowerCase().includes(searchQuery.toLowerCase())
+          )
           .map((product) => {
             if (viewMode === "list") {
               return (
@@ -238,14 +255,7 @@ export default function Vitrine() {
           })}
       </div>
 
-      {produits.length > 0 && (
-        <Button
-          onClick={() => navigate("/client/panier")}
-          className="mt-6 w-full"
-        >
-          Voir le panier
-        </Button>
-      )}
+
     </div>
   );
 }
