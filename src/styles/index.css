@@ -31,6 +31,7 @@
     @apply text-[16px];
   }
 }
+
 @layer utilities {
   @keyframes slide-up {
     from {
@@ -65,6 +66,10 @@
     }
   }
 
+  .animate-shrink-fade-out {
+    animation: shrink-fade-out 200ms ease-out forwards;
+  }
+
   @keyframes expand-card {
     0% {
       opacity: 0;
@@ -83,7 +88,10 @@
     }
   }
 
-  /* Added fade-shrink-out animation */
+  .animate-expand-card {
+    animation: expand-card 300ms ease-out forwards;
+  }
+
   @keyframes fade-shrink-out {
     0% {
       opacity: 1;
@@ -95,14 +103,6 @@
       transform: scale(0.8);
       filter: blur(2px);
     }
-  }
-
-  .animate-shrink-fade-out {
-    animation: shrink-fade-out 200ms ease-out forwards;
-  }
-
-  .animate-expand-card {
-    animation: expand-card 300ms ease-out forwards;
   }
 
   .animate-fade-shrink-out {
@@ -137,5 +137,37 @@
 
   .animate-slide-up-exit {
     animation: slide-up-exit 0.4s ease-in forwards;
+  }
+
+  @keyframes morph-list-to-grid {
+    0% {
+      transform: scale(0.95) rotateX(5deg);
+      opacity: 0.2;
+      filter: blur(4px);
+    }
+    100% {
+      transform: scale(1) rotateX(0);
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  @keyframes morph-grid-to-list {
+    0% {
+      transform: scale(1.05) translateY(-10px);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-list-to-grid {
+    animation: morph-list-to-grid 300ms ease-out forwards;
+  }
+
+  .animate-grid-to-list {
+    animation: morph-grid-to-list 300ms ease-out forwards;
   }
 }

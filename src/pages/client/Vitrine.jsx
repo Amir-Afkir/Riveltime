@@ -6,6 +6,7 @@ import Button from "../../components/ui/Button";
 import Title from "../../components/ui/Title";
 import Card from "../../components/ui/Card";
 import NotificationBanner from "../../components/ui/NotificationBanner";
+import { ShoppingCart, List, LayoutGrid } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -20,6 +21,7 @@ export default function Vitrine() {
   const [notification, setNotification] = useState(null);
   const [collections, setCollections] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState("tout");
+  const [viewMode, setViewMode] = useState("grid");
   const closeNotification = () => setNotification(null);
 
   useEffect(() => {
@@ -101,8 +103,8 @@ export default function Vitrine() {
       </div>
 
       {collections.length > 0 && (
-        <div className="mt-6 mb-4 overflow-x-auto px-4 -mx-4 ">
-          <div className="flex gap-2 w-max">
+        <div className="-ml-4 mt-6 mb-4 whitespace-nowrap no-scrollbar snap-x scroll-pl-6 flex items-center justify-between gap-2">
+          <div className="overflow-x-auto flex gap-2 flex-1 pl-4">
             <button
               onClick={() => setSelectedCollection("tout")}
               className={`px-4 py-2 rounded-full border text-sm whitespace-nowrap ${
@@ -127,43 +129,114 @@ export default function Vitrine() {
               </button>
             ))}
           </div>
+          <div className="flex-shrink-0 flex gap-1 pl-2">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`p-2 rounded-full ${viewMode === "grid" ? "bg-black text-white" : "bg-gray-200 text-gray-700"}`}
+              title="Affichage en grille"
+            >
+              <LayoutGrid size={18} />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-2 rounded-full ${viewMode === "list" ? "bg-black text-white" : "bg-gray-200 text-gray-700"}`}
+              title="Affichage en liste"
+            >
+              <List size={18} />
+            </button>
+          </div>
         </div>
       )}
 
-      <Card className="p-4">
-        <ul className="space-y-3">
-          {produits
-            .filter(p => selectedCollection === "tout" || p.collectionName === selectedCollection)
-            .map((product) => (
-            <li key={product._id}>
-              <div className="flex items-center justify-between gap-4 bg-white rounded-2xl shadow-sm px-4 py-3 border border-gray-200">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
+      <div
+        className={`transition-all duration-300 ${
+          viewMode === "grid"
+            ? "grid grid-cols-2 gap-4 animate-list-to-grid"
+            : "flex flex-col gap-4 animate-grid-to-list"
+        }`}
+      >
+        {produits
+          .filter(p => selectedCollection === "tout" || p.collectionName === selectedCollection)
+          .map((product) => {
+            if (viewMode === "list") {
+              return (
+                <div
+                  key={product._id}
+                  className="group rounded-xl border border-gray-100 bg-white shadow transition-shadow hover:shadow-md px-5 py-4 flex items-center gap-5"
+                >
+                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
                     {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <span className="text-xl">🧺</span>
+                      <span className="text-2xl">🧺</span>
                     )}
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-800">{product.name}</p>
+                  <div className="flex-1 min-w-0 flex flex-col gap-1 text-left">
+                    <p className="font-semibold text-gray-900 text-sm leading-tight">{product.name}</p>
                     {product.description && (
-                      <p className="text-sm text-gray-500">{product.description}</p>
+                      <p className="text-xs text-gray-500 leading-snug line-clamp-2">{product.description}</p>
                     )}
-                    <p className="text-sm text-black mt-1">{product.price.toFixed(2)} €</p>
+                  </div>
+                  <div className="flex flex-col items-end justify-between self-stretch gap-1">
+                    <span className="text-sm font-semibold text-red-600">
+                      {product.price.toFixed(2)} €
+                    </span>
+                    <button
+                      onClick={() => addToCart({ merchant: boutique.name, product })}
+                      className="text-gray-400 hover:text-black transition"
+                      title="Ajouter au panier"
+                    >
+                      <ShoppingCart size={18} strokeWidth={1.75} />
+                    </button>
                   </div>
                 </div>
-                <Button
-                  onClick={() => addToCart({ merchant: boutique.name, product })}
-                  className="text-sm"
-                >
-                  Ajouter
-                </Button>
+              );
+            }
+            // Mode grid (inchangé)
+            return (
+              <div
+                key={product._id}
+                className="rounded-2xl bg-white shadow-sm border border-gray-200 p-3 flex flex-col justify-between"
+              >
+                <div className="w-full aspect-square rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
+                  {product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl">🧺</span>
+                  )}
+                </div>
+                <div className="flex-1 flex flex-col justify-between">
+                  <div className="mb-2">
+                    <p className="font-semibold text-sm text-gray-800 truncate">{product.name}</p>
+                    {product.description && (
+                      <p className="text-xs text-gray-500 truncate">{product.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between mt-auto">
+                    <span className="text-sm font-semibold text-red-600">
+                      {product.price.toFixed(2)} €
+                    </span>
+                    <button
+                      onClick={() => addToCart({ merchant: boutique.name, product })}
+                      className="text-gray-600 hover:text-black"
+                      title="Ajouter au panier"
+                    >
+                      <ShoppingCart size={18} strokeWidth={1.75} />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </li>
-          ))}
-        </ul>
-      </Card>
+            );
+          })}
+      </div>
 
       {produits.length > 0 && (
         <Button
