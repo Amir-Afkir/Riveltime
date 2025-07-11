@@ -230,7 +230,7 @@ export default function Produits() {
   const memoizedSelectedId = useMemo(() => selectedBoutique?._id, [selectedBoutique?._id]);
 
   return (
-    <div className="pt-4 px-4 pb-10">
+    <div className="px-4 pb-10">
       {notification && (
         <NotificationBanner
           message={notification.message}

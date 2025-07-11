@@ -94,7 +94,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
           aria-label={`Boutique ${b.name}`}
         />
         <span
-          className="mt-2 text-center text-sm font-medium text-black truncate w-full"
+          className="text-center text-sm font-medium text-black truncate w-full"
           title={b.name}
         >
           {b.name}
@@ -104,7 +104,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
   };
 
   return (
-    <div className="relative py-3 -mx-4 px-4 overflow-x-auto overflow-visible flex gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap scroll-smooth pb-12">
+    <div className="relative py-4 -mx-4 px-4 overflow-x-auto overflow-visible flex gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap scroll-smooth pb-12">
       {selectedId
         ? renderSelectedBoutique()
         : boutiques.filter((b) => !b.isPlaceholder).map(renderBoutique)}
