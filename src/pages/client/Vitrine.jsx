@@ -204,8 +204,11 @@ export default function Vitrine() {
                       {product.price.toFixed(2)} €
                     </span>
                     <button
-                      onClick={() => addToCart({ merchant: boutique.name, product })}
-                      className="text-gray-400 hover:text-black transition"
+                      onClick={() => {
+                        addToCart({ merchant: boutique.name, product });
+                        setNotification({ message: `${product.name} ajouté au panier`, type: "success" });
+                      }}
+                      className="group/button flex items-center justify-center w-9 h-9 rounded-full bg-gray-200 text-gray-600 hover:bg-[#ed354f] hover:text-white transition duration-200 active:scale-95"
                       title="Ajouter au panier"
                     >
                       <ShoppingCart size={18} strokeWidth={1.75} />
@@ -243,8 +246,11 @@ export default function Vitrine() {
                       {product.price.toFixed(2)} €
                     </span>
                     <button
-                      onClick={() => addToCart({ merchant: boutique.name, product })}
-                      className="text-gray-600 hover:text-black"
+                      onClick={() => {
+                        addToCart({ merchant: boutique.name, product });
+                        setNotification({ message: `${product.name} ajouté au panier`, type: "success" });
+                      }}
+                      className="group/button flex items-center justify-center w-9 h-9 rounded-full bg-gray-200 text-gray-600 hover:bg-[#ed354f] hover:text-white transition duration-200 active:scale-95"
                       title="Ajouter au panier"
                     >
                       <ShoppingCart size={18} strokeWidth={1.75} />
