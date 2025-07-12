@@ -55,10 +55,10 @@ export default function Accueil() {
           />
           <input
             type="text"
-            placeholder="Recherchez une boutique"
+            placeholder="Rechercher une boutique..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pr-4 py-2 pl-10 border border-gray-300 rounded-3xl shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+            className="w-full pl-10 pr-4 py-2 text-[16px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f]"
           />
         </div> 
         <div className="-mx-4">

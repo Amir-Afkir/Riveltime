@@ -2,6 +2,8 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { Home, ShoppingCart, Boxes, User, Store, FileText, Bike, Mail, Scroll, Package } from "lucide-react";
+import PanierModal from "../../components/client/PanierModal";
+import { useState } from "react";
 
 function BottomNavItem({ label, path, icon: Icon, isActive, onClick, color, badge }) {
   return (
@@ -37,10 +39,12 @@ export default function BottomNav() {
   let navItems = [];
   const color = "text-[#ed354f]";
 
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   if (path.startsWith("/client") || path.startsWith("/vitrine")) {
     navItems = [
       { label: "Accueil", path: "/client/accueil", icon: Home },
-      { label: "Panier", path: "/client/panier", icon: ShoppingCart },
+      { label: "Panier", path: "#", icon: ShoppingCart, onClick: () => setIsCartOpen(true) },
       { label: "Suivis", path: "/client/commandes", icon: Package },
       { label: "Profil", path: "/client/profil", icon: User },
     ];
@@ -61,25 +65,28 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-20 pb-[env(safe-area-inset-bottom)] bg-white/80 backdrop-blur-md shadow-t-md border-t border-gray-200 rounded-t-2xl">  
-      <ul className="flex justify-around items-center h-16">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <li key={item.path}>
-              <BottomNavItem
-                label={item.label}
-                path={item.path}
-                icon={item.icon}
-                isActive={isActive}
-                color={color}
-                badge={item.label === "Panier" ? totalQuantity : 0}
-                onClick={() => navigate(item.path)}
-              />
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+    <>
+      {isCartOpen && <PanierModal onClose={() => setIsCartOpen(false)} />}
+      <nav className="fixed bottom-0 inset-x-0 z-20 pb-[env(safe-area-inset-bottom)] bg-white/80 backdrop-blur-md shadow-t-md border-t border-gray-200 rounded-t-2xl">  
+        <ul className="flex justify-around items-center h-16">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <li key={item.path}>
+                <BottomNavItem
+                  label={item.label}
+                  path={item.path}
+                  icon={item.icon}
+                  isActive={isActive}
+                  color={color}
+                  badge={item.label === "Panier" ? totalQuantity : 0}
+                  onClick={item.onClick || (() => navigate(item.path))}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </>
   );
 }

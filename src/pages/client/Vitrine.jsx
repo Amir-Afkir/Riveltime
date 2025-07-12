@@ -13,7 +13,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function Vitrine() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, cart } = useCart();
+  const totalQuantity = cart?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   const [boutique, setBoutique] = useState(null);
   const [produits, setProduits] = useState([]);
@@ -103,15 +104,19 @@ export default function Vitrine() {
         <p className="text-sm text-gray-500">{boutique.address}</p>
       </div>
 
-      <div className="mt-6 mb-2">
+      <div className="mt-6 mb-2" role="search">
+        <label htmlFor="product-search" className="sr-only">Rechercher un produit</label>
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} aria-hidden="true" />
           <input
+            id="product-search"
             type="text"
+            role="searchbox"
+            aria-label="Rechercher un produit"
             placeholder="Rechercher un produit..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full pl-10 pr-4 py-2 text-[16px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f]"
           />
         </div>
       </div>
@@ -199,7 +204,7 @@ export default function Vitrine() {
                     )}
                   </div>
                   <div className="flex flex-col items-end justify-between self-stretch gap-1">
-                    <span className="text-sm font-semibold text-red-600">
+                    <span className="text-sm font-semibold text-[#ed354f]">
                       {product.price.toFixed(2)} €
                     </span>
                     <button
@@ -238,7 +243,7 @@ export default function Vitrine() {
                     )}
                   </div>
                   <div className="flex items-center justify-between mt-auto">
-                    <span className="text-sm font-semibold text-red-600">
+                    <span className="text-sm font-semibold text-[#ed354f]">
                       {product.price.toFixed(2)} €
                     </span>
                     <button
@@ -254,8 +259,6 @@ export default function Vitrine() {
             );
           })}
       </div>
-
-
     </div>
   );
 }

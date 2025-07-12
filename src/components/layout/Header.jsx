@@ -26,15 +26,13 @@ export default function Header() {
           Riveltime
         </span>
       </div>
-      <span
-        className="flex items-center gap-1.5 bg-white text-[#c72d41] text-sm font-semibold px-3 py-1.5 rounded-full shadow-sm cursor-pointer transition hover:brightness-95 min-h-[44px]"
-        role="button"
-        aria-label="Modifier la localisation"
-        title="Modifier la localisation"
-      >
-        <LocationEdit size={14} strokeWidth={2} />
-        {ville}
-      </span>
+          <div className="flex flex-col items-end text-white text-sm">
+            <span className="text-xs opacity-80">Localisation</span>
+            <div className="flex items-center gap-1">
+              <LocationEdit size={16} strokeWidth={2} />
+              <span className="font-medium">{ville}</span>
+            </div>
+          </div>
     </header>
   );
 }

@@ -7,23 +7,29 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
 
-  const addToCart = (item) => {
-    setCart((prev) => {
-      const existingIndex = prev.findIndex(
-        (i) => i.product === item.product && i.merchant === item.merchant
+  function addToCart({ product, merchant }) {
+    setCart((prevCart) => {
+      const productId = product._id;
+      const boutiqueId = product.boutique;
+
+      const existingItemIndex = prevCart.findIndex(
+        (item) =>
+          item.product._id === productId &&
+          item.product.boutique === boutiqueId
       );
 
-      if (existingIndex !== -1) {
-        return prev.map((entry, index) =>
-          index === existingIndex
-            ? { ...entry, quantity: entry.quantity + 1 }
-            : entry
-        );
+      if (existingItemIndex !== -1) {
+        const updatedCart = [...prevCart];
+        updatedCart[existingItemIndex] = {
+          ...updatedCart[existingItemIndex],
+          quantity: updatedCart[existingItemIndex].quantity + 1,
+        };
+        return updatedCart;
       }
 
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prevCart, { product, merchant, quantity: 1 }];
     });
-  };
+  }
 
   const removeFromCart = (itemToRemove) => {
     setCart((prev) =>

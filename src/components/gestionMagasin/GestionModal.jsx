@@ -190,7 +190,7 @@ export default function GestionModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-end justify-center z-50"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end justify-center z-50"
       onClick={handleBackdropClick}
     >
       <div
