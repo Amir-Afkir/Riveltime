@@ -148,20 +148,16 @@ export default function Vitrine() {
               </button>
             ))}
           </div>
-          <div className="flex-shrink-0 flex gap-1 pl-2">
+          <div className="flex-shrink-0 pl-2">
             <button
-              onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-full ${viewMode === "grid" ? "bg-black text-white" : "bg-gray-200 text-gray-700"}`}
-              title="Affichage en grille"
+              onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+              className={`p-2 rounded-full transition ${
+                viewMode === "grid"
+                  ? "bg-black text-white hover:bg-gray-300"
+                  : "bg-gray-300 text-black hover:bg-black"
+              }`}
             >
-              <LayoutGrid size={18} />
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-2 rounded-full ${viewMode === "list" ? "bg-black text-white" : "bg-gray-200 text-gray-700"}`}
-              title="Affichage en liste"
-            >
-              <List size={18} />
+              {viewMode === "grid" ? <List size={18} /> : <LayoutGrid size={18} />}
             </button>
           </div>
         </div>
