@@ -1,11 +1,12 @@
 import { X, Plus, Minus } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 
 export default function PanierModal({ onClose }) {
   const { cart, removeFromCart, placeOrder, addToCart } = useCart();
   const modalRef = useRef();
+  const navigate = useNavigate();
 
   const totalPrice = cart.reduce((sum, { quantity, product }) => sum + quantity * product.price, 0);
 
@@ -21,6 +22,7 @@ export default function PanierModal({ onClose }) {
   const handleOrder = () => {
     placeOrder();
     onClose();
+    navigate("/client/commandes");
   };
 
   return (

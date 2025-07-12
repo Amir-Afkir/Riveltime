@@ -12,6 +12,7 @@ import AvatarHeader from "../../components/profile/AvatarHeader";
 import InfoCard from "../../components/profile/InfoCard";
 import UserFieldCard from "../../components/profile/UserFieldCard";
 import ToggleSwitch from "../../components/profile/ToggleSwitch";
+import Button from "../../components/ui/Button";
 
 // 🛠️ Icônes externes
 import { User, Mail, Phone, MapPin, Truck, Pencil, CheckCircle } from "lucide-react";
@@ -440,21 +441,23 @@ export default function ProfilCommun({ isLoading }) {
 
             <hr className="border-gray-200" />
 
-            <button
+            <Button
               onClick={() => {
                 logout({ returnTo: import.meta.env.VITE_BASE_URL });
               }}
-              className="w-full bg-neutral-50 !text-black border border-gray-300 hover:bg-neutral-100 active:scale-[0.97] active:shadow-inner focus-visible:ring-2 focus-visible:ring-red-300 rounded-full flex items-center justify-center gap-2 py-2.5 text-[15px] transition-transform"
+              type="button"
+              variant = "primary"
             >
               Déconnexion
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={deleteAccount}
-              className="w-full bg-[#ed354f] text-white rounded-full hover:bg-[#d12e47] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#f58ba0] py-2.5 text-[15px] transition-all"
+              type="button"
+              variant = "secondary"
             >
               Supprimer mon profil
-            </button>
+            </Button>
           </div>
         </InfoCard>
       </div>

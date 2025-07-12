@@ -153,8 +153,8 @@ export default function Vitrine() {
               onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
               className={`p-2 rounded-full transition ${
                 viewMode === "grid"
-                  ? "bg-black text-white hover:bg-gray-300"
-                  : "bg-gray-300 text-black hover:bg-black"
+                  ? "bg-black text-white"
+                  : "bg-gray-300 text-black"
               }`}
             >
               {viewMode === "grid" ? <List size={18} /> : <LayoutGrid size={18} />}

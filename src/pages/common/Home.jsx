@@ -98,7 +98,7 @@ export default function Home() {
               </Button>
               <Button
                 type="button"
-                className="w-full bg-[#ed354f] text-white rounded-full hover:bg-[#d12e47] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#f58ba0] py-2.5 text-[15px] transition-all"
+                variant = "secondary"
                 onClick={() => logout({ returnTo: import.meta.env.VITE_BASE_URL })}
               >
                 Se déconnecter
