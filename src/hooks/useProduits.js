@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import axios from 'axios';
-import useUserStore from '../../../stores/userStore';
+import useUserStore from '../stores/userStore';
 
 const API_URL = import.meta.env.VITE_API_URL;
 

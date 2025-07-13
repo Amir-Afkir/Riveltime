@@ -14,7 +14,7 @@ const roles = [
 export default function Home() {
   const navigate = useNavigate();
   const { userData, loadingUser, logoutSafe } = useUserStore();
-  const { user: auth0User, loginWithPopup, getAccessTokenSilently, isAuthenticated, logout } = useAuth0();
+  const { user: auth0User, loginWithRedirect, isAuthenticated, logout } = useAuth0();
 
   useEffect(() => {
     if (loadingUser) return;
@@ -28,24 +28,17 @@ export default function Home() {
   }, [isAuthenticated, userData, loadingUser, navigate, auth0User]);
 
 
-  const handleRoleClick = async (role) => {
+  const handleRoleClick = (role) => {
     if (isAuthenticated) return;
-
-    try {
-      localStorage.setItem("signup_role", role);
-
-      await loginWithPopup({
-        authorizationParams: {
-          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-          scope: "openid profile email",
-        },
-      });
-
-      await getAccessTokenSilently();
-      window.location.reload(); // Optionally refresh to re-sync state
-    } catch (err) {
-      console.error("Erreur lors du login popup", err);
-    }
+    localStorage.setItem("signup_role", role);
+    loginWithRedirect({
+      screen_hint: "signup",
+      authorizationParams: {
+        signup_role: role,
+        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        scope: "openid profile email",
+      },
+    });
   };
 
   const handleManualRedirect = () => {

@@ -12,7 +12,6 @@
     padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
              env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
     min-height: calc(100% + env(safe-area-inset-top));
-    touch-action: manipulation;
     scroll-behavior: smooth;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -29,6 +28,9 @@
 
   input, select, textarea {
     @apply text-[16px];
+    -webkit-user-select: auto !important;
+    user-select: auto !important;
+    touch-action: auto !important;
   }
 }
 

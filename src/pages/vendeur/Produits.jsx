@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import useBoutiques from "../../components/gestionMagasin/hooks/useBoutiques.js";
-import useProduits from "../../components/gestionMagasin/hooks/useProduits.js";
+import useBoutiques from "../../hooks/useBoutiques.js";
+import useProduits from "../../hooks/useProduits.js";
 
 import {
   BoutiqueSelector,
