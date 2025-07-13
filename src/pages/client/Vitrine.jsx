@@ -39,18 +39,27 @@ export default function Vitrine() {
         const { produits } = await resProduits.json();
 
         setBoutique(boutique);
-        // Mise à jour du localStorage avec la boutique consultée
+        setProduits(produits);
+        const uniqueCollections = [...new Set(produits.map(p => p.collectionName).filter(Boolean))];
+        setCollections(uniqueCollections);
+
+        // ✅ Enregistre toute la boutique dans localStorage
         try {
-          const existing = JSON.parse(localStorage.getItem("recentBoutiques") || "[]");
-          const filtered = existing.filter((b) => b !== boutique._id);
-          const updated = [boutique._id, ...filtered].slice(0, 5); // max 5 boutiques récentes
+          const newEntry = {
+            _id: boutique._id,
+            name: boutique.name,
+            category: boutique.category,
+            distance: boutique.distance || null,
+            coverImageUrl: boutique.coverImageUrl || null,
+          };
+
+          const existing = JSON.parse(localStorage.getItem("recentBoutiques")) || [];
+          const filtered = existing.filter((b) => b._id !== boutique._id);
+          const updated = [newEntry, ...filtered].slice(0, 10);
           localStorage.setItem("recentBoutiques", JSON.stringify(updated));
         } catch (e) {
           console.error("Erreur stockage recentBoutiques:", e);
         }
-        setProduits(produits);
-        const uniqueCollections = [...new Set(produits.map(p => p.collectionName).filter(Boolean))];
-        setCollections(uniqueCollections);
       } catch (err) {
         console.error("❌ Erreur Vitrine:", err);
         setError(err.message || "Erreur serveur");
