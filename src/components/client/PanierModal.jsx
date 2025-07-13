@@ -142,4 +142,4 @@ export default function PanierModal({ onClose }) {
       </div>
     </div>
   );
-}s
+}
