@@ -26,7 +26,7 @@
     margin: 0 auto;
     padding: 0;
     position: relative;
-    overscroll-behavior-y: auto;
+    overscroll-behavior: auto;
   }
 
   input, select, textarea {
