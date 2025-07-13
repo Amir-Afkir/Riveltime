@@ -19,6 +19,16 @@ export default function Accueil() {
   const [boutiques, setBoutiques] = useState([]);
   const navigate = useNavigate();
 
+  const FEATURED_MESSAGES = [
+    "Une pépite locale à découvrir absolument",
+    "Artisanat passionné, sélection soignée",
+    "Ce n’est pas une boutique comme les autres…",
+    "Entrez, explorez, régalez-vous",
+    "Les clients adorent, vous allez comprendre pourquoi",
+    "Rien que pour vous aujourd’hui",
+    "Et si vous tombiez sur votre prochain coup de cœur ?",
+  ];
+
   useEffect(() => {
     async function fetchBoutiques() {
       try {
@@ -39,6 +49,8 @@ export default function Accueil() {
     const search = query.toLowerCase();
     return nom.includes(search) || categorie.includes(search);
   });
+
+  const randomMessage = FEATURED_MESSAGES[Math.floor(Math.random() * FEATURED_MESSAGES.length)];
 
   return (
     <>
@@ -136,7 +148,7 @@ export default function Accueil() {
           </p>
           {filteredBoutiques[0] && (
             <div
-              className="relative w-full rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+              className="relative w-full h-[210px] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-1 transform transition-all duration-300 cursor-pointer"
               onClick={() => navigate(`/vitrine/${filteredBoutiques[0]._id}`)}
             >
               <div className="absolute inset-0 z-10 pointer-events-none animate-[sparkle_6s_linear_infinite] opacity-30"
@@ -152,23 +164,35 @@ export default function Accueil() {
               <img
                 src={filteredBoutiques[0].coverImageUrl}
                 alt={filteredBoutiques[0].name}
-                className="w-full h-[210px] object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-4 flex flex-col justify-between z-20">
-                <div className="flex justify-end">
-                  <div className="flex gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <svg key={i} xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.95a1 1 0 00.95.69h4.154c.969 0 1.371 1.24.588 1.81l-3.364 2.448a1 1 0 00-.364 1.118l1.287 3.95c.3.921-.755 1.688-1.538 1.118l-3.364-2.448a1 1 0 00-1.176 0l-3.364 2.448c-.783.57-1.838-.197-1.538-1.118l1.287-3.95a1 1 0 00-.364-1.118L2.071 9.377c-.783-.57-.38-1.81.588-1.81h4.154a1 1 0 00.95-.69l1.286-3.95z" />
-                      </svg>
-                    ))}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent z-20 p-4 flex flex-col justify-between">
+                {/* Top : Pastille fixe "Sélection" */}
+                <div className="flex justify-between">
+                  <div className="flex items-center gap-1 text-xs text-white px-3 py-1 rounded-full backdrop-blur-md font-semibold bg-white/10 shadow-sm ring-1 ring-white/20">
+                    <span className="text-[13px]">👑</span>
+                    Sélection
                   </div>
                 </div>
+
+                {/* Centre gauche : Nom + Message */}
+                <div className="flex-1 flex items-center">
+                  <div>
+                    <h3 className="text-white text-xl font-bold">{filteredBoutiques[0].name}</h3>
+                    <p className="text-white text-sm italic opacity-90 mt-1 animate-fade-in max-w-[90%]">
+                      {randomMessage}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bas gauche : Catégorie + bouton */}
                 <div className="flex justify-between items-end">
-                  <h3 className="text-white text-xl font-bold">{filteredBoutiques[0].name}</h3>
-                  <span className="text-white text-xs bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
-                    {filteredBoutiques[0].category || "Non renseignée"}
-                  </span>
+                  <p className="text-white text-xs italic">
+                    À découvrir dans {filteredBoutiques[0].category || "cette catégorie"}
+                  </p>
+                  <button className="text-white bg-[#ed354f] hover:bg-[#d42e45] text-sm px-4 py-1 rounded-full transition">
+                    Voir
+                  </button>
                 </div>
               </div>
             </div>
@@ -178,10 +202,10 @@ export default function Accueil() {
         {/* Section Populaires */}
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-1">
-            🔥 Populaires
+            🔥 Les incontournables
           </h2>
           <p className="text-sm text-gray-500 mb-4">
-            Les commerces préférés des utilisateurs
+            Commerces les plus appréciés par la communauté
           </p>
           <div className="flex overflow-x-auto overflow-visible gap-3 py-3 -mx-4 px-4 whitespace-nowrap no-scrollbar snap-x">
             {filteredBoutiques.slice(1, 5).map((b) => (
@@ -193,6 +217,7 @@ export default function Accueil() {
                   distance={b.distance || null}
                   coverImage={b.coverImageUrl || null}
                   onClick={() => navigate(`/vitrine/${b._id}`)}
+                  variant="popular"
                 />
               </div>
             ))}
@@ -222,6 +247,15 @@ export default function Accueil() {
           </div>
         </section>
       </div>
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out;
+        }
+      `}</style>
     </>
   );
 }
