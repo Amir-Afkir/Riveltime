@@ -207,19 +207,18 @@ export default function Accueil() {
           <p className="text-sm text-gray-500 mb-4">
             Commerces les plus appréciés par la communauté
           </p>
-          <div className="flex overflow-x-auto overflow-visible gap-3 py-3 -mx-4 px-4 whitespace-nowrap no-scrollbar snap-x">
+          <div className="grid grid-cols-2 gap-4">
             {filteredBoutiques.slice(1, 5).map((b) => (
-              <div key={b._id} className="inline-block w-[260px]">
-                <MerchantCard
-                  id={b._id}
-                  name={b.name}
-                  category={b.category || "Non renseignée"}
-                  distance={b.distance || null}
-                  coverImage={b.coverImageUrl || null}
-                  onClick={() => navigate(`/vitrine/${b._id}`)}
-                  variant="popular"
-                />
-              </div>
+              <MerchantCard
+                key={b._id}
+                id={b._id}
+                name={b.name}
+                category={b.category || "Non renseignée"}
+                distance={b.distance || null}
+                coverImage={b.coverImageUrl || null}
+                onClick={() => navigate(`/vitrine/${b._id}`)}
+                variant="popular"
+              />
             ))}
           </div>
         </section>
@@ -232,7 +231,7 @@ export default function Accueil() {
           <p className="text-sm text-gray-500 mb-4">
             Liste complète des commerces disponibles
           </p>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col gap-4">
             {filteredBoutiques.map((b) => (
               <MerchantCard
                 key={b._id}

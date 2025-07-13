@@ -1,7 +1,24 @@
+import React, { useEffect, useRef } from "react";
 import { X, Plus, Minus } from "lucide-react";
-import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useCartStore from "../../stores/cartStore";
+
+const messages = [
+  "Tu commandes, on prépare, ça arrive vite.",
+  "Tout est prêt, tu fais le dernier geste.",
+  "Paiement serein, livraison express.",
+  "Chaque clic soutient une vraie boutique.",
+  "Chez toi en moins d’une heure, sans effort.",
+  "Commande maintenant, reçois sans attendre.",
+  "Tu gagnes du temps et tu fais du bien.",
+  "Ton livreur roule pour toi, payé à 100%.",
+  "Chaque course rémunère justement ton livreur.",
+  "Tu choisis une livraison juste, locale et rapide.",
+  "Ton geste valorise l’économie de ton quartier.",
+  "Ta commande fait tourner la vie locale.",
+  "Merci d’agir pour les commerçants d’ici.",
+  "Riveltime t’accompagne, tu profites de l’instant.",
+];
 
 export default function PanierModal({ onClose }) {
   const { cart, removeFromCart, placeOrder, addToCart } = useCartStore();
@@ -24,6 +41,23 @@ export default function PanierModal({ onClose }) {
     onClose();
     navigate("/client/commandes");
   };
+
+  useEffect(() => {
+    const el = document.getElementById("panier-message");
+    if (!el) return;
+    let timeout;
+    const updateMessage = () => {
+      el.style.opacity = 0;
+      setTimeout(() => {
+        const newMsg = messages[Math.floor(Math.random() * messages.length)];
+        el.innerText = newMsg;
+        el.style.opacity = 1;
+      }, 200);
+    };
+    updateMessage(); // set initial
+    const interval = setInterval(updateMessage, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div
@@ -93,7 +127,9 @@ export default function PanierModal({ onClose }) {
                 <span className="font-semibold text-gray-800">Total</span>
                 <span className="text-base font-bold text-[#ed354f]">{totalPrice.toFixed(2)} €</span>
               </div>
-              <p className="text-xs text-gray-500 text-right mt-1">Livraison gratuite dès 30€</p>
+              <p id="panier-message" className="text-xs text-gray-500 text-right mt-1 transition-opacity duration-500">
+                Commande simple, livraison fluide.
+              </p>
               <button
                 onClick={handleOrder}
                 className="bg-[#ed354f] text-white rounded-full py-3 font-semibold text-lg w-full mt-6"
