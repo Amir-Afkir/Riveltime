@@ -8,8 +8,14 @@ import './pwa';
 import App from './App.jsx';
 import { Auth0Provider } from '@auth0/auth0-react';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("❌ Élément 'root' introuvable dans le DOM");
+}
+
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
+    {/* Auth0 configuration + session persistée en localStorage */}
     <Auth0Provider
       domain="dev-x240f0akkby8jtyr.us.auth0.com"
       clientId="LgbGjKYPe3klaxWN6NNkAeaAziOVW3tk"
