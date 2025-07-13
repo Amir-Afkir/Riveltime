@@ -40,5 +40,47 @@ export default function App() {
     }
   }, [isAuthenticated, auth0User]);
 
-  return <AppRoutes />;
+  // Affiche un avertissement sur iOS PWA concernant le clavier virtuel
+  useEffect(() => {
+    const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isInStandaloneMode = 'standalone' in window.navigator && window.navigator.standalone;
+
+    if (isiOS && isInStandaloneMode) {
+      alert("⚠️ Le clavier virtuel peut ne pas fonctionner dans l'app installée sur iPhone. Utilisez Safari pour une meilleure expérience.");
+    }
+  }, []);
+
+  const TestInput = () => (
+    <div style={{ padding: "16px", backgroundColor: "#fff", zIndex: 9999 }}>
+      <label htmlFor="ios-test-input" style={{ display: "block", marginBottom: "8px" }}>
+        Test Clavier iOS :
+      </label>
+      <input
+        id="ios-test-input"
+        type="text"
+        placeholder="Tape ici…"
+        style={{
+          padding: "12px",
+          fontSize: "16px",
+          width: "100%",
+          maxWidth: "400px",
+          margin: "0 auto",
+          display: "block",
+          border: "1px solid #ccc",
+          borderRadius: "6px",
+          color: "#000",
+          backgroundColor: "#fff",
+        }}
+        onFocus={() => console.log("focus")}
+        onChange={(e) => console.log("value:", e.target.value)}
+      />
+    </div>
+  );
+
+  return (
+    <>
+      <TestInput />
+      <AppRoutes />
+    </>
+  );
 }
