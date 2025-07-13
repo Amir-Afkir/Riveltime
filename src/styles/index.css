@@ -10,10 +10,10 @@
 /* -------- BASE LAYER -------- */
 @layer base {
   html {
-    height: auto;
+    height: 100%;
     padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
              env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
-    min-height: calc(100% + env(safe-area-inset-top));
+    min-height: 100%;
     scroll-behavior: smooth;
     -webkit-touch-callout: none;
     -webkit-user-select: auto;
@@ -27,7 +27,7 @@
   }
 
   body, #root {
-    height: auto;
+    height: 100%;
     max-width: 1280px;
     margin: 0 auto;
     padding: 0;
