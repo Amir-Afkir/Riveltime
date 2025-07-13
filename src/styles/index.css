@@ -3,9 +3,11 @@
 :root {
   --body-bg: #fff;
 }
+
 @tailwind components;
 @tailwind utilities;
 
+/* -------- BASE LAYER -------- */
 @layer base {
   html {
     height: auto;
@@ -17,7 +19,7 @@
     -webkit-user-select: auto;
     user-select: auto;
     touch-action: auto;
-    scroll-padding-top: 80px;
+    scroll-padding-top: 0; /* ✅ important pour éviter les bugs clavier iOS */
   }
 
   body, #root {
@@ -25,7 +27,6 @@
     max-width: 1280px;
     margin: 0 auto;
     padding: 0;
-    position: relative;
     overscroll-behavior: auto;
   }
 
@@ -37,150 +38,71 @@
   }
 }
 
+/* -------- UTILITIES LAYER -------- */
 @layer utilities {
+  /* ✅ Animations conservées mais allégées (pas de transform-scale sur input parents) */
+
   @keyframes slide-up {
-    from {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
   }
 
   .animate-slide-up {
     animation: slide-up 0.4s ease-out forwards;
   }
 
-  @keyframes shrink-fade-out {
-    0% {
-      opacity: 1;
-      transform: scale(1);
-      filter: blur(0);
-    }
-    50% {
-      opacity: 0.3;
-      transform: scale(0.85);
-      filter: blur(2px);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(0.7);
-      filter: blur(4px);
-    }
-  }
-
-  .animate-shrink-fade-out {
-    animation: shrink-fade-out 200ms ease-out forwards;
-  }
-
-  @keyframes expand-card {
-    0% {
-      opacity: 0;
-      transform: scale(0.9) translateY(24px);
-      filter: blur(4px);
-    }
-    60% {
-      opacity: 1;
-      transform: scale(1.02) translateY(-2px);
-      filter: blur(1px);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-      filter: blur(0);
-    }
-  }
-
-  .animate-expand-card {
-    animation: expand-card 300ms ease-out forwards;
-  }
-
-  @keyframes fade-shrink-out {
-    0% {
-      opacity: 1;
-      transform: scale(1);
-      filter: blur(0);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(0.8);
-      filter: blur(2px);
-    }
-  }
-
-  .animate-fade-shrink-out {
-    animation: fade-shrink-out 200ms ease-out forwards;
-  }
-
-  @keyframes slide-down {
-    0% {
-      transform: translateY(-30%);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0%);
-      opacity: 1;
-    }
-  }
-
-  .animate-slide-down {
-    animation: slide-down 0.6s ease-out forwards;
-  }
-
-  @keyframes slide-up-exit {
-    0% {
-      transform: translateY(0%);
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(-30%);
-      opacity: 0;
-    }
-  }
-
-  .animate-slide-up-exit {
-    animation: slide-up-exit 0.4s ease-in forwards;
-  }
-
-  @keyframes morph-list-to-grid {
-    0% {
-      transform: scale(0.95) rotateX(5deg);
-      opacity: 0.2;
-      filter: blur(4px);
-    }
-    100% {
-      transform: scale(1) rotateX(0);
-      opacity: 1;
-      filter: blur(0);
-    }
-  }
-
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
   }
+
   .animate-fade-in {
     animation: fade-in 0.8s ease-out;
   }
 
-  @keyframes morph-grid-to-list {
-    0% {
-      transform: scale(1.05) translateY(-10px);
-      opacity: 0;
-    }
-    100% {
-      transform: scale(1) translateY(0);
-      opacity: 1;
-    }
+  @keyframes riseFade {
+    0%   { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
 
-  .animate-list-to-grid {
-    animation: morph-list-to-grid 300ms ease-out forwards;
+  .animate-rise-fade {
+    animation: riseFade 600ms ease-out forwards;
   }
 
-  .animate-grid-to-list {
-    animation: morph-grid-to-list 300ms ease-out forwards;
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
   }
+
+  .loader {
+    animation: spin 1.2s linear infinite;
+    margin: 0 auto;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #ddd;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+  }
+}
+
+/* -------- OPTIONNEL : Composants graphiques -------- */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
 }
