@@ -57,7 +57,7 @@ export default function Accueil() {
       {/* Container principal */}
       <div
         className="w-full rounded-t-[2rem] p-4 z-20 relative"
-        style={{ minHeight: "100vh" }}
+        style={{ minHeight: "100dvh" }}
       >
         <div className="mb-3" aria-hidden="true" />
 

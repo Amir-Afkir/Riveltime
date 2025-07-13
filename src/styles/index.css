@@ -19,7 +19,7 @@
     -webkit-user-select: auto;
     user-select: auto;
     touch-action: auto;
-    scroll-padding-top: 0; /* ✅ important pour éviter les bugs clavier iOS */
+    scroll-padding-top: 0; /* ✅ important pour clavier iOS */
   }
 
   body, #root {
@@ -40,8 +40,6 @@
 
 /* -------- UTILITIES LAYER -------- */
 @layer utilities {
-  /* ✅ Animations conservées mais allégées (pas de transform-scale sur input parents) */
-
   @keyframes slide-up {
     from { transform: translateY(100%); opacity: 0; }
     to   { transform: translateY(0); opacity: 1; }
@@ -83,18 +81,65 @@
     border-top-color: #3b82f6;
     border-radius: 50%;
   }
+
+  @keyframes headerReveal {
+    0% {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.99);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .header-animated {
+    animation: headerReveal 400ms cubic-bezier(0.22, 1, 0.36, 1);
+    animation-fill-mode: both;
+  }
+
+  @keyframes spinToupie {
+    0% {
+      transform: rotateY(0deg) scale(1);
+    }
+    100% {
+      transform: rotateY(360deg) scale(1);
+    }
+  }
+
+  .toupie-spin {
+    animation: spinToupie 3s linear infinite;
+    transform-style: preserve-3d;
+    backface-visibility: visible;
+    max-height: 100%;
+    max-width: 100%;
+    will-change: transform;
+  }
 }
 
-/* -------- OPTIONNEL : Composants graphiques -------- */
+/* -------- COMPOSANTS GRAPHIQUES -------- */
+
+.header-home-logo-container {
+  height: 30vh;
+}
+
+@media (max-width: 639px) {
+  .header-home-logo-container {
+    height: 25vh;
+  }
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }

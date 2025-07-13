@@ -63,7 +63,7 @@ export default function Home() {
           className="h-[200px] w-auto mb-6 sm:mb-8 md:mb-10"
         />
       </div>
-        <div className="bg-white/80 backdrop-blur-sm shadow-xl border border-gray-100 rounded-3xl p-6 w-full text-center flex flex-col items-center gap-6 z-10">
+        <div className="bg-white/80 backdrop-blur-sm shadow-xl border border-gray-100 rounded-3xl p-6 w-full text-center flex flex-col items-center gap-6 animate-[riseFade_600ms_ease-out_forwards] z-10">
           {!isAuthenticated ? (
             <>
               <h1 className="text-2xl font-semibold leading-tight">Bienvenue sur Riveltime</h1>

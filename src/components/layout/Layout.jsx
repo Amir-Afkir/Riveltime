@@ -36,7 +36,7 @@ export default function Layout() {
         <div className="fixed inset-0 z-[-10] pointer-events-none">
           <div className="absolute inset-0">
             <div className="h-[0vh] bg-[#ed354f]" />
-            <div className="h-[100vh] bg-[#f3f4f6]" />
+            <div className="h-[100dvh] bg-[#f3f4f6]" />
           </div>
         </div>
       )}
