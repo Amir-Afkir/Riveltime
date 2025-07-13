@@ -22,12 +22,17 @@
     scroll-padding-top: 0; /* ✅ important pour clavier iOS */
   }
 
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+  }
+
   body, #root {
     height: auto;
     max-width: 1280px;
     margin: 0 auto;
     padding: 0;
     overscroll-behavior: auto;
+    position: static !important;
   }
 
   input, select, textarea {
@@ -35,6 +40,10 @@
     -webkit-user-select: auto !important;
     user-select: auto !important;
     touch-action: auto !important;
+  }
+  input:focus,
+  textarea:focus {
+    caret-color: auto;
   }
 }
 
