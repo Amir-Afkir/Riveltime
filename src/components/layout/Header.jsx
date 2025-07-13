@@ -1,11 +1,11 @@
 // src/components/Header.jsx
 import { useNavigate } from "react-router-dom";
 import { LocationEdit } from "lucide-react";
-import { useUser } from "../../context/UserContext";
+import useUserStore from "../../stores/userStore";
 
 export default function Header() {
   const navigate = useNavigate();
-  const { userData } = useUser();
+  const userData = useUserStore((state) => state.userData);
   const adresse = userData?.infosClient?.adresseComplete || userData?.infosVendeur?.adresseComplete || "";
   const ville = adresse?.match(/(?:\d{5})?\s*([\p{L}\s\-']+)$/u)?.[1]?.trim() || "Votre ville";
 

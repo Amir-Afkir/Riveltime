@@ -1,10 +1,10 @@
 import { X, Plus, Minus } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "../../context/CartContext";
+import useCartStore from "../../stores/cartStore";
 
 export default function PanierModal({ onClose }) {
-  const { cart, removeFromCart, placeOrder, addToCart } = useCart();
+  const { cart, removeFromCart, placeOrder, addToCart } = useCartStore();
   const modalRef = useRef();
   const navigate = useNavigate();
 

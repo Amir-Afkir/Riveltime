@@ -1,10 +1,10 @@
 import Section from "../../components/ui/Section";
-import { useCart } from "../../context/CartContext";
+import useCartStore from "../../stores/cartStore";
 import Title from "../../components/ui/Title";
 import OrderCard from "../../components/logic/OrderCard"; 
 
 export default function CommandesClient() {
-  const { orders } = useCart();
+  const orders = useCartStore((state) => state.orders);
 
   return (
     <div className="space-y-4">

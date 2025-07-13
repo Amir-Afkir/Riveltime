@@ -5,8 +5,6 @@ import { BrowserRouter } from 'react-router-dom';
 import './styles/index.css';
 
 import App from './App.jsx';
-import { CartProvider } from './context/CartContext.jsx';
-import { UserProvider } from './context/UserContext.jsx';
 import { Auth0Provider } from '@auth0/auth0-react';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -19,13 +17,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         audience: "https://api.riveltime.app",
       }}
     >
-      <UserProvider>
-        <BrowserRouter>
-          <CartProvider>
-            <App />
-          </CartProvider>
-        </BrowserRouter>
-      </UserProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </Auth0Provider>
   </React.StrictMode>
 );

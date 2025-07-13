@@ -21,7 +21,6 @@ const routesConfig = {
   client: [
     { path: "/client/accueil", key: "client/Accueil" },
     { path: "/vitrine/:id", key: "client/Vitrine" },
-    { path: "/client/panier", key: "client/Panier" },
     { path: "/client/commandes", key: "client/Commandes" },
     { path: "/client/profil", key: "common/Profil" },
     { path: "/client/messages", key: "client/Messages" },

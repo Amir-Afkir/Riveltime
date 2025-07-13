@@ -130,6 +130,37 @@ export default function Accueil() {
             ))}
           </div>
         </section>
+
+        {/* Section Récemment consultées */}
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-1">
+            👀 Récemment consultées
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Vos dernières visites
+          </p>
+          <div className="flex overflow-x-auto overflow-visible gap-3 py-3 -mx-4 px-4 whitespace-nowrap no-scrollbar snap-x">
+            {(() => {
+              try {
+                const recent = JSON.parse(localStorage.getItem("recentBoutiques")) || [];
+                return recent.map((b, index) => (
+                  <div key={b._id || index} className="inline-block w-[260px]">
+                    <MerchantCard
+                      id={b._id}
+                      name={b.name}
+                      category={b.category || "Non renseignée"}
+                      distance={b.distance || null}
+                      coverImage={b.coverImageUrl || null}
+                      onClick={() => navigate(`/vitrine/${b._id}`)}
+                    />
+                  </div>
+                ));
+              } catch (e) {
+                return null;
+              }
+            })()}
+          </div>
+        </section>
       </div>
     </>
   );

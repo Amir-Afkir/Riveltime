@@ -2,12 +2,13 @@
 
 import { useState, useCallback } from 'react';
 import axios from 'axios';
-import { useUser } from '../../../context/UserContext';
+import useUserStore from '../../../stores/userStore';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function useProduits() {
-  const { token, isAuthenticated, loadingUser } = useUser();
+  const { token, userData, loadingUser } = useUserStore();
+  const isAuthenticated = !!userData;
 
   const [produits, setProduits] = useState([]);
   const [loading, setLoading] = useState(false);

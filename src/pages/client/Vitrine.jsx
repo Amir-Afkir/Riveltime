@@ -1,7 +1,7 @@
 // src/pages/client/Vitrine.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useCart } from "../../context/CartContext";
+import useCartStore from "../../stores/cartStore";
 import Button from "../../components/ui/Button";
 import Title from "../../components/ui/Title";
 import Card from "../../components/ui/Card";
@@ -13,7 +13,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function Vitrine() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, cart } = useCart();
+  const addToCart = useCartStore((state) => state.addToCart);
+  const cart = useCartStore((state) => state.cart);
   const totalQuantity = cart?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   const [boutique, setBoutique] = useState(null);
@@ -38,6 +39,15 @@ export default function Vitrine() {
         const { produits } = await resProduits.json();
 
         setBoutique(boutique);
+        // Mise à jour du localStorage avec la boutique consultée
+        try {
+          const existing = JSON.parse(localStorage.getItem("recentBoutiques") || "[]");
+          const filtered = existing.filter((b) => b !== boutique._id);
+          const updated = [boutique._id, ...filtered].slice(0, 5); // max 5 boutiques récentes
+          localStorage.setItem("recentBoutiques", JSON.stringify(updated));
+        } catch (e) {
+          console.error("Erreur stockage recentBoutiques:", e);
+        }
         setProduits(produits);
         const uniqueCollections = [...new Set(produits.map(p => p.collectionName).filter(Boolean))];
         setCollections(uniqueCollections);

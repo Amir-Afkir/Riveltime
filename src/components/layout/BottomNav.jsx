@@ -1,6 +1,6 @@
 // ✅ src/components/BottomNav.jsx
 import { useNavigate, useLocation } from "react-router-dom";
-import { useCart } from "../../context/CartContext";
+import useCartStore from "../../stores/cartStore";
 import { Home, ShoppingCart, Boxes, User, Store, FileText, Bike, Mail, Scroll, Package } from "lucide-react";
 import PanierModal from "../../components/client/PanierModal";
 import { useState } from "react";
@@ -31,7 +31,7 @@ function BottomNavItem({ label, path, icon: Icon, isActive, onClick, color, badg
 export default function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { cart } = useCart();
+  const cart = useCartStore((state) => state.cart);
 
   const totalQuantity = cart?.reduce?.((sum, item) => sum + item.quantity, 0) || 0;
 

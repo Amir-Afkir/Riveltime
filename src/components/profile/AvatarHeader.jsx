@@ -1,9 +1,9 @@
 import React, { useRef, useState } from "react";
-import { useUser } from "../../context/UserContext";
+import useUserStore from "../../stores/userStore";
 
 
 export default function AvatarHeader() {
-  const { userData, refreshUser } = useUser();
+  const { userData, fetchUser } = useUserStore();
   const fileInputRef = useRef();
   const [avatarVersion, setAvatarVersion] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -15,14 +15,16 @@ export default function AvatarHeader() {
     formData.append("avatar", file);
     setIsUploading(true);
     try {
-      const token = sessionStorage.getItem("accessToken");
+      const token = localStorage.getItem("accessToken");
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me/avatar`, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
       if (!res.ok) throw new Error("Upload échoué");
-      await refreshUser({ silent: true });
+      await fetchUser({ silent: true });
       setAvatarVersion(Date.now());
     } catch (err) {
       alert("❌ Échec de l’upload de l’avatar");

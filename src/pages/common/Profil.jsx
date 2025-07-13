@@ -1,12 +1,14 @@
 // ✅ ProfilCommun.jsx
 
-// 🛠️ Imports React et hooks
+// 1. Imports externes React
 import { useState, useRef, useEffect, useMemo } from "react";
-
-// 🛠️ Portail
 import { createPortal } from "react-dom";
 
-// 🛠️ Composants internes
+// 2. Bibliothèques tierces
+import { User, Mail, Phone, MapPin, Truck, Pencil, CheckCircle } from "lucide-react";
+import { useAuth0 } from "@auth0/auth0-react";
+
+// 3. Composants internes
 import NotificationBanner from "../../components/ui/NotificationBanner";
 import AvatarHeader from "../../components/profile/AvatarHeader";
 import InfoCard from "../../components/profile/InfoCard";
@@ -14,11 +16,8 @@ import UserFieldCard from "../../components/profile/UserFieldCard";
 import ToggleSwitch from "../../components/profile/ToggleSwitch";
 import Button from "../../components/ui/Button";
 
-// 🛠️ Icônes externes
-import { User, Mail, Phone, MapPin, Truck, Pencil, CheckCircle } from "lucide-react";
-
-// 🛠️ Context
-import { useUser } from "../../context/UserContext";
+// 4. Stores et hooks personnalisés
+import useUserStore from "../../stores/userStore";
 
 // 🪟 AddressSuggestionsPortal (portail suggestions d'adresse)
 function AddressSuggestionsPortal({ suggestions, onSelect, inputRef }) {
@@ -63,14 +62,54 @@ function AddressSuggestionsPortal({ suggestions, onSelect, inputRef }) {
   );
 }
 
+// 🗂️ Constantes globales et helpers
+// URL de l'API (pour éviter répétition)
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+
+// Données éditables par défaut (pour useState et reset)
+const defaultEditableData = {
+  fullname: "",
+  phone: "",
+  adresseComplete: "",
+  typeDeTransport: "",
+  latitude: null,
+  longitude: null,
+};
+
+// Fonction utilitaire pour géocoder une adresse via l'API gouvernementale
+async function geocodeAdresse(adresse) {
+  try {
+    const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${adresse}`);
+    const data = await res.json();
+    const best = data?.features?.[0];
+    if (best) {
+      return {
+        latitude: best.geometry.coordinates[1],
+        longitude: best.geometry.coordinates[0],
+      };
+    }
+    return null;
+  } catch (err) {
+    throw err;
+  }
+}
 
 export default function ProfilCommun({ isLoading }) {
-  // 🧠 Hooks d'état
-  const { userData: user, loadingUser: loading, refreshUser, logout, deleteAccount } = useUser();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [notif, setNotif] = useState({ message: "", type: "success" });
+  // 🧠 Stores et hooks personnalisés (mémoïsés pour éviter les réévaluations inutiles)
+  const user = useUserStore((state) => state.userData);
+  const { logoutSafe, deleteAccount, getTokenSilentlyFromStore } = useMemo(() => ({
+    logoutSafe: useUserStore.getState().logoutSafe,
+    deleteAccount: useUserStore.getState().deleteAccount,
+    getTokenSilentlyFromStore: useUserStore.getState().getTokenSilently,
+  }), []);
+  const { getTokenSilently, logout } = useAuth0();
+
+  // 🧠 State local
+  const [isEditing, setIsEditing] = useState(false); // Edition du profil
+  const [isUpdating, setIsUpdating] = useState(false); // Chargement pour update
+  const [notif, setNotif] = useState({ message: "", type: "success" }); // Notification
   const [editableData, setEditableData] = useState({
+    ...defaultEditableData,
     fullname: user?.fullname || "",
     phone: user?.phone || "",
     adresseComplete: (user?.infosClient?.adresseComplete || user?.infosVendeur?.adresseComplete) || "",
@@ -78,12 +117,12 @@ export default function ProfilCommun({ isLoading }) {
     latitude: user?.infosClient?.latitude || user?.infosVendeur?.latitude || null,
     longitude: user?.infosClient?.longitude || user?.infosVendeur?.longitude || null,
   });
-  const [adresseSuggestions, setAdresseSuggestions] = useState([]);
+  const [adresseSuggestions, setAdresseSuggestions] = useState([]); // Suggestions d'adresse
 
   // 🧠 Références DOM
   const adresseInputRef = useRef(null);
 
-  // 🧠 Calculs dérivés (profil, complétion)
+  // 🧠 Sélection des infos utilisateur (mémoïsé)
   const {
     fullname,
     email,
@@ -95,6 +134,10 @@ export default function ProfilCommun({ isLoading }) {
     infosLivreur
   } = useMemo(() => user || {}, [user]);
 
+  // 🧠 Constante dérivée pour savoir si l'adresse est requise
+  const isAdresseRequired = role === "client" || role === "vendeur";
+
+  // 🧮 Calcul du taux de complétion du profil (mémoïsé)
   const profilCompletion = useMemo(() => {
     let filled = 0;
     if (fullname) filled++;
@@ -108,6 +151,7 @@ export default function ProfilCommun({ isLoading }) {
     return Math.round((filled / max) * 100);
   }, [fullname, phone, role, infosClient, infosVendeur, infosLivreur]);
 
+  // 🧮 Profil incomplet ? (mémoïsé)
   const profilIncomplet = useMemo(() => {
     if (role === "client") return !fullname || !phone || !infosClient?.adresseComplete;
     if (role === "vendeur") return !fullname || !phone || !infosVendeur?.adresseComplete;
@@ -115,13 +159,41 @@ export default function ProfilCommun({ isLoading }) {
     return false;
   }, [fullname, phone, role, infosClient, infosVendeur, infosLivreur]);
 
-  // 🧠 Fonctions de gestion (update, edit)
+  // 🔄 Rafraîchir les données utilisateur (plus sécurisé, avec fallback)
+  const refreshUserData = async () => {
+    try {
+      const { fetchUser, getTokenSilentlyFn } = useUserStore.getState();
+      const fallback = getTokenSilently;
+      const getTokenSilentlyToUse = getTokenSilentlyFn?.() || fallback;
+      if (typeof getTokenSilentlyToUse !== "function") {
+        throw new Error("getTokenSilently non défini ou invalide");
+      }
+      if (typeof fetchUser !== "function") {
+        throw new Error("fetchUser non défini dans le store");
+      }
+      await fetchUser({ getTokenSilently: getTokenSilentlyToUse, silent: true });
+    } catch (err) {
+      console.error("❌ Erreur rechargement utilisateur :", err);
+    }
+  };
+
+  // 📝 Gérer la modification des champs input
+  const handleInputChange = (field, value) => {
+    setEditableData((prev) => ({
+      ...prev,
+      [field]: value,
+      ...(field === "adresseComplete"
+        ? { latitude: null, longitude: null }
+        : {}),
+    }));
+  };
+
+  // ✅ Handler pour la mise à jour du profil (appel API)
   const handleUpdate = async (formData) => {
     try {
       setIsUpdating(true);
       const token = localStorage.getItem("accessToken");
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+      const res = await fetch(`${VITE_API_URL}/users/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -129,33 +201,31 @@ export default function ProfilCommun({ isLoading }) {
         },
         body: JSON.stringify(formData),
       });
-
       if (!res.ok) throw new Error("Erreur lors de la mise à jour");
-
       setNotif({ message: "Profil mis à jour avec succès !", type: "success" });
-      if (typeof refreshUser === "function") await refreshUser({ silent: true });
+      await refreshUserData();
     } catch (err) {
-      console.error("❌", err);
+      console.error("❌ Erreur fonction handleUpdate :", err);
       setNotif({ message: "❌ La mise à jour a échoué", type: "error" });
     } finally {
       setIsUpdating(false);
     }
   };
 
+  // ✅ Handler pour basculer le mode édition
   const handleEditToggle = async () => {
     if (isEditing) {
+      // Si l'adresse est requise et qu'elle a changé sans coordonnées, géocoder avant update
       if (
-        (role === "client" || role === "vendeur") &&
+        isAdresseRequired &&
         editableData.adresseComplete &&
         (editableData.latitude === null || editableData.longitude === null)
       ) {
         try {
-          const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${editableData.adresseComplete}`);
-          const data = await res.json();
-          const best = data?.features?.[0];
-          if (best) {
-            editableData.latitude = best.geometry.coordinates[1];
-            editableData.longitude = best.geometry.coordinates[0];
+          const coords = await geocodeAdresse(editableData.adresseComplete);
+          if (coords) {
+            editableData.latitude = coords.latitude;
+            editableData.longitude = coords.longitude;
           } else {
             setNotif({
               message: "❌ Adresse non trouvée. Veuillez saisir une adresse plus précise ou en choisir une dans les suggestions.",
@@ -164,7 +234,7 @@ export default function ProfilCommun({ isLoading }) {
             return;
           }
         } catch (err) {
-          console.error("Géocodage échoué :", err);
+          console.error("❌ Erreur fonction geocodeAdresse :", err);
           setNotif({
             message: "❌ Erreur de géocodage. Vérifiez votre connexion internet.",
             type: "error",
@@ -172,7 +242,7 @@ export default function ProfilCommun({ isLoading }) {
           return;
         }
       }
-
+      // Construction de l'objet utilisateur à mettre à jour
       const updatedUser = {
         ...user,
         fullname: editableData.fullname,
@@ -202,7 +272,9 @@ export default function ProfilCommun({ isLoading }) {
       };
       await handleUpdate(updatedUser);
     } else {
+      // Préremplir les données éditables à partir du user
       setEditableData({
+        ...defaultEditableData,
         fullname: fullname || "",
         phone: phone || "",
         adresseComplete: infosClient?.adresseComplete || infosVendeur?.adresseComplete || "",
@@ -214,7 +286,7 @@ export default function ProfilCommun({ isLoading }) {
     setIsEditing(!isEditing);
   };
 
-  // if (loading) return <p>Chargement...</p>;
+  // 🛑 Si pas d'utilisateur, afficher une erreur
   if (!user) return <p>Erreur : utilisateur introuvable</p>;
 
   // 📦 Données des sections
@@ -245,7 +317,7 @@ export default function ProfilCommun({ isLoading }) {
                   <input
                     type="text"
                     value={editableData.fullname}
-                    onChange={(e) => setEditableData({ ...editableData, fullname: e.target.value })}
+                    onChange={(e) => handleInputChange("fullname", e.target.value)}
                     className="border border-gray-300 rounded px-2 py-1 w-full text-[16px]"
                     placeholder="Nom complet"
                   />
@@ -258,7 +330,7 @@ export default function ProfilCommun({ isLoading }) {
                     onChange={(e) => {
                       // Autoriser uniquement chiffres, +, espaces, tirets
                       const filteredValue = e.target.value.replace(/[^\d+ \-]/g, "");
-                      setEditableData({ ...editableData, phone: filteredValue });
+                      handleInputChange("phone", filteredValue);
                     }}
                     pattern="^\+?[0-9\- ]{7,15}$"
                     title="Entrez un numéro de téléphone valide (7 à 15 chiffres, espaces et tirets autorisés)"
@@ -272,7 +344,7 @@ export default function ProfilCommun({ isLoading }) {
                     <select
                       value={editableData.typeDeTransport}
                       onChange={(e) =>
-                        setEditableData({ ...editableData, typeDeTransport: e.target.value })
+                        handleInputChange("typeDeTransport", e.target.value)
                       }
                       className="border border-gray-300 rounded px-2 py-1 w-full text-[16px]"
                       required
@@ -286,47 +358,43 @@ export default function ProfilCommun({ isLoading }) {
                     </select>
                   </div>
                 ) : (
-                  // Localisation de l'input adresse dans le bloc role !== "livreur"
-                  <div className="flex items-center gap-2">
-                    <MapPin size={18} />
-                    <input
-                      type="text"
-                      value={editableData.adresseComplete}
-                      onChange={async (e) => {
-                        const value = e.target.value;
-                        setEditableData({
-                          ...editableData,
-                          adresseComplete: value,
-                          latitude: null,
-                          longitude: null,
-                        });
-                        if (value.length > 3) {
-                          const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${value}`);
-                          const data = await res.json();
-                          setAdresseSuggestions(data.features || []);
-                        } else {
+                  isAdresseRequired && (
+                    <div className="flex items-center gap-2">
+                      <MapPin size={18} />
+                      <input
+                        type="text"
+                        value={editableData.adresseComplete}
+                        onChange={async (e) => {
+                          const value = e.target.value;
+                          handleInputChange("adresseComplete", value);
+                          if (value.length > 3) {
+                            const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${value}`);
+                            const data = await res.json();
+                            setAdresseSuggestions(data.features || []);
+                          } else {
+                            setAdresseSuggestions([]);
+                          }
+                        }}
+                        className="border border-gray-300 rounded px-2 py-1 w-full text-[16px]"
+                        placeholder="Adresse complète"
+                        autoComplete="off"
+                        ref={adresseInputRef}
+                      />
+                      <AddressSuggestionsPortal
+                        suggestions={adresseSuggestions}
+                        onSelect={(label, coords) => {
+                          setEditableData((prev) => ({
+                            ...prev,
+                            adresseComplete: label,
+                            latitude: coords[1],
+                            longitude: coords[0],
+                          }));
                           setAdresseSuggestions([]);
-                        }
-                      }}
-                      className="border border-gray-300 rounded px-2 py-1 w-full text-[16px]"
-                      placeholder="Adresse complète"
-                      autoComplete="off"
-                      ref={adresseInputRef}
-                    />
-                    <AddressSuggestionsPortal
-                      suggestions={adresseSuggestions}
-                      onSelect={(label, coords) => {
-                        setEditableData({
-                          ...editableData,
-                          adresseComplete: label,
-                          latitude: coords[1],
-                          longitude: coords[0],
-                        });
-                        setAdresseSuggestions([]);
-                      }}
-                      inputRef={adresseInputRef}
-                    />
-                  </div>
+                        }}
+                        inputRef={adresseInputRef}
+                      />
+                    </div>
+                  )
                 )}
                 {email && <UserFieldCard icon={<Mail size={18} />} value={email} />}
               </>
@@ -335,8 +403,10 @@ export default function ProfilCommun({ isLoading }) {
                 {!profilIncomplet && <UserFieldCard icon={<User size={18} />} value={fullname} />}
                 {email && <UserFieldCard icon={<Mail size={18} />} value={email} />}
                 {!profilIncomplet && <UserFieldCard icon={<Phone size={18} />} value={phone} />}
-                {(role === "client" && infosClient?.adresseComplete) ||
-                (role === "vendeur" && infosVendeur?.adresseComplete) ? (
+                {isAdresseRequired && (
+                  (role === "client" && infosClient?.adresseComplete) ||
+                  (role === "vendeur" && infosVendeur?.adresseComplete)
+                ) ? (
                   <UserFieldCard
                     icon={<MapPin size={18} />}
                     value={infosClient?.adresseComplete || infosVendeur?.adresseComplete}
@@ -371,7 +441,6 @@ export default function ProfilCommun({ isLoading }) {
       title: "Notifications",
       content: <ToggleSwitch label="Recevoir les alertes e-mail" checked={notifications ?? false} role={role} />,
     },
-    // Section "Moyens de paiement" supprimée
   ];
 
   // 🧩 Rendu
@@ -419,18 +488,16 @@ export default function ProfilCommun({ isLoading }) {
             <button
               onClick={async () => {
                 try {
-                  const response = await fetch(`${import.meta.env.VITE_API_URL}/account/password-reset`, {
+                  const response = await fetch(`${VITE_API_URL}/account/password-reset`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: user?.email }),
                   });
-
                   const result = await response.json();
                   if (!response.ok) throw new Error(result.error || "Erreur");
-
                   setNotif({ message: result.message || "Un email de réinitialisation a été envoyé à votre adresse.", type: "success" });
                 } catch (err) {
-                  console.error("❌", err);
+                  console.error("❌ Erreur fonction handleResetPassword :", err);
                   setNotif({ message: "Erreur lors de l'envoi de l’email", type: "error" });
                 }
               }}
@@ -442,11 +509,9 @@ export default function ProfilCommun({ isLoading }) {
             <hr className="border-gray-200" />
 
             <Button
-              onClick={() => {
-                logout({ returnTo: import.meta.env.VITE_BASE_URL });
-              }}
+              onClick={() => logoutSafe(logout)}
               type="button"
-              variant = "primary"
+              variant="primary"
             >
               Déconnexion
             </Button>
@@ -454,7 +519,7 @@ export default function ProfilCommun({ isLoading }) {
             <Button
               onClick={deleteAccount}
               type="button"
-              variant = "secondary"
+              variant="secondary"
             >
               Supprimer mon profil
             </Button>
