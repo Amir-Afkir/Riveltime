@@ -21,11 +21,12 @@
   }
 
   body, #root {
-    height: 100%;
-    margin: 0;
+    height: auto;
+    max-width: 1280px;
+    margin: 0 auto;
     padding: 0;
     position: relative;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: auto;
   }
 
   input, select, textarea {
