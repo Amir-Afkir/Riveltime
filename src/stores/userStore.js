@@ -1,3 +1,4 @@
+// src/stores/userStore.js
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
@@ -6,16 +7,20 @@ const useUserStore = create(devtools((set, get) => {
   function saveAccessToken(token) {
     localStorage.setItem("accessToken", token);
   }
+
   function saveUserData(user) {
     localStorage.setItem("userData", JSON.stringify(user));
   }
+
   function clearStorage() {
     localStorage.clear();
   }
+
   function getCachedUser() {
     const raw = localStorage.getItem("userData");
     return raw ? JSON.parse(raw) : null;
   }
+
   function resolveTokenFn(inputFn) {
     const fn = typeof inputFn === 'function' ? inputFn : get().getTokenSilently;
     if (typeof fn !== 'function') throw new Error("getTokenSilently non défini ou invalide");
@@ -29,7 +34,41 @@ const useUserStore = create(devtools((set, get) => {
     auth0User: null,
     getTokenSilently: null,
 
-    // 🔄 Met à jour l'utilisateur
+    // 🔄 Restaure depuis le cache local (appelé dans App.jsx ou ailleurs)
+    restoreUserFromCache: () => {
+      const token = localStorage.getItem("accessToken");
+      const raw = localStorage.getItem("userData");
+      const userData = raw ? JSON.parse(raw) : null;
+
+      if (token && userData) {
+        set({
+          token,
+          userData,
+          loadingUser: false,
+        });
+      }
+    },
+
+    // 🔐 Initialise depuis Auth0
+    initAuth0Session: function initAuth0Session({ auth0User, getTokenSilently }) {
+      const cached = getCachedUser();
+
+      if (cached?.auth0Id === auth0User?.sub) {
+        set({
+          userData: cached,
+          token: localStorage.getItem("accessToken"),
+          auth0User,
+          getTokenSilently,
+          loadingUser: false,
+        });
+      } else {
+        localStorage.removeItem("userData");
+        set({ auth0User, getTokenSilently });
+        get().fetchUser({ getTokenSilently });
+      }
+    },
+
+    // 🔄 Met à jour l'utilisateur (appel API sécurisé)
     fetchUser: async function fetchUser({ getTokenSilently, silent = false } = {}) {
       try {
         const tokenFn = resolveTokenFn(getTokenSilently);
@@ -59,20 +98,7 @@ const useUserStore = create(devtools((set, get) => {
       }
     },
 
-    // 🔐 Initialise depuis Auth0
-    initAuth0Session: function initAuth0Session({ auth0User, getTokenSilently }) {
-      const cached = getCachedUser();
-
-      if (cached?.auth0Id === auth0User?.sub) {
-        set({ userData: cached, auth0User, loadingUser: false });
-      } else {
-        localStorage.removeItem("userData");
-        set({ auth0User, getTokenSilently });
-        get().fetchUser({ getTokenSilently });
-      }
-    },
-
-    // 🔑 Fournit getTokenSilently stocké
+    // 🔑 Fournit la fonction Auth0 en mémoire
     getTokenSilentlyFn: function getTokenSilentlyFn() {
       return get().getTokenSilently;
     },
