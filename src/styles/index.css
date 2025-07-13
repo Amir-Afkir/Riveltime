@@ -8,13 +8,15 @@
 
 @layer base {
   html {
-    height: 100%;
+    height: auto;
     padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
              env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
     min-height: calc(100% + env(safe-area-inset-top));
     scroll-behavior: smooth;
     -webkit-touch-callout: none;
-    -webkit-user-select: none;
+    -webkit-user-select: auto;
+    user-select: auto;
+    touch-action: auto;
     scroll-padding-top: 80px;
   }
 
