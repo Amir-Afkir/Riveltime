@@ -25,7 +25,7 @@ export default defineConfig({
         description: 'Livraison locale rapide et responsable',
         start_url: '/',
         scope: '/',
-        display: 'standalone', 
+        display: 'browser', 
         theme_color: '#ed354f', 
         background_color: '#f3f4f6', 
         orientation: 'portrait',
