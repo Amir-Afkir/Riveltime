@@ -138,7 +138,7 @@ export default function PanierModal({ onClose }) {
                       <p className="text-xs text-gray-500">
                         chez{" "}
                         <Link
-                          to={`/vitrine/${product.boutique}`}
+                          to={`/vitrine/${product.boutique._id}`}
                           className="text-[#ed354f] underline hover:text-[#d02d45] transition"
                           onClick={onClose}
                         >

@@ -34,7 +34,7 @@ export default function Vitrine() {
   useEffect(() => {
     async function fetchBoutiqueAndProduits() {
       try {
-        const resBoutique = await fetch(`${API_URL}/boutiques/${id}`);
+        const resBoutique = await fetch(`${API_URL}/boutiques/${id}`); 
         if (!resBoutique.ok) throw new Error("Boutique introuvable");
         const { boutique } = await resBoutique.json();
 
