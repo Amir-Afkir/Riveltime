@@ -65,7 +65,7 @@ app.use(jwtCheck, injectUser, createUserIfNotExists);
 app.use('/users', require('./routes/userRoutes'));
 app.use('/produits', require('./routes/productRoutes')); // create/update/delete/mine
 app.use('/notifications', require('./routes/notificationRoutes'));
-
+app.use('/orders', require('./routes/orderRoutes')); 
 
 // ====================================
 // 🧪 Route test sécurisée

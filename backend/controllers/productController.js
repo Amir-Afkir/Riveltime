@@ -31,6 +31,16 @@ exports.createProduct = async (req, res) => {
 
     const result = req.imageData;
 
+    const LOGISTICS_PRESETS = {
+      small:  { poids_kg: 0.3, volume_m3: 0.0015 },
+      medium: { poids_kg: 0.8, volume_m3: 0.003 },
+      large:  { poids_kg: 1.5, volume_m3: 0.01 },
+      fragile:{ poids_kg: 3, volume_m3: 0.02 }
+    };
+
+    const logisticsCategory = req.body.logisticsCategory || 'medium';
+    const { poids_kg, volume_m3 } = LOGISTICS_PRESETS[logisticsCategory] || LOGISTICS_PRESETS.medium;
+
     const produit = new Product({
       name,
       price,
@@ -39,6 +49,9 @@ exports.createProduct = async (req, res) => {
       imageUrl: result.secure_url,
       imagePublicId: result.public_id,
       boutique: boutique._id,
+      logisticsCategory,
+      poids_kg,
+      volume_m3,
     });
 
     await produit.save();
@@ -91,6 +104,21 @@ exports.updateProduct = async (req, res) => {
     }
 
     const { name, price, collectionName, description } = req.body;
+
+    const LOGISTICS_PRESETS = {
+      small:  { poids_kg: 0.3, volume_m3: 0.0015 },
+      medium: { poids_kg: 0.8, volume_m3: 0.003 },
+      large:  { poids_kg: 1.5, volume_m3: 0.01 },
+      fragile:{ poids_kg: 3, volume_m3: 0.02 }
+    };
+
+    const logisticsCategory = req.body.logisticsCategory;
+    if (logisticsCategory && LOGISTICS_PRESETS[logisticsCategory]) {
+      const { poids_kg, volume_m3 } = LOGISTICS_PRESETS[logisticsCategory];
+      produit.logisticsCategory = logisticsCategory;
+      produit.poids_kg = poids_kg;
+      produit.volume_m3 = volume_m3;
+    }
 
     if (req.imageData?.secure_url && req.imageData?.public_id) {
       if (produit.imagePublicId) {

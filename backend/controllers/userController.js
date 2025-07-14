@@ -1,6 +1,5 @@
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
-// backend/controllers/userController.js
 
 const fs = require('fs');
 const path = require('path');

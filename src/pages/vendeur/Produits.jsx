@@ -37,6 +37,7 @@ const INITIAL_PRODUIT_FORM = {
   description: "",
   image: null,
   collectionName: "",
+  logisticsCategory: "medium",
 };
 
 export default function Produits() {
@@ -181,6 +182,7 @@ export default function Produits() {
       category: produit.category,
       description: produit.description,
       collectionName: produit.collectionName || "",
+      logisticsCategory: produit.logisticsCategory || "medium",
       image: null,
     });
     setShowProduitModal(true);
@@ -203,6 +205,7 @@ export default function Produits() {
       formData.append("description", produitForm.description);
       formData.append("boutiqueId", selectedBoutique._id);
       formData.append("collectionName", produitForm.collectionName);
+      formData.append("logisticsCategory", produitForm.logisticsCategory || "medium");
       if (produitForm.image) formData.append("image", produitForm.image);
       if (produitForm._id) {
         await updateProduit(produitForm._id, formData);

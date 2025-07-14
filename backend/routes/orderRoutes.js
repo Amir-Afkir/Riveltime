@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
 
+// Estimer les frais de livraison
+router.post('/estimate', orderController.estimateDelivery);
+
 // Créer une commande
 router.post('/', orderController.createOrder);
 

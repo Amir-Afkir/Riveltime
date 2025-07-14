@@ -175,6 +175,21 @@ export default function GestionModal({
         <Input name="description" placeholder="Description" aria-label="Description" value={safeValue(data.description)} onChange={onChange} className="pl-10" />
       </IconFieldWrapper>
 
+      <div className="relative mb-4 pl-10">
+        <PackageSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <select
+          name="logisticsCategory"
+          value={safeValue(data.logisticsCategory, "medium")}
+          onChange={onChange}
+          className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+        >
+          <option value="small">📦 Petit (livre, cosmétique…)</option>
+          <option value="medium">🧴 Moyen (par défaut)</option>
+          <option value="large">🧺 Grand (sac, électroménager…)</option>
+          <option value="fragile">🧊 Fragile / Volumineux</option>
+        </select>
+      </div>
+
       <div className="mb-3">
         <FileInput
           id="image"

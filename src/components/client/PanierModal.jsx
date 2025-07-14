@@ -1,31 +1,79 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X, Plus, Minus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import useCartStore from "../../stores/cartStore";
+import useUserStore from "../../stores/userStore";
 
-const messages = [
-  "Tu commandes, on prépare, ça arrive vite.",
-  "Tout est prêt, tu fais le dernier geste.",
-  "Paiement serein, livraison express.",
-  "Chaque clic soutient une vraie boutique.",
-  "Chez toi en moins d’une heure, sans effort.",
-  "Commande maintenant, reçois sans attendre.",
-  "Tu gagnes du temps et tu fais du bien.",
-  "Ton livreur roule pour toi, payé à 100%.",
-  "Chaque course rémunère justement ton livreur.",
-  "Tu choisis une livraison juste, locale et rapide.",
-  "Ton geste valorise l’économie de ton quartier.",
-  "Ta commande fait tourner la vie locale.",
-  "Merci d’agir pour les commerçants d’ici.",
-  "Riveltime t’accompagne, tu profites de l’instant.",
-];
+const getClientCoords = (userData) =>
+  userData?.infosClient?.latitude && userData?.infosClient?.longitude
+    ? [userData.infosClient.longitude, userData.infosClient.latitude]
+    : null;
+
+const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadingFee) => {
+  const clientCoords = getClientCoords(userData);
+  const boutiqueLoc = cart[0]?.product?.boutique?.location?.coordinates;
+
+  if (!cart.length || !token || !Array.isArray(clientCoords)) {
+    setDeliveryFee(null);
+    return;
+  }
+
+  if (!Array.isArray(boutiqueLoc)) {
+    console.warn("Boutique location non définie dans le panier :", cart[0]?.product?.boutique);
+    setDeliveryFee(0);
+    return;
+  }
+
+  setLoadingFee(true);
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/estimate`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        items: cart.map(({ product, quantity }) => ({ product: product._id, quantity })),
+        deliveryLocation: { lat: clientCoords[1], lng: clientCoords[0] },
+        boutiqueLocation: { lat: boutiqueLoc[1], lng: boutiqueLoc[0] },
+        horaire: [],
+        vehicule: "velo",
+      }),
+    });
+    const data = await res.json();
+    if (res.ok && typeof data.deliveryFee === "number") {
+      setDeliveryFee(data.deliveryFee);
+    } else {
+      setDeliveryFee(null);
+    }
+  } catch (err) {
+    console.error("Erreur estimation livraison :", err);
+    alert("Erreur pendant l’estimation de livraison. Veuillez réessayer.");
+    setDeliveryFee(null);
+  } finally {
+    setLoadingFee(false);
+  }
+};
+
+const updateRandomMessage = (el) => {
+  el.style.opacity = 0;
+  setTimeout(() => {
+    const newMsg = messages[Math.floor(Math.random() * messages.length)];
+    el.innerText = newMsg;
+    el.style.opacity = 1;
+  }, 200);
+};
 
 export default function PanierModal({ onClose }) {
+  const { token, userData } = useUserStore();
   const { cart, removeFromCart, placeOrder, addToCart } = useCartStore();
+  const [deliveryFee, setDeliveryFee] = useState(null);
+  const [loadingFee, setLoadingFee] = useState(false);
   const modalRef = useRef();
   const navigate = useNavigate();
 
-  const totalPrice = cart.reduce((sum, { quantity, product }) => sum + quantity * product.price, 0);
+  const sousTotal = cart.reduce((sum, { quantity, product }) => sum + quantity * product.price, 0);
+  const totalPrice = sousTotal + (deliveryFee || 0);
 
   useEffect(() => {
     document.body.classList.add("overflow-hidden");
@@ -43,19 +91,14 @@ export default function PanierModal({ onClose }) {
   };
 
   useEffect(() => {
+    estimateDelivery(cart, token, userData, setDeliveryFee, setLoadingFee);
+  }, [cart, token, userData]);
+
+  useEffect(() => {
     const el = document.getElementById("panier-message");
     if (!el) return;
-    let timeout;
-    const updateMessage = () => {
-      el.style.opacity = 0;
-      setTimeout(() => {
-        const newMsg = messages[Math.floor(Math.random() * messages.length)];
-        el.innerText = newMsg;
-        el.style.opacity = 1;
-      }, 200);
-    };
-    updateMessage(); // set initial
-    const interval = setInterval(updateMessage, 5000);
+    updateRandomMessage(el);
+    const interval = setInterval(() => updateRandomMessage(el), 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -123,6 +166,19 @@ export default function PanierModal({ onClose }) {
             </div>
 
             <div className="mt-6 border-t pt-4">
+              {typeof deliveryFee === "number" && !isNaN(deliveryFee) && (
+                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                  <span>Frais de livraison</span>
+                  <span>{deliveryFee.toFixed(2)} €</span>
+                </div>
+              )}
+              {deliveryFee === null && (
+                <div className="text-sm text-red-500 mb-2">
+                  Impossible d’estimer les frais de livraison pour cette commande.
+                </div>
+              )}
+              <div className="flex justify-between text-sm text-gray-600 mb-2">
+              </div>
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-gray-800">Total</span>
                 <span className="text-base font-bold text-[#ed354f]">{totalPrice.toFixed(2)} €</span>
@@ -143,3 +199,20 @@ export default function PanierModal({ onClose }) {
     </div>
   );
 }
+
+const messages = [
+  "Tu commandes, on prépare, ça arrive vite.",
+  "Tout est prêt, tu fais le dernier geste.",
+  "Paiement serein, livraison express.",
+  "Chaque clic soutient une vraie boutique.",
+  "Chez toi en moins d’une heure, sans effort.",
+  "Commande maintenant, reçois sans attendre.",
+  "Tu gagnes du temps et tu fais du bien.",
+  "Ton livreur roule pour toi, payé à 100%.",
+  "Chaque course rémunère justement ton livreur.",
+  "Tu choisis une livraison juste, locale et rapide.",
+  "Ton geste valorise l’économie de ton quartier.",
+  "Ta commande fait tourner la vie locale.",
+  "Merci d’agir pour les commerçants d’ici.",
+  "Riveltime t’accompagne, tu profites de l’instant.",
+];

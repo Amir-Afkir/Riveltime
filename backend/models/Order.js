@@ -13,6 +13,7 @@ const orderSchema = new mongoose.Schema({
   deliverer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Peut être null au départ
   items: [orderItemSchema],
   totalPrice: { type: Number, required: true },
+  deliveryFee: { type: Number, required: true },
   status: {
     type: String,
     enum: ['pending', 'accepted', 'preparing', 'on_the_way', 'delivered', 'cancelled'],

@@ -1,6 +1,7 @@
 // src/pages/client/Vitrine.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import useUserStore from "../../stores/userStore";
 import useCartStore from "../../stores/cartStore";
 import Button from "../../components/ui/Button";
 import Title from "../../components/ui/Title";
@@ -26,6 +27,9 @@ export default function Vitrine() {
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const closeNotification = () => setNotification(null);
+
+  const { token, userData } = useUserStore();
+  const [estimatedFee, setEstimatedFee] = useState(null);
 
   useEffect(() => {
     async function fetchBoutiqueAndProduits() {
@@ -68,6 +72,67 @@ export default function Vitrine() {
 
     fetchBoutiqueAndProduits();
   }, [id]);
+
+  useEffect(() => {
+    async function estimateFee() {
+      if (
+        !token ||
+        !userData?.infosClient?.latitude ||
+        !userData?.infosClient?.longitude ||
+        !boutique?.location?.coordinates
+      ) {
+        return;
+      }
+
+      const deliveryLocation = {
+        lat: userData.infosClient.latitude,
+        lng: userData.infosClient.longitude,
+      };
+
+      const boutiqueLocation = {
+        lat: boutique.location.coordinates[1],
+        lng: boutique.location.coordinates[0],
+      };
+
+      const item = produits?.[0] || {
+        name: "Produit moyen",
+        price: 10,
+        logisticsCategory: "moyen",
+        quantity: 1,
+      };
+
+      try {
+        const response = await fetch(`${API_URL}/orders/estimate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            boutiqueLocation,
+            deliveryLocation,
+            items: [
+              {
+                name: item.name,
+                price: item.price,
+                logisticsCategory: item.logisticsCategory || "moyen",
+                quantity: 1,
+              },
+            ],
+          }),
+        });
+
+        const result = await response.json();
+        if (result.deliveryFee) {
+          setEstimatedFee(result.deliveryFee);
+        }
+      } catch (error) {
+        console.error("Erreur estimation frais livraison:", error);
+      }
+    }
+
+    estimateFee();
+  }, [boutique, userData, token, produits]);
 
   if (error) {
     return (
@@ -121,6 +186,11 @@ export default function Vitrine() {
         </Title>
         <p className="text-sm text-gray-600">{boutique.category}</p>
         <p className="text-sm text-gray-500">{boutique.address}</p>
+        {estimatedFee !== null && (
+          <p className="text-sm text-gray-700">
+            Frais de livraison estimés : <strong>{estimatedFee.toFixed(2)} €</strong>
+          </p>
+        )}
       </div>
 
       <div className="mt-6 mb-2" role="search">
@@ -224,7 +294,17 @@ export default function Vitrine() {
                     </span>
                     <button
                       onClick={() => {
-                        addToCart({ merchant: boutique.name, product });
+                        addToCart({
+                          merchant: boutique.name,
+                          product: {
+                            ...product,
+                            boutique: {
+                              _id: boutique._id,
+                              name: boutique.name,
+                              location: boutique.location,
+                            },
+                          },
+                        });
                         setNotification({ message: `${product.name} ajouté au panier`, type: "success" });
                       }}
                       className="group/button flex items-center justify-center w-9 h-9 rounded-full bg-gray-200 text-gray-600 hover:bg-[#ed354f] hover:text-white transition duration-200 active:scale-95"
@@ -266,7 +346,17 @@ export default function Vitrine() {
                     </span>
                     <button
                       onClick={() => {
-                        addToCart({ merchant: boutique.name, product });
+                        addToCart({
+                          merchant: boutique.name,
+                          product: {
+                            ...product,
+                            boutique: {
+                              _id: boutique._id,
+                              name: boutique.name,
+                              location: boutique.location,
+                            },
+                          },
+                        });
                         setNotification({ message: `${product.name} ajouté au panier`, type: "success" });
                       }}
                       className="group/button flex items-center justify-center w-9 h-9 rounded-full bg-gray-200 text-gray-600 hover:bg-[#ed354f] hover:text-white transition duration-200 active:scale-95"
