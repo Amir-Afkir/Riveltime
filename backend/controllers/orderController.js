@@ -36,25 +36,34 @@ exports.estimateDelivery = async (req, res) => {
     const TARIF_PAR_KG = 0.25;
     const TARIF_PAR_KM = 0.5;
     const MAJ_HORAIRE = {
-      pointe: 3,
-      nuit: 5,
-      weekend: 2
+      pointe: 2,
+      nuit: 2.5,
+      weekend: 1.5
     };
     const MAJ_VEHICULE = {
       velo: 0,
-      scooter: 1,
-      voiture: 3,
-      camionnette: 10
+      scooter: 1.5,
+      voiture: 2.5,
+      camionnette: 5
     };
 
     let majHoraire = 0;
     horaire.forEach(type => majHoraire += MAJ_HORAIRE[type] || 0);
-    const majVehicule = MAJ_VEHICULE[vehicule] || 0;
+
+    const recommanderVehicule = (poidsKg, volumeM3, distanceKm) => {
+      if (poidsKg > 50 || volumeM3 > 0.4) return 'camionnette';
+      if (poidsKg > 20 || volumeM3 > 0.2 || distanceKm > 8) return 'voiture';
+      if (poidsKg > 10 || volumeM3 > 0.1 || distanceKm > 4) return 'scooter';
+      return 'velo';
+    };
+
+    const vehiculeRecommande = recommanderVehicule(poidsKg, volumeM3, distanceKm);
+    const majVehicule = MAJ_VEHICULE[vehiculeRecommande] || 0;
 
     const brut = BASE + (poidsFacture * TARIF_PAR_KG) + (distanceKm * TARIF_PAR_KM) + majHoraire + majVehicule;
     const deliveryFee = Math.max(PRIX_MIN, brut);
 
-    res.json({ deliveryFee, poidsKg, volumeM3, poidsFacture, distanceKm });
+    res.json({ deliveryFee, poidsKg, volumeM3, poidsFacture, distanceKm, vehiculeRecommande });
   } catch (err) {
     console.error('❌ Erreur estimation livraison :', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -70,7 +79,7 @@ exports.createOrder = async (req, res) => {
     const clientId = req.user?.id;
     if (!clientId) return res.status(401).json({ error: 'Utilisateur non authentifié.' });
 
-    const { items, boutique, deliverer, deliveryAddress, deliveryLocation, horaire = [], vehicule = 'velo' } = req.body;
+    const { items, boutique, deliverer, deliveryAddress, deliveryLocation, horaire = [] } = req.body;
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Les articles sont requis.' });
     }
@@ -110,11 +119,25 @@ exports.createOrder = async (req, res) => {
     const TARIF_PAR_KG = 0.25;
     const TARIF_PAR_KM = 0.5;
     const MAJ_HORAIRE = { pointe: 3, nuit: 5, weekend: 2 };
-    const MAJ_VEHICULE = { velo: 0, scooter: 1, voiture: 3, camionnette: 10 };
+    const MAJ_VEHICULE = {
+      velo: 0,
+      scooter: 1.5,
+      voiture: 2.5,
+      camionnette: 5
+    };
 
     let majHoraire = 0;
     horaire.forEach(type => majHoraire += MAJ_HORAIRE[type] || 0);
-    const majVehicule = MAJ_VEHICULE[vehicule] || 0;
+
+    const recommanderVehicule = (poidsKg, volumeM3, distanceKm) => {
+      if (poidsKg > 50 || volumeM3 > 0.4) return 'camionnette';
+      if (poidsKg > 20 || volumeM3 > 0.2 || distanceKm > 8) return 'voiture';
+      if (poidsKg > 10 || volumeM3 > 0.1 || distanceKm > 4) return 'scooter';
+      return 'velo';
+    };
+
+    const vehiculeRecommande = recommanderVehicule(poidsKg, volumeM3, distanceKm);
+    const majVehicule = MAJ_VEHICULE[vehiculeRecommande] || 0;
 
     const brut = BASE + (poidsFacture * TARIF_PAR_KG) + (distanceKm * TARIF_PAR_KM) + majHoraire + majVehicule;
     const deliveryFee = Math.max(PRIX_MIN, brut);
@@ -130,6 +153,7 @@ exports.createOrder = async (req, res) => {
       deliveryFee,
       totalPrice,
       status: 'en attente',
+      vehiculeRecommande,
     });
 
     await order.save();

@@ -9,12 +9,13 @@ const getClientCoords = (userData) =>
     ? [userData.infosClient.longitude, userData.infosClient.latitude]
     : null;
 
-const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique) => {
+const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles) => {
   const clientCoords = getClientCoords(userData);
 
   if (!cart.length || !token || !Array.isArray(clientCoords)) {
     setDeliveryFee(null);
     setDeliveryFeesPerBoutique({});
+    setRecommendedVehicles({});
     return;
   }
 
@@ -39,7 +40,7 @@ const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadin
     const results = await Promise.all(
       Object.entries(boutiqueGroups).map(async ([boutiqueId, items]) => {
         const loc = items[0]?.product?.boutiqueDetails?.location?.coordinates;
-        if (!Array.isArray(loc)) return { boutiqueId, fee: 0 };
+        if (!Array.isArray(loc)) return { boutiqueId, fee: 0, vehicule: "inconnu" };
 
         const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/estimate`, {
           method: "POST",
@@ -56,24 +57,32 @@ const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadin
           }),
         });
         const data = await res.json();
-        return { boutiqueId, fee: res.ok && typeof data.deliveryFee === "number" ? data.deliveryFee : 0 };
+        return {
+          boutiqueId,
+          fee: res.ok && typeof data.deliveryFee === "number" ? data.deliveryFee : 0,
+          vehicule: data.vehiculeRecommande || "inconnu"
+        };
       })
     );
 
     const feesMap = {};
+    const vehicleMap = {};
     let total = 0;
-    results.forEach(({ boutiqueId, fee }) => {
+    results.forEach(({ boutiqueId, fee, vehicule }) => {
       feesMap[boutiqueId] = fee;
+      vehicleMap[boutiqueId] = vehicule;
       total += fee;
     });
 
     setDeliveryFeesPerBoutique(feesMap);
+    setRecommendedVehicles(vehicleMap);
     setDeliveryFee(total);
   } catch (err) {
     console.error("Erreur estimation livraison :", err);
     alert("Erreur pendant l’estimation de livraison. Veuillez réessayer.");
     setDeliveryFee(null);
     setDeliveryFeesPerBoutique({});
+    setRecommendedVehicles({});
   } finally {
     setLoadingFee(false);
   }
@@ -94,6 +103,7 @@ export default function PanierModal({ onClose }) {
   const [deliveryFee, setDeliveryFee] = useState(null);
   const [loadingFee, setLoadingFee] = useState(false);
   const [deliveryFeesPerBoutique, setDeliveryFeesPerBoutique] = useState({});
+  const [recommendedVehicles, setRecommendedVehicles] = useState({});
   const modalRef = useRef();
   const navigate = useNavigate();
 
@@ -116,7 +126,7 @@ export default function PanierModal({ onClose }) {
   };
 
   useEffect(() => {
-    estimateDelivery(cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique);
+    estimateDelivery(cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles);
   }, [cart, token, userData]);
 
   useEffect(() => {
@@ -195,7 +205,10 @@ export default function PanierModal({ onClose }) {
                 const boutiqueName = cart.find(item => item.product.boutique === id)?.merchant || "Boutique";
                 return (
                   <div key={id} className="flex justify-between text-sm text-gray-600 mb-1">
-                    <span>Livraison {boutiqueName}</span>
+                    <span>
+                      Livraison {boutiqueName}
+                      {recommendedVehicles[id] ? ` (${recommendedVehicles[id]})` : ""}
+                    </span>
                     <span>{fee.toFixed(2)} €</span>
                   </div>
                 );
