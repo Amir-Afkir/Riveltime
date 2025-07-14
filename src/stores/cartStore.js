@@ -8,17 +8,24 @@ const useCartStore = create(devtools(persist((set, get) => ({
   addToCart: ({ product, merchant }) => {
     const cart = get().cart;
     const productId = product._id;
-    const boutiqueId = product.boutique;
+    const boutiqueId = typeof product.boutique === "object" ? product.boutique._id : product.boutique;
 
     const existingIndex = cart.findIndex(
-      (item) => item.product._id === productId && item.product.boutique === boutiqueId
+      (item) =>
+        item.product._id === productId &&
+        item.product.boutique === boutiqueId
     );
 
     const updatedCart = [...cart];
     if (existingIndex !== -1) {
       updatedCart[existingIndex].quantity += 1;
     } else {
-      updatedCart.push({ product, merchant, quantity: 1 });
+      const newProduct = {
+        ...product,
+        boutique: boutiqueId,
+        boutiqueDetails: product.boutiqueDetails || (typeof product.boutique === "object" ? product.boutique : undefined),
+      };
+      updatedCart.push({ product: newProduct, merchant, quantity: 1 });
     }
 
     set({ cart: updatedCart });

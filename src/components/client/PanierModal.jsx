@@ -9,47 +9,71 @@ const getClientCoords = (userData) =>
     ? [userData.infosClient.longitude, userData.infosClient.latitude]
     : null;
 
-const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadingFee) => {
+const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique) => {
   const clientCoords = getClientCoords(userData);
-  const boutiqueLoc = cart[0]?.product?.boutique?.location?.coordinates;
 
   if (!cart.length || !token || !Array.isArray(clientCoords)) {
     setDeliveryFee(null);
-    return;
-  }
-
-  if (!Array.isArray(boutiqueLoc)) {
-    console.warn("Boutique location non définie dans le panier :", cart[0]?.product?.boutique);
-    setDeliveryFee(0);
+    setDeliveryFeesPerBoutique({});
     return;
   }
 
   setLoadingFee(true);
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/estimate`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        items: cart.map(({ product, quantity }) => ({ product: product._id, quantity })),
-        deliveryLocation: { lat: clientCoords[1], lng: clientCoords[0] },
-        boutiqueLocation: { lat: boutiqueLoc[1], lng: boutiqueLoc[0] },
-        horaire: [],
-        vehicule: "velo",
-      }),
+    const horaire = [];
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay(); // 0 (dimanche) à 6 (samedi)
+
+    if (hour >= 18 && hour <= 21) horaire.push("pointe");
+    if (hour >= 22 || hour <= 6) horaire.push("nuit");
+    if (day === 0 || day === 6) horaire.push("weekend");
+
+    const boutiqueGroups = cart.reduce((acc, item) => {
+      const id = item.product.boutique;
+      acc[id] = acc[id] || [];
+      acc[id].push(item);
+      return acc;
+    }, {});
+
+    const results = await Promise.all(
+      Object.entries(boutiqueGroups).map(async ([boutiqueId, items]) => {
+        const loc = items[0]?.product?.boutiqueDetails?.location?.coordinates;
+        if (!Array.isArray(loc)) return { boutiqueId, fee: 0 };
+
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/estimate`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            items: items.map(({ product, quantity }) => ({ product: product._id, quantity })),
+            deliveryLocation: { lat: clientCoords[1], lng: clientCoords[0] },
+            boutiqueLocation: { lat: loc[1], lng: loc[0] },
+            horaire,
+            vehicule: "velo",
+          }),
+        });
+        const data = await res.json();
+        return { boutiqueId, fee: res.ok && typeof data.deliveryFee === "number" ? data.deliveryFee : 0 };
+      })
+    );
+
+    const feesMap = {};
+    let total = 0;
+    results.forEach(({ boutiqueId, fee }) => {
+      feesMap[boutiqueId] = fee;
+      total += fee;
     });
-    const data = await res.json();
-    if (res.ok && typeof data.deliveryFee === "number") {
-      setDeliveryFee(data.deliveryFee);
-    } else {
-      setDeliveryFee(null);
-    }
+
+    setDeliveryFeesPerBoutique(feesMap);
+    setDeliveryFee(total);
   } catch (err) {
     console.error("Erreur estimation livraison :", err);
     alert("Erreur pendant l’estimation de livraison. Veuillez réessayer.");
     setDeliveryFee(null);
+    setDeliveryFeesPerBoutique({});
   } finally {
     setLoadingFee(false);
   }
@@ -69,6 +93,7 @@ export default function PanierModal({ onClose }) {
   const { cart, removeFromCart, placeOrder, addToCart } = useCartStore();
   const [deliveryFee, setDeliveryFee] = useState(null);
   const [loadingFee, setLoadingFee] = useState(false);
+  const [deliveryFeesPerBoutique, setDeliveryFeesPerBoutique] = useState({});
   const modalRef = useRef();
   const navigate = useNavigate();
 
@@ -91,7 +116,7 @@ export default function PanierModal({ onClose }) {
   };
 
   useEffect(() => {
-    estimateDelivery(cart, token, userData, setDeliveryFee, setLoadingFee);
+    estimateDelivery(cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique);
   }, [cart, token, userData]);
 
   useEffect(() => {
@@ -130,7 +155,7 @@ export default function PanierModal({ onClose }) {
           <>
             <div className="space-y-3 overflow-y-auto flex-1">
               {cart.map(({ product, merchant, quantity }) => (
-                <div key={`${product._id}-${merchant}`} className="flex items-center justify-between border-b pb-3">
+                <div key={`${product._id}-${product.boutique._id}-${merchant}`} className="flex items-center justify-between border-b pb-3">
                   <div className="flex items-center gap-3 flex-1">
                     <img src={product.imageUrl} alt={product.name} className="w-20 h-20 rounded-lg object-cover" />
                     <div className="flex flex-col flex-1 min-w-0">
@@ -138,7 +163,7 @@ export default function PanierModal({ onClose }) {
                       <p className="text-xs text-gray-500">
                         chez{" "}
                         <Link
-                          to={`/vitrine/${product.boutique._id}`}
+                          to={`/vitrine/${product.boutique}`}
                           className="text-[#ed354f] underline hover:text-[#d02d45] transition"
                           onClick={onClose}
                         >
@@ -166,12 +191,15 @@ export default function PanierModal({ onClose }) {
             </div>
 
             <div className="mt-6 border-t pt-4">
-              {typeof deliveryFee === "number" && !isNaN(deliveryFee) && (
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>Frais de livraison</span>
-                  <span>{deliveryFee.toFixed(2)} €</span>
-                </div>
-              )}
+              {Object.entries(deliveryFeesPerBoutique).map(([id, fee]) => {
+                const boutiqueName = cart.find(item => item.product.boutique === id)?.merchant || "Boutique";
+                return (
+                  <div key={id} className="flex justify-between text-sm text-gray-600 mb-1">
+                    <span>Livraison {boutiqueName}</span>
+                    <span>{fee.toFixed(2)} €</span>
+                  </div>
+                );
+              })}
               {deliveryFee === null && (
                 <div className="text-sm text-red-500 mb-2">
                   Impossible d’estimer les frais de livraison pour cette commande.

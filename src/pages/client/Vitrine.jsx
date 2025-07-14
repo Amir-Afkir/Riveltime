@@ -34,7 +34,7 @@ export default function Vitrine() {
   useEffect(() => {
     async function fetchBoutiqueAndProduits() {
       try {
-        const resBoutique = await fetch(`${API_URL}/boutiques/${id}`); 
+        const resBoutique = await fetch(`${API_URL}/boutiques/${id}`);
         if (!resBoutique.ok) throw new Error("Boutique introuvable");
         const { boutique } = await resBoutique.json();
 
@@ -268,7 +268,7 @@ export default function Vitrine() {
             if (viewMode === "list") {
               return (
                 <div
-                  key={product._id}
+                  key={`${product._id}-${boutique._id}-${product.name}`}
                   className="group rounded-xl border border-gray-100 bg-white shadow transition-shadow hover:shadow-md px-5 py-4 flex items-center gap-5"
                 >
                   <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
@@ -298,8 +298,8 @@ export default function Vitrine() {
                           merchant: boutique.name,
                           product: {
                             ...product,
-                            boutique: {
-                              _id: boutique._id,
+                            boutique: boutique._id,
+                            boutiqueDetails: {
                               name: boutique.name,
                               location: boutique.location,
                             },
@@ -319,7 +319,7 @@ export default function Vitrine() {
             // Mode grid (inchangé)
             return (
               <div
-                key={product._id}
+                key={`${product._id}-${boutique._id}-${product.name}`}
                 className="rounded-2xl bg-white shadow-sm border border-gray-200 p-3 flex flex-col justify-between"
               >
                 <div className="w-full aspect-square rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
@@ -350,8 +350,8 @@ export default function Vitrine() {
                           merchant: boutique.name,
                           product: {
                             ...product,
-                            boutique: {
-                              _id: boutique._id,
+                            boutique: boutique._id,
+                            boutiqueDetails: {
                               name: boutique.name,
                               location: boutique.location,
                             },
