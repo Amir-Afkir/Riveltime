@@ -179,14 +179,25 @@ export default function GestionModal({
         <PackageSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
         <select
           name="logisticsCategory"
-          value={safeValue(data.logisticsCategory, "medium")}
+          value={safeValue(data.logisticsCategory, "")}
           onChange={onChange}
           className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
         >
-          <option value="small">📦 Petit (livre, cosmétique…)</option>
-          <option value="medium">🧴 Moyen (par défaut)</option>
-          <option value="large">🧺 Grand (sac, électroménager…)</option>
-          <option value="fragile">🧊 Fragile / Volumineux</option>
+          <option value="" disabled hidden>
+            📦 Sélectionner un format d’expédition
+          </option>
+          <optgroup label="📦 Petits colis">
+            <option value="petit_colis">📦 Petit (livre, cosmétique, accessoire)</option>
+            <option value="sac_ou_vetement">🧺 Sac, vêtements, petit électroménager</option>
+          </optgroup>
+          <optgroup label="📦 Colis moyens">
+            <option value="carton_moyen">📦📦 Carton moyen ou gros colis</option>
+            <option value="fragile">🧊 Fragile / Volumineux</option>
+          </optgroup>
+          <optgroup label="📦 Grands objets">
+            <option value="meuble">🪑 Électroménager / Meuble compact</option>
+            <option value="gros_objet">🚲 Vélo, gros électroménager, colis lourd</option>
+          </optgroup>
         </select>
       </div>
 

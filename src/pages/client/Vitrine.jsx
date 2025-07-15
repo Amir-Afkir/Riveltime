@@ -97,7 +97,9 @@ export default function Vitrine() {
       const item = produits?.[0] || {
         name: "Produit moyen",
         price: 10,
-        logisticsCategory: "moyen",
+        logisticsCategory: "carton_moyen",
+        poids_kg: 0.8,
+        volume_m3: 0.003,
         quantity: 1,
       };
 
@@ -115,10 +117,12 @@ export default function Vitrine() {
               {
                 name: item.name,
                 price: item.price,
-                logisticsCategory: item.logisticsCategory || "moyen",
+                logisticsCategory: item.logisticsCategory || "carton_moyen",
+                poids_kg: item.poids_kg ?? 0.8,
+                volume_m3: item.volume_m3 ?? 0.003,
                 quantity: 1,
-              },
-            ],
+              }
+            ]
           }),
         });
 

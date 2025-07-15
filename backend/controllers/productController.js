@@ -31,15 +31,18 @@ exports.createProduct = async (req, res) => {
 
     const result = req.imageData;
 
+    // À placer dans createProduct.js
     const LOGISTICS_PRESETS = {
-      small:  { poids_kg: 0.3, volume_m3: 0.0015 },
-      medium: { poids_kg: 0.8, volume_m3: 0.003 },
-      large:  { poids_kg: 1.5, volume_m3: 0.01 },
-      fragile:{ poids_kg: 3, volume_m3: 0.02 }
+      petit_colis: { poids_kg: 0.3, volume_m3: 0.0015 },
+      sac_ou_vetement: { poids_kg: 1.2, volume_m3: 0.006 },
+      carton_moyen: { poids_kg: 3, volume_m3: 0.012 },
+      fragile: { poids_kg: 4.5, volume_m3: 0.025 },
+      meuble: { poids_kg: 25, volume_m3: 0.25 },
+      gros_objet: { poids_kg: 50, volume_m3: 0.5 }
     };
 
-    const logisticsCategory = req.body.logisticsCategory || 'medium';
-    const { poids_kg, volume_m3 } = LOGISTICS_PRESETS[logisticsCategory] || LOGISTICS_PRESETS.medium;
+    const logisticsCategory = req.body.logisticsCategory || 'petit_colis';
+    const { poids_kg, volume_m3 } = LOGISTICS_PRESETS[logisticsCategory] || LOGISTICS_PRESETS.petit_colis;
 
     const produit = new Product({
       name,
@@ -105,11 +108,14 @@ exports.updateProduct = async (req, res) => {
 
     const { name, price, collectionName, description } = req.body;
 
+    // À placer dans createProduct.js
     const LOGISTICS_PRESETS = {
-      small:  { poids_kg: 0.3, volume_m3: 0.0015 },
-      medium: { poids_kg: 0.8, volume_m3: 0.003 },
-      large:  { poids_kg: 1.5, volume_m3: 0.01 },
-      fragile:{ poids_kg: 3, volume_m3: 0.02 }
+      petit_colis: { poids_kg: 0.3, volume_m3: 0.0015 },
+      sac_ou_vetement: { poids_kg: 1.2, volume_m3: 0.006 },
+      carton_moyen: { poids_kg: 3, volume_m3: 0.012 },
+      fragile: { poids_kg: 4.5, volume_m3: 0.025 },
+      meuble: { poids_kg: 25, volume_m3: 0.25 },
+      gros_objet: { poids_kg: 50, volume_m3: 0.5 }
     };
 
     const logisticsCategory = req.body.logisticsCategory;

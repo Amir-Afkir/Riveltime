@@ -49,7 +49,12 @@ const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadin
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            items: items.map(({ product, quantity }) => ({ product: product._id, quantity })),
+            items: items.map(({ product, quantity }) => ({
+              product: product._id,
+              quantity,
+              poids_kg: product.poids_kg ?? 0.8,
+              volume_m3: product.volume_m3 ?? 0.003,
+            })),
             deliveryLocation: { lat: clientCoords[1], lng: clientCoords[0] },
             boutiqueLocation: { lat: loc[1], lng: loc[0] },
             horaire,

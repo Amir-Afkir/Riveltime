@@ -11,8 +11,8 @@ const productSchema = new mongoose.Schema({
   collectionName: String,
   logisticsCategory: {
     type: String,
-    enum: ['small', 'medium', 'large', 'fragile'],
-    default: 'medium'
+    enum: ['petit_colis', 'sac_ou_vetement', 'carton_moyen', 'fragile', 'meuble', 'gros_objet'],
+    default: 'carton_moyen'
   },
   poids_kg: { type: Number, default: 0.8 },
   volume_m3: { type: Number, default: 0.003 }

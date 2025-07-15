@@ -1,4 +1,5 @@
 const Product = require('../models/Product');
+const { recommanderVehicule } = require('../utils/vehicule');
 
 exports.estimateDelivery = async (req, res) => {
   try {
@@ -50,14 +51,11 @@ exports.estimateDelivery = async (req, res) => {
     let majHoraire = 0;
     horaire.forEach(type => majHoraire += MAJ_HORAIRE[type] || 0);
 
-    const recommanderVehicule = (poidsKg, volumeM3, distanceKm) => {
-      if (poidsKg > 50 || volumeM3 > 0.4) return 'camionnette';
-      if (poidsKg > 20 || volumeM3 > 0.2 || distanceKm > 8) return 'voiture';
-      if (poidsKg > 10 || volumeM3 > 0.1 || distanceKm > 4) return 'scooter';
-      return 'velo';
-    };
-
-    const vehiculeRecommande = recommanderVehicule(poidsKg, volumeM3, distanceKm);
+    const vehiculeRecommande = recommanderVehicule({
+      poids_kg: poidsKg,
+      volume_m3: volumeM3,
+      distance_km: distanceKm
+    });
     const majVehicule = MAJ_VEHICULE[vehiculeRecommande] || 0;
 
     const brut = BASE + (poidsFacture * TARIF_PAR_KG) + (distanceKm * TARIF_PAR_KM) + majHoraire + majVehicule;
@@ -129,14 +127,11 @@ exports.createOrder = async (req, res) => {
     let majHoraire = 0;
     horaire.forEach(type => majHoraire += MAJ_HORAIRE[type] || 0);
 
-    const recommanderVehicule = (poidsKg, volumeM3, distanceKm) => {
-      if (poidsKg > 50 || volumeM3 > 0.4) return 'camionnette';
-      if (poidsKg > 20 || volumeM3 > 0.2 || distanceKm > 8) return 'voiture';
-      if (poidsKg > 10 || volumeM3 > 0.1 || distanceKm > 4) return 'scooter';
-      return 'velo';
-    };
-
-    const vehiculeRecommande = recommanderVehicule(poidsKg, volumeM3, distanceKm);
+    const vehiculeRecommande = recommanderVehicule({
+      poids_kg: poidsKg,
+      volume_m3: volumeM3,
+      distance_km: distanceKm
+    });
     const majVehicule = MAJ_VEHICULE[vehiculeRecommande] || 0;
 
     const brut = BASE + (poidsFacture * TARIF_PAR_KG) + (distanceKm * TARIF_PAR_KM) + majHoraire + majVehicule;

@@ -37,7 +37,7 @@ const INITIAL_PRODUIT_FORM = {
   description: "",
   image: null,
   collectionName: "",
-  logisticsCategory: "medium",
+  logisticsCategory: "carton_moyen",
 };
 
 export default function Produits() {
