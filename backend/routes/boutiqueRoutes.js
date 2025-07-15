@@ -38,6 +38,7 @@ router.post(
     next();
   },
   validateBoutiqueData,
+  // Champs personnalisés supportés : activerParticipation, participationPourcent, contributionLivraisonPourcent
   boutiqueController.createBoutique
 );
 
@@ -51,6 +52,7 @@ router.put(
   multerErrorHandler,
   cloudinaryUpload((req) => `riveltime/${req.dbUser.auth0Id}/boutiques/${req.params.id}`),
   validateBoutiqueData,
+  // Prise en compte des champs : activerParticipation, participationPourcent, contributionLivraisonPourcent
   boutiqueController.updateBoutique
 );
 

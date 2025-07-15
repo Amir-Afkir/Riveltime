@@ -44,7 +44,28 @@ export default function useProduits() {
   }, [token, isAuthenticated, loadingUser]);
 
   const fetchProduitsByBoutique = useCallback(async (boutiqueId) => {
-    await fetchProduitsFrom(`${API_URL}/produits/boutique/${boutiqueId}`, 'Erreur chargement produits');
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get(`${API_URL}/produits/boutique/${boutiqueId}`, { headers });
+      if (res.data.success) {
+        const produits = res.data.produits.map((prod) => ({
+          ...prod,
+          boutique: {
+            activerParticipation: res.data.boutique?.activerParticipation || false,
+            participationPourcent: res.data.boutique?.participationPourcent || 50,
+            contributionLivraisonPourcent: res.data.boutique?.contributionLivraisonPourcent || 20,
+          },
+        }));
+        setProduits(produits);
+      } else {
+        setError(res.data.error || 'Erreur chargement produits');
+      }
+    } catch (err) {
+      handleAxiosError(err, 'Erreur chargement produits');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const createProduit = async (formData) => {

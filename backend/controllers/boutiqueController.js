@@ -60,7 +60,16 @@ exports.getProduitsParBoutique = async (req, res) => {
 // 🔐 POST - Créer une boutique (privée)
 exports.createBoutique = async (req, res) => {
   try {
-    let { name, category, description, address, location } = req.body;
+    let {
+      name,
+      category,
+      description,
+      address,
+      location,
+      activerParticipation = false,
+      participationPourcent = 50,
+      contributionLivraisonPourcent = 20,
+    } = req.body;
 
     if (typeof location === 'string') {
       try {
@@ -84,6 +93,9 @@ exports.createBoutique = async (req, res) => {
       description,
       address,
       location,
+      activerParticipation,
+      participationPourcent,
+      contributionLivraisonPourcent,
     });
 
     await boutique.save();
@@ -140,7 +152,16 @@ exports.updateBoutique = async (req, res) => {
       return res.status(403).json({ error: 'Boutique introuvable ou accès interdit.' });
     }
 
-    let { name, category, description, address, location } = req.body;
+    let {
+      name,
+      category,
+      description,
+      address,
+      location,
+      activerParticipation = false,
+      participationPourcent = 50,
+      contributionLivraisonPourcent = 20,
+    } = req.body;
     if (typeof location === 'string') {
       try {
         location = JSON.parse(location);
@@ -166,6 +187,10 @@ exports.updateBoutique = async (req, res) => {
     boutique.description = description;
     boutique.address = address;
     boutique.location = location;
+
+    boutique.activerParticipation = activerParticipation;
+    boutique.participationPourcent = participationPourcent;
+    boutique.contributionLivraisonPourcent = contributionLivraisonPourcent;
 
     await boutique.save();
     res.status(200).json({ boutique });

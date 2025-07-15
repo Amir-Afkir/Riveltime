@@ -6,7 +6,16 @@ import useUserStore from '../stores/userStore';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const createFormData = ({ name, category, coverImage, address, location }) => {
+const createFormData = ({
+  name,
+  category,
+  coverImage,
+  address,
+  location,
+  activerParticipation,
+  participationPourcent,
+  contributionLivraisonPourcent,
+}) => {
   const formData = new FormData();
   formData.append("name", name);
   formData.append("category", category);
@@ -18,6 +27,15 @@ const createFormData = ({ name, category, coverImage, address, location }) => {
   }
   if (location) {
     formData.append("location", JSON.stringify(location));
+  }
+  if (activerParticipation !== undefined) {
+    formData.append("activerParticipation", activerParticipation);
+  }
+  if (participationPourcent !== undefined) {
+    formData.append("participationPourcent", participationPourcent);
+  }
+  if (contributionLivraisonPourcent !== undefined) {
+    formData.append("contributionLivraisonPourcent", contributionLivraisonPourcent);
   }
   return formData;
 };

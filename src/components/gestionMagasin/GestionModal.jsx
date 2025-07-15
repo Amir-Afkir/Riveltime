@@ -4,6 +4,7 @@ import Input from "../ui/Input";
 import Button from "../ui/Button";
 import IconFieldWrapper from "../ui/IconFieldWrapper";
 import FileInput from "../ui/FileInput";
+import ToggleSwitch from "../profile/ToggleSwitch";
 
 const safeValue = (val, fallback = "") => (val === undefined || val === null ? fallback : val);
 
@@ -129,6 +130,67 @@ export default function GestionModal({
           </ul>
         )}
       </div>
+
+      <h4 className="text-sm font-semibold text-gray-700 mb-2 mt-4">💸 Participation aux frais de livraison</h4>
+
+      <ToggleSwitch
+        label="Activer la participation"
+        checked={!!data.activerParticipation}
+        onChange={(value) => {
+          onChange({ target: { name: "activerParticipation", value } });
+
+          if (value) {
+            if (!data.participationPourcent) {
+              onChange({ target: { name: "participationPourcent", value: "50" } });
+            }
+            if (!data.contributionLivraisonPourcent) {
+              onChange({ target: { name: "contributionLivraisonPourcent", value: "20" } });
+            }
+          } else {
+            onChange({ target: { name: "participationPourcent", value: "" } });
+            onChange({ target: { name: "contributionLivraisonPourcent", value: "" } });
+          }
+        }}
+        readOnly={false}
+      />
+
+      {data.activerParticipation && (
+        <div className="relative mb-4 pl-10">
+          <Euro className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <select
+            id="participationPourcent"
+            name="participationPourcent"
+            value={safeValue(data.participationPourcent, "50")}
+            onChange={onChange}
+            className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+          >
+            <option value="25">💰 25 % – Participation légère</option>
+            <option value="50">🔄 50 % – Partage équitable</option>
+            <option value="75">💸 75 % – Participation généreuse</option>
+            <option value="100">🎁 100 % – Livraison offerte au client</option>
+          </select>
+        </div>
+      )}
+
+      {data.activerParticipation && (
+        <div className="relative mb-4 pl-10">
+          <Euro className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            id="contributionLivraisonPourcent"
+            name="contributionLivraisonPourcent"
+            type="number"
+            min={1}
+            max={100}
+            step={1}
+            placeholder="Plafond de contribution (% du prix)"
+            aria-label="Plafond contribution (%)"
+            value={safeValue(data.contributionLivraisonPourcent, "")}
+            onChange={onChange}
+            className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
+          />
+          <p className="text-xs text-gray-500 mt-1">Ex. : 20 % du prix max sera utilisé pour couvrir les frais</p>
+        </div>
+      )}
 
       <div className="mb-3">
         <FileInput

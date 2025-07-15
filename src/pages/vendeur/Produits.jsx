@@ -110,7 +110,13 @@ export default function Produits() {
   };
 
   const handleChangeBoutiqueForm = (e) => {
-    setBoutiqueForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    let { name, value } = e.target;
+
+    if (name === "activerParticipation") {
+      value = value === true || value === "true";
+    }
+
+    setBoutiqueForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleBoutiqueFileChange = (e) => {

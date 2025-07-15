@@ -81,6 +81,23 @@ const boutiqueSchema = new mongoose.Schema({
     required: true,
   },
 
+  // ───── Participation livraison ─────
+  activerParticipation: {
+    type: Boolean,
+    default: false,
+  },
+  participationPourcent: {
+    type: Number,
+    enum: [25, 50, 75, 100],
+    default: 50,
+  },
+  contributionLivraisonPourcent: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 20,
+  },
+
 }, { timestamps: true });
 
 // Index géospatial 2dsphere pour les requêtes spatiales

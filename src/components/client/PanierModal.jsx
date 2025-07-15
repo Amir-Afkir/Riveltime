@@ -9,13 +9,14 @@ const getClientCoords = (userData) =>
     ? [userData.infosClient.longitude, userData.infosClient.latitude]
     : null;
 
-const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles) => {
+const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles, setParticipationsPerBoutique) => {
   const clientCoords = getClientCoords(userData);
 
   if (!cart.length || !token || !Array.isArray(clientCoords)) {
     setDeliveryFee(null);
     setDeliveryFeesPerBoutique({});
     setRecommendedVehicles({});
+    setParticipationsPerBoutique({});
     return;
   }
 
@@ -40,7 +41,9 @@ const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadin
     const results = await Promise.all(
       Object.entries(boutiqueGroups).map(async ([boutiqueId, items]) => {
         const loc = items[0]?.product?.boutiqueDetails?.location?.coordinates;
-        if (!Array.isArray(loc)) return { boutiqueId, fee: 0, vehicule: "inconnu" };
+        if (!Array.isArray(loc)) return { boutiqueId, fee: 0, participation: 0, vehicule: "inconnu" };
+
+        const productTotal = items.reduce((sum, { product, quantity }) => sum + (product.price * quantity), 0);
 
         const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/estimate`, {
           method: "POST",
@@ -49,12 +52,14 @@ const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadin
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            boutiqueId,
             items: items.map(({ product, quantity }) => ({
               product: product._id,
               quantity,
               poids_kg: product.poids_kg ?? 0.8,
               volume_m3: product.volume_m3 ?? 0.003,
             })),
+            productTotal,
             deliveryLocation: { lat: clientCoords[1], lng: clientCoords[0] },
             boutiqueLocation: { lat: loc[1], lng: loc[0] },
             horaire,
@@ -65,6 +70,7 @@ const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadin
         return {
           boutiqueId,
           fee: res.ok && typeof data.deliveryFee === "number" ? data.deliveryFee : 0,
+          participation: data.participation || 0,
           vehicule: data.vehiculeRecommande || "inconnu"
         };
       })
@@ -72,15 +78,19 @@ const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadin
 
     const feesMap = {};
     const vehicleMap = {};
+    const participMap = {};
     let total = 0;
-    results.forEach(({ boutiqueId, fee, vehicule }) => {
+    results.forEach(({ boutiqueId, fee, participation, vehicule }) => {
       feesMap[boutiqueId] = fee;
+      participMap[boutiqueId] = participation;
+      console.log(`Participation vendeur ${boutiqueId} : ${participation} €`);
       vehicleMap[boutiqueId] = vehicule;
       total += fee;
     });
 
     setDeliveryFeesPerBoutique(feesMap);
     setRecommendedVehicles(vehicleMap);
+    setParticipationsPerBoutique(participMap);
     setDeliveryFee(total);
   } catch (err) {
     console.error("Erreur estimation livraison :", err);
@@ -88,6 +98,7 @@ const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadin
     setDeliveryFee(null);
     setDeliveryFeesPerBoutique({});
     setRecommendedVehicles({});
+    setParticipationsPerBoutique({});
   } finally {
     setLoadingFee(false);
   }
@@ -109,6 +120,7 @@ export default function PanierModal({ onClose }) {
   const [loadingFee, setLoadingFee] = useState(false);
   const [deliveryFeesPerBoutique, setDeliveryFeesPerBoutique] = useState({});
   const [recommendedVehicles, setRecommendedVehicles] = useState({});
+  const [participationsPerBoutique, setParticipationsPerBoutique] = useState({});
   const modalRef = useRef();
   const navigate = useNavigate();
 
@@ -131,7 +143,7 @@ export default function PanierModal({ onClose }) {
   };
 
   useEffect(() => {
-    estimateDelivery(cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles);
+    estimateDelivery(cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles, setParticipationsPerBoutique);
   }, [cart, token, userData]);
 
   useEffect(() => {
@@ -209,12 +221,20 @@ export default function PanierModal({ onClose }) {
               {Object.entries(deliveryFeesPerBoutique).map(([id, fee]) => {
                 const boutiqueName = cart.find(item => item.product.boutique === id)?.merchant || "Boutique";
                 return (
-                  <div key={id} className="flex justify-between text-sm text-gray-600 mb-1">
-                    <span>
-                      Livraison {boutiqueName}
-                      {recommendedVehicles[id] ? ` (${recommendedVehicles[id]})` : ""}
-                    </span>
-                    <span>{fee.toFixed(2)} €</span>
+                  <div key={id} className="flex flex-col text-sm text-gray-600 mb-1">
+                    <div className="flex justify-between">
+                      <span>
+                        Livraison {boutiqueName}
+                        {recommendedVehicles[id] ? ` (${recommendedVehicles[id]})` : ""}
+                      </span>
+                      <span>{fee.toFixed(2)} €</span>
+                    </div>
+                    {participationsPerBoutique[id] > 0 && (
+                      <div className="flex justify-between items-center text-xs text-green-700 -mt-1 mb-2">
+                        <span className="italic">Participation boutique</span>
+                        <span className="font-medium">- {participationsPerBoutique[id].toFixed(2)} €</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}

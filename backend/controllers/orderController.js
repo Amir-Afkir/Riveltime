@@ -61,7 +61,27 @@ exports.estimateDelivery = async (req, res) => {
     const brut = BASE + (poidsFacture * TARIF_PAR_KG) + (distanceKm * TARIF_PAR_KM) + majHoraire + majVehicule;
     const deliveryFee = Math.max(PRIX_MIN, brut);
 
-    res.json({ deliveryFee, poidsKg, volumeM3, poidsFacture, distanceKm, vehiculeRecommande });
+    const Boutique = require('../models/Boutique');
+    const boutiqueDoc = await Boutique.findById(req.body.boutiqueId);
+    let finalDeliveryFee = deliveryFee;
+    let participation = 0;
+
+    if (boutiqueDoc?.activerParticipation) {
+      const participationPourcent = boutiqueDoc.participationPourcent ?? 50;
+      const maxContribution = (boutiqueDoc.contributionLivraisonPourcent ?? 20) / 100 * (req.body.productTotal ?? 0);
+      participation = Math.min(deliveryFee * (participationPourcent / 100), maxContribution);
+      finalDeliveryFee = deliveryFee - participation;
+    }
+
+    res.json({
+      deliveryFee: finalDeliveryFee,
+      participation,
+      poidsKg,
+      volumeM3,
+      poidsFacture,
+      distanceKm,
+      vehiculeRecommande
+    });
   } catch (err) {
     console.error('❌ Erreur estimation livraison :', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -136,7 +156,16 @@ exports.createOrder = async (req, res) => {
 
     const brut = BASE + (poidsFacture * TARIF_PAR_KG) + (distanceKm * TARIF_PAR_KM) + majHoraire + majVehicule;
     const deliveryFee = Math.max(PRIX_MIN, brut);
-    const totalPrice = productTotal + deliveryFee;
+
+    let finalDeliveryFee = deliveryFee;
+    if (boutiqueDoc?.activerParticipation) {
+      const participationPourcent = boutiqueDoc.participationPourcent ?? 50;
+      const maxContribution = (boutiqueDoc.contributionLivraisonPourcent ?? 20) / 100 * productTotal;
+      const participation = Math.min(deliveryFee * (participationPourcent / 100), maxContribution);
+      finalDeliveryFee = deliveryFee - participation;
+    }
+
+    const totalPrice = productTotal + finalDeliveryFee;
 
     const order = new Order({
       client: clientId,
@@ -145,7 +174,7 @@ exports.createOrder = async (req, res) => {
       items,
       deliveryAddress,
       deliveryLocation,
-      deliveryFee,
+      deliveryFee: finalDeliveryFee,
       totalPrice,
       status: 'en attente',
       vehiculeRecommande,
