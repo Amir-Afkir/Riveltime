@@ -20,12 +20,8 @@ const multerErrorHandler = require('../middleware/multerErrorHandler');
 const upload = require('../middleware/multerConfig');
 
 // 🌐 Routes publiques
-router.get('/', boutiqueController.getAllBoutiques,);
-router.get('/:id', boutiqueController.getBoutiqueById);
-router.get('/:id/produits', productController.getProduitsParBoutique);
+router.get('/', boutiqueController.getAllBoutiques);
 
-
-// 🔒 Routes protégées
 router.get(
   '/mine',
   jwtCheck,
@@ -34,6 +30,12 @@ router.get(
   requireVendeurRole,
   boutiqueController.getMyBoutiques
 );
+
+router.get('/:id', boutiqueController.getBoutiqueById);
+router.get('/:id/produits', productController.getProduitsParBoutique);
+
+
+// 🔒 Routes protégées
 
 router.post(
   '/',
