@@ -19,7 +19,6 @@ const formatUserProfile = (user) => {
           adresseComplete: user.infosClient?.adresseComplete || "",
           latitude: user.infosClient?.latitude || null,
           longitude: user.infosClient?.longitude || null,
-          telephone: user.infosClient?.telephone || "",
         }
       };
     case 'vendeur':
@@ -27,13 +26,14 @@ const formatUserProfile = (user) => {
         role: 'vendeur',
         fullname: user.fullname,
         phone: user.phone,
-        raisonSociale: user.raisonSociale,
-        kbis: user.kbis,
         notifications: user.notifications,
         infosVendeur: {
-          ...user.infosVendeur,
+          adresseComplete: user.infosVendeur?.adresseComplete || "",
+          latitude: user.infosVendeur?.latitude || null,
+          longitude: user.infosVendeur?.longitude || null,
           stripeAccountId: user.infosVendeur?.stripeAccountId || null,
-        },
+          moyensPaiement: user.infosVendeur?.moyensPaiement || [],
+        }, 
       };
     case 'livreur':
       return {
