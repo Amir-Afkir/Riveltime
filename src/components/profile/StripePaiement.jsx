@@ -57,7 +57,7 @@ const StripePaiement = ({ stripeAccountId }) => {
   return (
     <div className="mt-4">
       {stripeAccountId ? (
-        <div className="text-green-600 font-medium">Paiement activé avec Stripe</div>
+        <div className="text-green-600 font-medium">✅ Paiement activé avec Stripe</div>
       ) : (
         <>
           <Button onClick={handleStripeOnboarding} disabled={loading}>

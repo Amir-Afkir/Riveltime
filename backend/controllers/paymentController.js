@@ -55,18 +55,14 @@ const onboardStripeAccountHandler = async (req, res) => {
       return res.status(400).json({ error: 'Aucun compte Stripe trouvé pour cet utilisateur.' });
     }
 
-    const frontendUrl = process.env.FRONTEND_URL;
-    if (!frontendUrl) {
-      return res.status(500).json({ error: "URL frontend manquante (FRONTEND_URL)" });
-    }
-
+    const frontendUrl = req.headers.origin;
     const role = dbUser.role;
-    const returnUrl = `${frontendUrl}/${role}/profil`;
+    const redirectPath = `/${role}/profil`;
 
     const accountLink = await stripe.accountLinks.create({
       account: stripeAccountId,
-      refresh_url: `${returnUrl}?onboarding=cancel`,
-      return_url: `${returnUrl}?onboarding=success`,
+      refresh_url: `${frontendUrl}${redirectPath}?onboarding=cancel`,
+      return_url: `${frontendUrl}${redirectPath}?onboarding=success`,
       type: 'account_onboarding',
     });
 
