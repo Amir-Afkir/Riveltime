@@ -15,6 +15,7 @@ import InfoCard from "../../components/profile/InfoCard";
 import UserFieldCard from "../../components/profile/UserFieldCard";
 import ToggleSwitch from "../../components/profile/ToggleSwitch";
 import Button from "../../components/ui/Button";
+import StripePaiement from "../../components/profile/StripePaiement";
 
 // 4. Stores et hooks personnalisés
 import useUserStore from "../../stores/userStore";
@@ -441,6 +442,21 @@ export default function ProfilCommun({ isLoading }) {
       title: "Notifications",
       content: <ToggleSwitch label="Recevoir les alertes e-mail" checked={notifications ?? false} role={role} />,
     },
+    ...(role === "vendeur"
+      ? [{
+          key: "paiement",
+          title: "Paiement",
+          content: (
+            <div className="space-y-2">
+              <StripePaiement
+                stripeAccountId={infosVendeur?.stripeAccountId}
+                redirectPath="/profil"
+              />
+            </div>
+          ),
+          cardClass: "bg-white shadow-md border border-gray-100",
+        }]
+      : []),
   ];
 
   // 🧩 Rendu

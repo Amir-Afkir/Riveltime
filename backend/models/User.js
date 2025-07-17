@@ -11,6 +11,7 @@ const infosVendeurSchema = new mongoose.Schema({
   latitude: Number,
   longitude: Number,
   moyensPaiement: [String],
+  stripeAccountId: { type: String, trim: true }, // ✅ Ajout ici
 }, { _id: false });
 
 const infosLivreurSchema = new mongoose.Schema({

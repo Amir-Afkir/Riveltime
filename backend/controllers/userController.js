@@ -30,7 +30,10 @@ const formatUserProfile = (user) => {
         raisonSociale: user.raisonSociale,
         kbis: user.kbis,
         notifications: user.notifications,
-        infosVendeur: user.infosVendeur,
+        infosVendeur: {
+          ...user.infosVendeur,
+          stripeAccountId: user.infosVendeur?.stripeAccountId || null,
+        },
       };
     case 'livreur':
       return {
@@ -95,7 +98,12 @@ exports.updateMyProfile = async (req, res) => {
       dbUser.infosVendeur = null;
       dbUser.infosLivreur = null;
     } else if (role === 'vendeur') {
-      dbUser.infosVendeur = { ...vendeurDefaults, ...dbUser.infosVendeur, ...infosVendeur };
+      dbUser.infosVendeur = {
+        ...vendeurDefaults,
+        ...(dbUser.infosVendeur || {}),
+        ...(infosVendeur || {}),
+        stripeAccountId: (infosVendeur && infosVendeur.stripeAccountId) || dbUser.infosVendeur?.stripeAccountId || null,
+      };
       dbUser.infosClient = null;
       dbUser.infosLivreur = null;
     } else if (role === 'livreur') {

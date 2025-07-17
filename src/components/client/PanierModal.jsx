@@ -83,7 +83,6 @@ const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadin
     results.forEach(({ boutiqueId, fee, participation, vehicule }) => {
       feesMap[boutiqueId] = fee;
       participMap[boutiqueId] = participation;
-      console.log(`Participation vendeur ${boutiqueId} : ${participation} €`);
       vehicleMap[boutiqueId] = vehicule;
       total += fee;
     });
@@ -137,7 +136,28 @@ export default function PanierModal({ onClose }) {
   };
 
   const handleOrder = () => {
-    placeOrder();
+    const cartWithStripeData = cart.map((item) => {
+      const boutiqueId = item.product.boutique;
+      return {
+        ...item,
+        livraison: deliveryFeesPerBoutique[boutiqueId] || 0,
+        participation: participationsPerBoutique[boutiqueId] || 0,
+        livreurStripeId: item.product.boutiqueDetails?.livreurStripeId || "",
+        product: {
+          ...item.product,
+          boutiqueDetails: {
+            ...item.product.boutiqueDetails,
+            stripeAccountId: item.product.boutiqueDetails?.stripeAccountId || "",
+          }
+        }
+      };
+    });
+
+    placeOrder(cartWithStripeData, {
+      deliveryFeesPerBoutique,
+      participationsPerBoutique,
+      totalLivraison: deliveryFee
+    });
     onClose();
     navigate("/client/commandes");
   };

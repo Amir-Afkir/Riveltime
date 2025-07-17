@@ -49,14 +49,21 @@ const useCartStore = create(devtools(persist((set, get) => ({
     set({ cart: updatedCart });
   },
 
-  placeOrder: () => {
-    const cart = get().cart;
+  placeOrder: (cartPayload) => {
+    const cart = cartPayload || get().cart;
     const orders = get().orders;
+
+    const total = cart.reduce((sum, item) => {
+      const prixProduit = item.product.price * item.quantity;
+      const livraison = item.livraison || 0;
+      const participation = item.participation || 0;
+      return sum + prixProduit + (livraison - participation);
+    }, 0);
 
     const newOrder = {
       id: Date.now(),
       items: cart,
-      total: cart.reduce((sum, item) => sum + item.quantity * item.product.price, 0),
+      total,
       date: new Date().toLocaleDateString(),
       status: "En cours",
     };

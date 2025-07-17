@@ -14,4 +14,7 @@ router.get('/', orderController.getOrdersByUser);
 // Mettre à jour le statut d'une commande
 router.patch('/:id/status', orderController.updateOrderStatus);
 
+// Assigner un livreur à une commande
+router.post('/:id/assign-livreur', orderController.assignLivreurToOrder);
+
 module.exports = router;

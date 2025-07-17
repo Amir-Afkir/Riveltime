@@ -7,9 +7,21 @@ import Button from "../../components/ui/Button";
 import Title from "../../components/ui/Title";
 import Card from "../../components/ui/Card";
 import NotificationBanner from "../../components/ui/NotificationBanner";
-import { ShoppingCart, List, LayoutGrid, Search } from "lucide-react";
+import { ShoppingCart, List, LayoutGrid, Search, MapPin, Clock, Euro, Star } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+function formatDelay(minutes) {
+  if (minutes >= 1440) {
+    const days = Math.floor(minutes / 1440);
+    return `${days} jour${days > 1 ? "s" : ""}`;
+  }
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h`;
+  }
+  return `${minutes} min`;
+}
 
 export default function Vitrine() {
   const { id } = useParams();
@@ -30,6 +42,7 @@ export default function Vitrine() {
 
   const { token, userData } = useUserStore();
   const [estimatedFee, setEstimatedFee] = useState(null);
+  const [estimatedDelay, setEstimatedDelay] = useState(null);
 
   useEffect(() => {
     async function fetchBoutiqueAndProduits() {
@@ -111,24 +124,24 @@ export default function Vitrine() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
+            boutiqueId: boutique._id,
             boutiqueLocation,
             deliveryLocation,
             items: [
               {
-                name: item.name,
-                price: item.price,
-                logisticsCategory: item.logisticsCategory || "carton_moyen",
                 poids_kg: item.poids_kg ?? 0.8,
                 volume_m3: item.volume_m3 ?? 0.003,
-                quantity: 1,
+                quantity: 1
               }
             ]
           }),
         });
 
         const result = await response.json();
-        if (result.deliveryFee) {
-          setEstimatedFee(result.deliveryFee);
+        if (result.deliveryFee) setEstimatedFee(result.deliveryFee);
+        if (result.estimatedDelay) setEstimatedDelay(result.estimatedDelay);
+        if (result.distanceKm && !boutique?.distance) {
+          setBoutique((prev) => ({ ...prev, distance: result.distanceKm }));
         }
       } catch (error) {
         console.error("Erreur estimation frais livraison:", error);
@@ -190,10 +203,25 @@ export default function Vitrine() {
         </Title>
         <p className="text-sm text-gray-600">{boutique.category}</p>
         <p className="text-sm text-gray-500">{boutique.address}</p>
-        {estimatedFee !== null && (
-          <p className="text-sm text-gray-700">
-            Frais de livraison estimés : <strong>{estimatedFee.toFixed(2)} €</strong>
-          </p>
+        {(estimatedFee !== null || estimatedDelay !== null || boutique?.distance) && (
+          <div className="mt-4 flex flex-wrap justify-center gap-3 text-gray-800">
+            {boutique?.distance && (
+              <div className="flex items-center gap-2 px-3 py-1.5 text-sm">
+                <MapPin className="w-4 h-4 text-[#ed354f]" />
+                <span>{boutique.distance.toFixed(1)} km</span>
+              </div>
+            )}
+            {estimatedDelay !== null && (
+              <div className="flex items-center gap-2 px-3 py-1.5 text-sm">
+                <Clock className="w-4 h-4 text-[#ed354f]" />
+                <span>{formatDelay(estimatedDelay)}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 px-3 py-1.5 text-sm">
+              <Star className="w-4 h-4 text-[#ed354f]" />
+              <span>4.7 / 5</span>
+            </div>
+          </div>
         )}
       </div>
 

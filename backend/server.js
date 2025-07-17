@@ -14,6 +14,8 @@ const { jwtCheck, injectUser, createUserIfNotExists } = require('./middleware/au
 // Middleware globaux
 app.use(cors());
 app.use(express.json());
+app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
+app.use('/stripe', require('./routes/stripeWebhook'));
 
 // ✅ Connexion MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -59,6 +61,7 @@ app.use('/users', require('./routes/userRoutes'));
 app.use('/produits', require('./routes/productRoutes')); // create/update/delete/mine
 app.use('/notifications', require('./routes/notificationRoutes'));
 app.use('/orders', require('./routes/orderRoutes')); 
+app.use('/stripe', require('./routes/paymentRoutes'));
 
 // ====================================
 // 🧪 Route test sécurisée
