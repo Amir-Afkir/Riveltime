@@ -143,7 +143,7 @@ export default function Produits() {
       const saved = await saveBoutique(boutiqueForm);
       setNotification({ message: "Boutique enregistrée.", type: "success" });
       setShowBoutiqueModal(false);
-      fetchAllBoutiques();
+      fetchMyBoutiques();
       if (
         selectedBoutique &&
         selectedBoutique._id === saved._id &&
@@ -168,7 +168,7 @@ export default function Produits() {
       setNotification({ message: "Boutique supprimée.", type: "success" });
       setShowBoutiqueModal(false);
       setSelectedBoutique(null);
-      fetchAllBoutiques();
+      fetchMyBoutiques();
     } catch (err) {
       setNotification({ message: err.message, type: "error" });
     }
