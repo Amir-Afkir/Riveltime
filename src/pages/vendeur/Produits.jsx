@@ -45,7 +45,7 @@ export default function Produits() {
     boutiques,
     loading: boutiquesLoading,
     error: boutiquesError,
-    fetchAllBoutiques,
+    fetchMyBoutiques,
     saveBoutique,
     deleteBoutique,
   } = useBoutiques();
@@ -77,8 +77,8 @@ export default function Produits() {
 
   // Effects
   useEffect(() => {
-    fetchAllBoutiques();
-  }, [fetchAllBoutiques]);
+    fetchMyBoutiques();
+  }, [fetchMyBoutiques]);
 
   useEffect(() => {
     if (produits.length > 0) {

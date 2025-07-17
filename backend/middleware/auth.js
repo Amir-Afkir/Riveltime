@@ -33,6 +33,7 @@ const injectUser = (req, res, next) => {
  * 3️⃣ Si utilisateur absent en BDD, le créer automatiquement
  * Et injecte le document MongoDB dans req.dbUser
  */
+
 const createUserIfNotExists = async (req, res, next) => {
   try {
     const { sub: auth0Id, email, name, picture } = req.user;

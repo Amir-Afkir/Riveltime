@@ -86,7 +86,9 @@ export default function useBoutiques() {
 
   const fetchMyBoutiques = useCallback(async () => {
     if (loadingUser || !isAuthenticated || !token) return;
-    const data = await fetchWithSignal(`${API_URL}/boutiques/mine`, 'Erreur lors du chargement de vos boutiques.');
+    const url = `${API_URL}/boutiques/mine`;
+    console.log('[DEBUG] fetchMyBoutiques URL:', url);
+    const data = await fetchWithSignal(url, 'Erreur lors du chargement de vos boutiques.');
     if (data) setBoutiques(data);
   }, [token, isAuthenticated, loadingUser]);
 

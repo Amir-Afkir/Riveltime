@@ -30,6 +30,19 @@ exports.getAllBoutiques = async (_req, res) => {
   }
 };
 
+// 🔐 GET - Boutiques du vendeur connecté
+exports.getMyBoutiques = async (req, res) => {
+  try {
+    const boutiques = await Boutique.find({ owner: req.dbUser._id })
+      .populate('owner', 'avatarUrl fullname')
+      .lean();
+    res.json(boutiques);
+  } catch (err) {
+    handleServerError(res, err, 'Erreur récupération boutiques');
+  }
+};
+
+
 // 🌐 GET - Une boutique par ID (public)
 exports.getBoutiqueById = async (req, res) => {
   const { id } = req.params;

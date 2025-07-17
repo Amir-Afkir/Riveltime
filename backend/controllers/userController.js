@@ -128,7 +128,6 @@ exports.updateMyProfile = async (req, res) => {
   }
 };
 
-
 exports.uploadAvatar = async (req, res) => {
   try {
     const dbUser = req.dbUser;
