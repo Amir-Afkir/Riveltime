@@ -73,7 +73,7 @@ const StripePaiement = ({ stripeAccountId }) => {
           disabled={loading || stripeAccountId}
           className={`transition p-2 rounded-full ${
             stripeAccountId
-              ? "bg-green-100 text-green-600"
+              ? "bg-emerald-100 text-emerald-600"
               : "bg-blue-100 hover:bg-blue-200 text-indigo-600"
           }`}
         >
