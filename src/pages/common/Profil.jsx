@@ -109,6 +109,16 @@ export default function ProfilCommun({ isLoading }) {
   const [isEditing, setIsEditing] = useState(false); // Edition du profil
   const [isUpdating, setIsUpdating] = useState(false); // Chargement pour update
   const [notif, setNotif] = useState({ message: "", type: "success" }); // Notification
+  const [onboardingSuccess, setOnboardingSuccess] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("onboarding") === "success") {
+      setOnboardingSuccess(true);
+      // Nettoie l'URL pour éviter la répétition
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, []);
   const [editableData, setEditableData] = useState({
     ...defaultEditableData,
     fullname: user?.fullname || "",
@@ -463,6 +473,13 @@ export default function ProfilCommun({ isLoading }) {
   return (
     <div className="relative z-10 pt-4">
       <AvatarHeader />
+      {onboardingSuccess && (
+        <NotificationBanner
+          message="✅ Votre compte Stripe est désormais connecté !"
+          type="success"
+          onClose={() => setOnboardingSuccess(false)}
+        />
+      )}
       {notif.message && (
         <NotificationBanner
           message={notif.message}
