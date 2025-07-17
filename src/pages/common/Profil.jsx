@@ -439,7 +439,7 @@ export default function ProfilCommun({ isLoading }) {
               ? "inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors duration-200"
               : "inline-flex items-center text-sm font-medium text-neutral-600 hover:text-neutral-800 transition-colors duration-200"
           }
-          aria-label={isEditing ? "Sauvegarder" : "Modifier"}
+          aria-label={isEditing ? "Sauvegarder" : "Modifier"} 
         >
           {isEditing ? <CheckCircle size={18} /> : <Pencil size={18} />}
           <span className="ml-1">{isEditing ? "Sauvegarder" : profilIncomplet ? "Compléter" : "Modifier"}</span>
