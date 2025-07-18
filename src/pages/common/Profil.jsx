@@ -114,8 +114,17 @@ export default function ProfilCommun({ isLoading }) {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("onboarding") === "success") {
-      setOnboardingSuccess(true);
+    const onboardingSuccessParam = params.get("onboarding");
+
+    if (onboardingSuccessParam === "success") {
+      // Vérifie dans le store si le compte Stripe est réellement activé (details_submitted + charges_enabled)
+      const vendeur = useUserStore.getState().userData?.infosVendeur;
+      const isStripeOk = vendeur?.stripeDetailsSubmitted && vendeur?.stripeChargesEnabled;
+
+      if (isStripeOk) {
+        setOnboardingSuccess(true);
+      }
+
       // Nettoie l'URL pour éviter la répétition
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);

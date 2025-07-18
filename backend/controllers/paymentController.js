@@ -3,6 +3,28 @@ const stripe = require('../utils/stripeClient'); // centralisation de l'init Str
 const { createPaymentIntent } = require('../services/stripeService');
 const { createExpressAccount, generateOnboardingLink } = require('../services/stripeAccounts');
 
+// Statut du compte Stripe Express
+const getStripeStatusHandler = async (req, res) => {
+  try {
+    const { dbUser } = req;
+    const stripeAccountId = dbUser?.infosVendeur?.stripeAccountId;
+
+    if (!stripeAccountId) {
+      return res.status(404).json({ message: 'Compte Stripe non trouvé.' });
+    }
+
+    const account = await stripe.accounts.retrieve(stripeAccountId);
+
+    return res.json({
+      enabled: account.charges_enabled,
+      details_submitted: account.details_submitted,
+    });
+  } catch (error) {
+    console.error('Erreur récupération status Stripe :', error.message);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
 // Création de compte Stripe Express
 const createStripeAccountHandler = async (req, res) => {
   try {
@@ -103,6 +125,7 @@ const createPaymentIntentHandler = async (req, res) => {
 
 
 module.exports = {
+  getStripeStatusHandler,
   createStripeAccountHandler,
   manageStripeAccountHandler,
   onboardStripeAccountHandler,

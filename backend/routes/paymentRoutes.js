@@ -1,5 +1,6 @@
 const express = require('express');
 const {
+  getStripeStatusHandler,
   createStripeAccountHandler,
   onboardStripeAccountHandler,
   manageStripeAccountHandler,
@@ -7,6 +8,9 @@ const {
 } = require('../controllers/paymentController');
 
 const router = express.Router();
+
+// Vérifi état du compte Stripe
+router.get('/status', getStripeStatusHandler); 
 
 // Crée le compte Stripe pour le vendeur connecté
 router.post('/create-account', createStripeAccountHandler);

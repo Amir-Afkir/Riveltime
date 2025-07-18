@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from "../../components/ui/Button";
 import { RefreshCw, CheckCircle } from "lucide-react";
 import { useAuth0 } from '@auth0/auth0-react';
@@ -8,7 +8,29 @@ const StripePaiement = ({ stripeAccountId }) => {
   const { getAccessTokenSilently } = useAuth0();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [isStripeOnboarded, setIsStripeOnboarded] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    const checkStripeStatus = async () => {
+      if (!stripeAccountId) return;
+      try {
+        const token = await getAccessTokenSilently();
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/stripe/status`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        // Correction ici : calcule directement si l'onboarding est complété
+        setIsStripeOnboarded(data.enabled && data.details_submitted);
+      } catch (err) {
+        console.error("Erreur vérification onboarding Stripe :", err);
+      }
+    };
+    checkStripeStatus();
+  }, [stripeAccountId]);
 
   const handleStripeOnboarding = async () => {
     setLoading(true);
@@ -16,8 +38,8 @@ const StripePaiement = ({ stripeAccountId }) => {
     try {
       const token = await getAccessTokenSilently();
 
-      if (stripeAccountId) {
-        // Si compte déjà créé, redirige vers la gestion Stripe
+      if (stripeAccountId && isStripeOnboarded) {
+        // Si compte déjà créé et onboarding complété, redirige vers la gestion Stripe
         const res = await fetch(`${import.meta.env.VITE_API_URL}/stripe/manage`, {
           method: 'GET', // ✅ Corrigé
           headers: {
@@ -76,7 +98,7 @@ const StripePaiement = ({ stripeAccountId }) => {
 return (
   <div>
     <div className="flex flex-col items-center justify-center space-y-4 text-center">
-      {stripeAccountId ? (
+      {stripeAccountId && isStripeOnboarded ? (
         <button
           onClick={handleStripeOnboarding}
           className="inline-flex items-center gap-2 text-sm font-medium text-green-700 border border-green-300 rounded-full px-5 py-2 shadow-sm bg-white hover:bg-green-50 transition focus:outline-none focus-visible:ring focus-visible:ring-green-300"
