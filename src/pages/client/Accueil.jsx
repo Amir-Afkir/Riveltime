@@ -17,7 +17,6 @@ const FILTERS = [
 export default function Accueil() {
   const [query, setQuery] = useState("");
   const [boutiques, setBoutiques] = useState([]);
-  const [recentBoutiques, setRecentBoutiques] = useState([]);
   const navigate = useNavigate();
 
   const FEATURED_MESSAGES = [
@@ -42,33 +41,6 @@ export default function Accueil() {
       }
     }
     fetchBoutiques();
-  }, []);
-
-  useEffect(() => {
-    async function filterExistingRecentBoutiques() {
-      const raw = localStorage.getItem("recentBoutiques");
-      if (!raw) return;
-
-      const recent = JSON.parse(raw);
-      const validBoutiques = [];
-
-      for (const b of recent) {
-        try {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/boutiques/${b._id}`);
-          if (res.ok) {
-            const data = await res.json();
-            validBoutiques.push(data.boutique);
-          }
-        } catch (e) {
-          console.warn("❌ Boutique introuvable ou erreur réseau :", b._id);
-        }
-      }
-
-      localStorage.setItem("recentBoutiques", JSON.stringify(validBoutiques));
-      setRecentBoutiques(validBoutiques);
-    }
-
-    filterExistingRecentBoutiques();
   }, []);
 
   const filteredBoutiques = boutiques.filter((b) => {
@@ -131,31 +103,40 @@ export default function Accueil() {
         </div>
 
         {/* Section Récemment consultées */}
-        {recentBoutiques.length > 0 && (
-          <section className="mt-8">
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-1">
-              👀 Récemment consultées
-            </h2>
-            <p className="text-sm text-gray-500 mb-4">
-              Vos dernières visites
-            </p>
-            <div className="flex overflow-x-auto overflow-visible gap-3 py-3 -mx-4 px-4 whitespace-nowrap no-scrollbar snap-x">
-              {recentBoutiques.map((b) => (
-                <div key={b._id} className="inline-block w-[260px]">
-                  <MerchantCard
-                    id={b._id}
-                    name={b.name}
-                    category={b.category || "Non renseignée"}
-                    distance={b.distance || null}
-                    coverImage={b.coverImageUrl || null}
-                    onClick={() => navigate(`/vitrine/${b._id}`)}
-                    variant="recent"
-                  />
+        {(() => {
+          try {
+            const recent = JSON.parse(localStorage.getItem("recentBoutiques")) || [];
+            if (recent.length === 0) return null;
+
+            return (
+              <section className="mt-8">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-1">
+                  👀 Récemment consultées
+                </h2>
+                <p className="text-sm text-gray-500 mb-4">
+                  Vos dernières visites
+                </p>
+                <div className="flex overflow-x-auto overflow-visible gap-3 py-3 -mx-4 px-4 whitespace-nowrap no-scrollbar snap-x">
+                  {recent.map((b, index) => (
+                    <div key={b._id || index} className="inline-block w-[260px]">
+                      <MerchantCard
+                        id={b._id}
+                        name={b.name}
+                        category={b.category || "Non renseignée"}
+                        distance={b.distance || null}
+                        coverImage={b.coverImageUrl || null}
+                        onClick={() => navigate(`/vitrine/${b._id}`)}
+                        variant="recent"
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+              </section>
+            );
+          } catch (e) {
+            return null;
+          }
+        })()}
 
         {/* Section En vedette */}
         <section className="mt-8">
