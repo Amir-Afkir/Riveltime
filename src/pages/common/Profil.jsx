@@ -303,6 +303,7 @@ export default function ProfilCommun({ isLoading }) {
   if (!user) return <p>Erreur : utilisateur introuvable</p>;
 
   // 📦 Données des sections
+  const stripeAccountId = infosVendeur?.stripeAccountId;
   const sections = [
     {
       key: "infos",
@@ -457,16 +458,16 @@ export default function ProfilCommun({ isLoading }) {
     ...(role === "vendeur"
       ? [{
           key: "paiement",
-          title: "Paiement",
+          title: "Paiement avec Stripe",
           content: (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <StripePaiement
-                stripeAccountId={infosVendeur?.stripeAccountId}
+                stripeAccountId={stripeAccountId}
                 redirectPath="/profil"
               />
             </div>
           ),
-          cardClass: "bg-white shadow-md border border-gray-100",
+          cardClass: "bg-white shadow-sm border border-neutral-200 rounded-xl px-4 py-5",
         }]
       : []),
   ];

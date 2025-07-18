@@ -73,47 +73,50 @@ const StripePaiement = ({ stripeAccountId }) => {
     }
   };
 
-  return (
-    <div className="mt-4">
-      <div className="flex justify-between items-center">
-        <div className="text-sm font-medium text-neutral-800">
-          {stripeAccountId ? (
-            <>
-              <span className="text-emerald-600">Paiement activé avec Stripe</span>
-              <button
-                onClick={handleStripeOnboarding}
-                className="mt-2 text-sm text-blue-600 hover:underline"
-              >
-                Gérer mon compte Stripe
-              </button>
-            </>
-          ) : loading ? (
-            <span className="text-neutral-600">Redirection vers Stripe...</span>
-          ) : (
-            <span className="text-neutral-600">Activer les paiements avec Stripe</span>
-          )}
-        </div>  
-
+return (
+  <div>
+    <div className="flex flex-col items-center justify-center space-y-4 text-center">
+      {stripeAccountId ? (
+        <button
+          onClick={handleStripeOnboarding}
+          className="inline-flex items-center gap-2 text-sm font-medium text-green-700 border border-green-300 rounded-full px-5 py-2 shadow-sm bg-white hover:bg-green-50 transition focus:outline-none focus-visible:ring focus-visible:ring-green-300"
+          aria-label="Gérer mon compte Stripe" 
+        >
+          <CheckCircle className="w-4 h-4 text-green-600" />
+          Gérer mon compte Stripe
+        </button>
+      ) : loading ? (
+        <button
+          disabled
+          className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 border border-blue-300 rounded-full px-5 py-2 shadow-sm bg-white opacity-60 cursor-not-allowed"
+          aria-label="Chargement Stripe"
+        >
+          <RefreshCw className="w-4 h-4 animate-spin" />
+          <span>Connexion...</span>
+        </button>
+      ) : (
         <button
           onClick={handleStripeOnboarding}
           disabled={loading}
-          className={`transition p-2 rounded-full ${
-            stripeAccountId
-              ? "bg-emerald-100 text-emerald-600"
-              : "bg-blue-100 hover:bg-blue-200 text-indigo-600"
-          }`}
+          className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 border border-blue-300 rounded-full px-5 py-2 shadow-sm bg-white hover:bg-blue-50 transition focus:outline-none focus-visible:ring focus-visible:ring-blue-300 disabled:opacity-60 disabled:cursor-not-allowed"
+          aria-label="Activer Stripe"
         >
-          {stripeAccountId ? (
-            <CheckCircle className="w-5 h-5" />
-          ) : (
-            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
-          )}
+          <RefreshCw className="w-4 h-4" />
+          <span>Activer Stripe</span>
         </button>
-      </div>
-
-      {message && <div className="text-red-600 mt-2 px-4">{message}</div>}
+      )}
     </div>
-  );
+
+    {message && (
+      <div
+        className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 text-center"
+        role="alert"
+      >
+        {message}
+      </div>
+    )}
+  </div>
+);
 };
 
 export default StripePaiement;

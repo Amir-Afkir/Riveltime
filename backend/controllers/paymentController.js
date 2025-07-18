@@ -19,7 +19,7 @@ const createStripeAccountHandler = async (req, res) => {
       });
     }
 
-    const account = await createExpressAccount(dbUser, stripe);
+    const { account } = await createExpressAccount(dbUser);
     dbUser.infosVendeur = { ...dbUser.infosVendeur, stripeAccountId: account.id };
     await dbUser.save();
 
