@@ -53,6 +53,8 @@ app.use('/produits', require('./routes/publicProductRoutes')); // uniquement get
 // =====================================================
 app.use(jwtCheck, injectUser, createUserIfNotExists);
 
+const stripeRoutes = require('./routes/paymentRoutes');
+
 
 // ====================================
 // 🔐 ROUTES PRIVÉES (PROTÉGÉES PAR JWT)
@@ -61,7 +63,8 @@ app.use('/users', require('./routes/userRoutes'));
 app.use('/produits', require('./routes/productRoutes')); // create/update/delete/mine
 app.use('/notifications', require('./routes/notificationRoutes'));
 app.use('/orders', require('./routes/orderRoutes')); 
-app.use('/stripe', require('./routes/paymentRoutes'));
+
+app.use('/stripe', jwtCheck, injectUser, createUserIfNotExists, stripeRoutes);
 
 // ====================================
 // 🧪 Route test sécurisée

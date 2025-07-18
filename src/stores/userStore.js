@@ -98,6 +98,40 @@ const useUserStore = create(devtools((set, get) => {
       }
     },
 
+    // 🚫 Suppression du compte utilisateur
+    deleteAccount: async () => {
+      const token = get().token;
+      const user = get().userData;
+      if (!token || !user) {
+        console.warn("❌ Impossible de supprimer le compte : utilisateur ou token manquant");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/account/delete/me`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error("❌ Erreur suppression compte :", data.error);
+          alert("❌ Échec de la suppression du compte.");
+          return;
+        }
+
+        console.log("✅ Compte supprimé avec succès");
+        clearStorage();
+        window.location.href = import.meta.env.VITE_BASE_URL;
+      } catch (err) {
+        console.error("❌ Erreur requête suppression :", err);
+        alert("❌ Une erreur est survenue lors de la suppression.");
+      }
+    },
+
     // 🔑 Fournit la fonction Auth0 en mémoire
     getTokenSilentlyFn: function getTokenSilentlyFn() {
       return get().getTokenSilently;

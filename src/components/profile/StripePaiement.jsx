@@ -16,7 +16,27 @@ const StripePaiement = ({ stripeAccountId }) => {
     try {
       const token = await getAccessTokenSilently();
 
-      // Étape 1 : Créer le compte Stripe si nécessaire
+      if (stripeAccountId) {
+        // Si compte déjà créé, redirige vers la gestion Stripe
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/stripe/manage`, {
+          method: 'GET', // ✅ Corrigé
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        if (res.ok && data.url) {
+          window.location.href = data.url;
+        } else {
+          setLoading(false);
+          setMessage(data.message || 'Erreur lors de la redirection Stripe.');
+        }
+        return;
+      }
+
+      // Sinon, créer le compte puis rediriger vers l'onboarding
       await fetch(`${import.meta.env.VITE_API_URL}/stripe/create-account`, {
         method: 'POST',
         headers: {
@@ -26,12 +46,10 @@ const StripePaiement = ({ stripeAccountId }) => {
         body: JSON.stringify({}),
       });
 
-      // Étape 2 : Rafraîchir les données utilisateur (optionnel selon ton architecture)
       if (typeof window.refreshUserData === 'function') {
         await window.refreshUserData();
       }
 
-      // Étape 3 : Obtenir le lien d'onboarding
       const res = await fetch(`${import.meta.env.VITE_API_URL}/stripe/onboard`, {
         method: 'POST',
         headers: {
@@ -60,7 +78,15 @@ const StripePaiement = ({ stripeAccountId }) => {
       <div className="flex justify-between items-center">
         <div className="text-sm font-medium text-neutral-800">
           {stripeAccountId ? (
-            <span className="text-emerald-600">Paiement activé avec Stripe</span>
+            <>
+              <span className="text-emerald-600">Paiement activé avec Stripe</span>
+              <button
+                onClick={handleStripeOnboarding}
+                className="mt-2 text-sm text-blue-600 hover:underline"
+              >
+                Gérer mon compte Stripe
+              </button>
+            </>
           ) : loading ? (
             <span className="text-neutral-600">Redirection vers Stripe...</span>
           ) : (
@@ -70,7 +96,7 @@ const StripePaiement = ({ stripeAccountId }) => {
 
         <button
           onClick={handleStripeOnboarding}
-          disabled={loading || stripeAccountId}
+          disabled={loading}
           className={`transition p-2 rounded-full ${
             stripeAccountId
               ? "bg-emerald-100 text-emerald-600"

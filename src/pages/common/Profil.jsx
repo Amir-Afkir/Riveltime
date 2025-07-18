@@ -16,6 +16,7 @@ import UserFieldCard from "../../components/profile/UserFieldCard";
 import ToggleSwitch from "../../components/profile/ToggleSwitch";
 import Button from "../../components/ui/Button";
 import StripePaiement from "../../components/profile/StripePaiement";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 
 // 4. Stores et hooks personnalisés
 import useUserStore from "../../stores/userStore";
@@ -110,6 +111,7 @@ export default function ProfilCommun({ isLoading }) {
   const [isUpdating, setIsUpdating] = useState(false); // Chargement pour update
   const [notif, setNotif] = useState({ message: "", type: "success" }); // Notification
   const [onboardingSuccess, setOnboardingSuccess] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("onboarding") === "success") {
@@ -550,7 +552,7 @@ export default function ProfilCommun({ isLoading }) {
             </Button>
 
             <Button
-              onClick={deleteAccount}
+              onClick={() => setShowConfirmDelete(true)}
               type="button"
               variant="secondary"
             >
@@ -559,6 +561,13 @@ export default function ProfilCommun({ isLoading }) {
           </div>
         </InfoCard>
       </div>
+      {/* Modal de confirmation suppression compte */}
+      <ConfirmModal
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        onConfirm={deleteAccount}
+        message="Cette action est irréversible. Toutes vos données seront supprimées définitivement."
+      />
     </div>
   );
 }
