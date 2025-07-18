@@ -1,68 +1,100 @@
-const { validateEstimateInput, validateOrderInput, validateStatus } = require('../utils/validation');
-const { processEstimate } = require('../services/livraison');
-const { processOrderCreation } = require('../services/orderService');
-const { getUserOrders, updateOrderStatusLogic, assignDelivererToOrder } = require('../services/orderService');
+const {
+  validateEstimateInput,
+  validateOrderInput,
+  validateStatus
+} = require('../utils/validation');
 
+const { processEstimate } = require('../services/livraison');
+const {
+  processOrderCreation,
+  getUserOrders,
+  updateOrderStatusLogic,
+  assignDelivererToOrder
+} = require('../services/orderService');
+
+const { serverError } = require('../utils/responseHelpers');
+
+/**
+ * Utilitaire pour gérer les erreurs de validation
+ */
+function handleValidation(validationFn, reqBody, res) {
+  const error = validationFn(reqBody);
+  if (error) {
+    res.status(400).json({ error });
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Estimer les frais de livraison
+ */
 exports.estimateDelivery = async (req, res) => {
   try {
-    const validationError = validateEstimateInput(req.body);
-    if (validationError) return res.status(400).json({ error: validationError });
+    if (!handleValidation(validateEstimateInput, req.body, res)) return;
 
     const result = await processEstimate(req.body);
     res.json(result);
   } catch (err) {
-    console.error('❌ Erreur estimation livraison :', err);
-    res.status(500).json({ error: 'Erreur serveur' });
+    serverError(res, 'Erreur estimation livraison', err);
   }
 };
 
+/**
+ * Créer une commande
+ */
 exports.createOrder = async (req, res) => {
   try {
-    const validationError = validateOrderInput(req.body);
-    if (validationError) return res.status(400).json({ error: validationError });
+    if (!handleValidation(validateOrderInput, req.body, res)) return;
 
     const result = await processOrderCreation(req.body, req.user);
     res.status(201).json(result);
   } catch (err) {
-    console.error('❌ Erreur création de commande :', err);
-    res.status(500).json({ error: 'Erreur lors de la création de la commande.' });
+    serverError(res, 'Erreur création de commande', err);
   }
 };
 
+/**
+ * Récupérer les commandes d’un utilisateur
+ */
 exports.getOrdersByUser = async (req, res) => {
   try {
     const userId = req.user?.id || req.query.userId;
     const orders = await getUserOrders(userId);
     res.json(orders);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    serverError(res, 'Erreur récupération commandes utilisateur', err);
   }
 };
 
+/**
+ * Mettre à jour le statut d’une commande
+ */
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    const isValid = validateStatus(status);
-    if (!isValid) {
+    if (!validateStatus(status)) {
       return res.status(400).json({ error: 'Statut invalide.' });
     }
 
     const updatedOrder = await updateOrderStatusLogic(id, status, req.user?.id);
     res.json(updatedOrder);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    serverError(res, 'Erreur mise à jour statut commande', err);
   }
 };
 
+/**
+ * Assigner un livreur à une commande
+ */
 exports.assignLivreurToOrder = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedOrder = await assignDelivererToOrder(id, req.user?.id);
     res.json(updatedOrder);
   } catch (err) {
-    console.error('❌ Erreur assignation livreur :', err);
-    res.status(500).json({ error: 'Erreur serveur lors de l’assignation du livreur.' });
+    serverError(res, 'Erreur assignation livreur', err);
   }
-}; 
+};

@@ -1,7 +1,11 @@
 const Product = require('../models/Product');
 const Boutique = require('../models/Boutique');
-const { recommanderVehicule } = require('../utils/vehicule');
-const { calculerPoidsFacture, calculateDeliveryFee, calculateParticipation } = require('../utils/deliveryUtils');
+const {
+  calculerPoidsFacture,
+  calculerFraisLivraison,
+  calculerParticipation,
+  recommanderVehicule,
+} = require('../utils/logistique');
 
 const estimateDelay = (distanceKm, vehicule = "velo") => {
   const vitesses = {
@@ -53,12 +57,12 @@ exports.processEstimate = async (data) => {
   const distanceKm = R * c;
 
   const vehiculeRecommande = recommanderVehicule({
-    poids_kg: poidsKg,
-    volume_m3: volumeM3,
-    distance_km: distanceKm
+    poidsKg,
+    volumeM3,
+    distanceKm
   });
 
-  const deliveryFee = calculateDeliveryFee({ poidsKg, volumeM3, distanceKm, horaire, vehicule: vehiculeRecommande });
+  const deliveryFee = calculerFraisLivraison({ poidsKg, volumeM3, distanceKm, horaire, vehicule: vehiculeRecommande });
 
   const boutiqueDoc = await Boutique.findById(boutiqueId);
   let finalDeliveryFee = deliveryFee;
@@ -67,7 +71,7 @@ exports.processEstimate = async (data) => {
   if (boutiqueDoc?.activerParticipation) {
     const participationPourcent = boutiqueDoc.participationPourcent ?? 50;
     const contributionLivraisonPourcent = boutiqueDoc.contributionLivraisonPourcent ?? 20;
-    participation = calculateParticipation(deliveryFee, productTotal, participationPourcent, contributionLivraisonPourcent);
+    participation = calculerParticipation(deliveryFee, productTotal, participationPourcent, contributionLivraisonPourcent);
     finalDeliveryFee = deliveryFee - participation;
   }
 

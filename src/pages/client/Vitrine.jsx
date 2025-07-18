@@ -217,10 +217,6 @@ export default function Vitrine() {
                 <span>{formatDelay(estimatedDelay)}</span>
               </div>
             )}
-            <div className="flex items-center gap-2 px-3 py-1.5 text-sm">
-              <Star className="w-4 h-4 text-[#ed354f]" />
-              <span>4.7 / 5</span>
-            </div>
           </div>
         )}
       </div>
