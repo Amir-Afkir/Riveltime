@@ -135,32 +135,6 @@ export default function PanierModal({ onClose }) {
     if (modalRef.current && !modalRef.current.contains(e.target)) onClose();
   };
 
-  const handleOrder = () => {
-    const cartWithStripeData = cart.map((item) => {
-      const boutiqueId = item.product.boutique;
-      return {
-        ...item,
-        livraison: deliveryFeesPerBoutique[boutiqueId] || 0,
-        participation: participationsPerBoutique[boutiqueId] || 0,
-        livreurStripeId: item.product.boutiqueDetails?.livreurStripeId || "",
-        product: {
-          ...item.product,
-          boutiqueDetails: {
-            ...item.product.boutiqueDetails,
-            stripeAccountId: item.product.boutiqueDetails?.stripeAccountId || "",
-          }
-        }
-      };
-    });
-
-    placeOrder(cartWithStripeData, {
-      deliveryFeesPerBoutique,
-      participationsPerBoutique,
-      totalLivraison: deliveryFee
-    });
-    onClose();
-    navigate("/client/commandes");
-  };
 
   useEffect(() => {
     estimateDelivery(cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles, setParticipationsPerBoutique);
@@ -173,6 +147,61 @@ export default function PanierModal({ onClose }) {
     const interval = setInterval(() => updateRandomMessage(el), 5000);
     return () => clearInterval(interval);
   }, []);
+
+    const handleOrder = async () => {
+    try {
+      const cartToSend = cart.map(item => ({
+        productId: item.product._id,
+        quantity: item.quantity,
+        prix: item.product.price, // 👈 obligatoire pour Stripe
+        nom: item.product.name,   // 👈 utile pour affichage produit Stripe
+        boutiqueId: item.product.boutique, // ✅ AJOUTÉ
+        livraison: deliveryFeesPerBoutique[item.product.boutique] || 0,
+        participation: participationsPerBoutique[item.product.boutique] || 0,
+        livreurStripeId: item.product.boutiqueDetails?.livreurStripeId || "",
+        merchant: item.merchant || ""
+      }));
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/stripe/checkout`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          cart: cartToSend,
+          user: {
+            email: userData.email,
+            sub: userData.sub,
+            deliveryAddress: userData.infosClient?.adresseComplete || "",
+            deliveryLocation: {
+              lat: userData.infosClient?.latitude,
+              lng: userData.infosClient?.longitude,
+            },
+          }
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        alert("Erreur lors de la création de la session de paiement.");
+        return;
+      }
+
+      placeOrder(cart, {
+        deliveryFeesPerBoutique,
+        participationsPerBoutique,
+        totalLivraison: deliveryFee
+      });
+
+      window.location.href = data.url;
+    } catch (err) {
+      console.error("Erreur Stripe :", err);
+      alert("Une erreur est survenue pendant la commande.");
+    } finally {
+      onClose();
+    }
+  };
 
   return (
     <div

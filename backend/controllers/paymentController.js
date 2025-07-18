@@ -2,6 +2,8 @@
 const stripe = require('../utils/stripeClient'); // centralisation de l'init Stripe
 const { createPaymentIntent } = require('../services/stripeService');
 const { createExpressAccount, generateOnboardingLink } = require('../services/stripeAccounts');
+const { processEstimate } = require('../services/livraison');
+
 
 // Statut du compte Stripe Express
 const getStripeStatusHandler = async (req, res) => {
@@ -89,8 +91,9 @@ const manageStripeAccountHandler = async (req, res) => {
   }
 };
 
-// Création d'une session de paiement
+// Création d'une session de paiement Stripe Checkout avec redirection
 const createPaymentIntentHandler = async (req, res) => {
+  console.log("🧾 Reçu :", req.body);
   try {
     const { cart, user } = req.body;
 
@@ -98,27 +101,115 @@ const createPaymentIntentHandler = async (req, res) => {
       return res.status(400).json({ message: 'Paramètres invalides.' });
     }
 
+    const groupedByBoutique = {};
     for (const item of cart) {
-      const nom = item.product?.name || 'inconnu';
+      const boutiqueId = item.boutiqueId;
+      if (!groupedByBoutique[boutiqueId]) {
+        groupedByBoutique[boutiqueId] = {
+          nom: item.merchant,
+          boutiqueObjectId: boutiqueId,
+          produits: [],
+        };
+      }
 
-      if (!item.product?.boutiqueDetails?.stripeAccountId)
-        return res.status(400).json({ message: `Produit \"${nom}\" sans Stripe vendeur.` });
-      if (!item.livreurStripeId)
-        return res.status(400).json({ message: `Produit \"${nom}\" sans Stripe livreur.` });
-      if (!Number.isInteger(item.quantity) || item.quantity < 1)
-        return res.status(400).json({ message: `Quantité invalide pour \"${nom}\".` });
-      if (typeof item.livraison !== 'number')
-        return res.status(400).json({ message: `Frais livraison manquants pour \"${nom}\".` });
-      if (typeof item.participation !== 'number')
-        return res.status(400).json({ message: `Participation manquante pour \"${nom}\".` });
-      if (!item.merchant)
-        return res.status(400).json({ message: `Commerçant manquant pour \"${nom}\".` });
+      groupedByBoutique[boutiqueId].produits.push({
+        productId: item.productId,
+        quantity: item.quantity,
+        prix: item.prix,
+        nom: item.nom,
+      });
     }
 
-    const clientSecret = await createPaymentIntent(cart, user, stripe);
-    res.status(200).json({ clientSecret });
+    for (const [_, data] of Object.entries(groupedByBoutique)) {
+      const items = data.produits.map(p => ({
+        product: p.productId,
+        quantity: p.quantity
+      }));
+
+      const boutiqueDoc = await require('../models/Boutique').findById(data.boutiqueObjectId);
+      let boutiqueLocation = { lat: 0, lng: 0 };
+      const coords = boutiqueDoc?.location?.coordinates;
+      if (Array.isArray(coords) && coords.length === 2) {
+        boutiqueLocation = { lat: coords[1], lng: coords[0] };
+      } else {
+        console.warn(`⚠️ Coordonnées boutique manquantes pour ${boutiqueDoc?.name || 'Inconnue'} (${data.boutiqueObjectId})`);
+      }
+
+      const estimation = await processEstimate({
+        items,
+        boutiqueId: data.boutiqueObjectId,
+        deliveryLocation: user.deliveryLocation,
+        boutiqueLocation,
+        horaire: [],
+        vehicule: 'velo'
+      });
+      console.log("📦 Estimation livraison :", estimation);
+
+      data.livraison = estimation.deliveryFee;
+      data.participation = estimation.participation;
+    }
+
+    // Créer les line_items complets pour Stripe
+    const line_items = [];
+
+    Object.entries(groupedByBoutique).forEach(([boutiqueId, data]) => {
+      const boutiqueNom = data.nom || boutiqueId;
+      data.produits.forEach(prod => {
+        if (prod.prix > 0 && prod.quantity >= 1) {
+          line_items.push({
+            price_data: {
+              currency: "eur",
+              unit_amount: Math.round(Number(prod.prix) * 100), // ✅ forcer conversion nombre * 100
+              product_data: {
+                name: prod.nom,
+                description: `chez ${boutiqueNom}`,
+                metadata: {
+                  productId: prod.productId,
+                },
+              },
+            },
+            quantity: Number(prod.quantity), // ✅ forcer conversion
+          });
+        }
+      });
+
+      const livraisonCents = Math.round(Number(data.livraison) * 100);
+      if (livraisonCents >= 1) {
+        line_items.push({
+          price_data: {
+            currency: "eur",
+            unit_amount: livraisonCents,
+            product_data: {
+              name: `Livraison ${boutiqueNom}`,
+              description: "Frais de livraison",
+            },
+          },
+          quantity: 1,
+        });
+      }
+
+      // La participation boutique est déjà déduite des frais de livraison,
+      // elle ne doit pas être ajoutée dans les line_items Stripe
+    });
+
+    console.log("🧾 line_items envoyés à Stripe :", line_items);
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items,
+      success_url: `${process.env.CLIENT_URL}/client/commandes?success=true`,
+      cancel_url: `${process.env.CLIENT_URL}/client/commandes?canceled=true`,
+      metadata: {
+        userId: user.sub,
+        address: user.deliveryAddress || "",
+        lat: user.deliveryLocation?.lat || "",
+        lng: user.deliveryLocation?.lng || "",
+      },
+    });
+
+    res.status(200).json({ url: session.url });
   } catch (err) {
-    console.error('Erreur création session Stripe :', err);
+    console.error("Erreur création session Stripe :", err);
     res.status(500).json({ message: "Erreur lors de la création de la session de paiement." });
   }
 };
