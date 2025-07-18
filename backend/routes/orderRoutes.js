@@ -9,7 +9,7 @@ router.post('/estimate', orderController.estimateDelivery);
 router.post('/', orderController.createOrder);
 
 // Récupérer les commandes de l'utilisateur
-router.get('/', orderController.getOrdersByUser);
+router.get('/me', orderController.getOrdersByUser);
 
 // Mettre à jour le statut d'une commande
 router.patch('/:id/status', orderController.updateOrderStatus);

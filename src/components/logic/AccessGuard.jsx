@@ -10,13 +10,7 @@ import { Navigate } from "react-router-dom";
 export default function AccessGuard({ allowedRoles, children }) {
   const { userData, loadingUser } = useUserStore();
 
-  if (loadingUser) return <p>Chargement...</p>;
-
-  // Attendre que userData soit défini
-  if (!userData) return <p>Préparation de votre espace...</p>;
-
-  // Rediriger uniquement si l'utilisateur est chargé mais non autorisé
-  if (!allowedRoles.includes(userData.role)) {
+  if (loadingUser || !userData || !allowedRoles.includes(userData.role)) {
     return <Navigate to="/" replace />;
   }
 

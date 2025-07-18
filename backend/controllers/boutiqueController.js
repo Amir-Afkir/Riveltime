@@ -84,6 +84,12 @@ exports.createBoutique = async (req, res) => {
       contributionLivraisonPourcent = 20,
     } = req.body;
 
+    if (participationPourcent > 70) {
+      return res.status(400).json({
+        error: "La participation ne peut pas dépasser 70 % du montant des produits."
+      });
+    }
+
     if (typeof location === 'string') {
       try {
         location = JSON.parse(location);
@@ -175,6 +181,13 @@ exports.updateBoutique = async (req, res) => {
       participationPourcent = 50,
       contributionLivraisonPourcent = 20,
     } = req.body;
+
+    if (contributionLivraisonPourcent >= 30) {
+      return res.status(400).json({
+        error: "Le plafond de la participation doit être inferieur à 30 % du montant total des produits."
+      });
+    }
+
     if (typeof location === 'string') {
       try {
         location = JSON.parse(location);

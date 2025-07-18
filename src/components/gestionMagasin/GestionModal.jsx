@@ -175,19 +175,17 @@ export default function GestionModal({
       {data.activerParticipation && (
         <div className="relative mb-4 pl-10">
           <Euro className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
+          <select
             id="contributionLivraisonPourcent"
             name="contributionLivraisonPourcent"
-            type="number"
-            min={1}
-            max={100}
-            step={1}
-            placeholder="Plafond de contribution (% du prix)"
-            aria-label="Plafond contribution (%)"
             value={safeValue(data.contributionLivraisonPourcent, "")}
             onChange={onChange}
             className="w-full pr-4 py-2 pl-3 border border-gray-300 rounded-md shadow-sm text-base text-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus:border-primary"
-          />
+          > 
+            <option value="10">🔹 10 % – Plafond faible</option>
+            <option value="20">🔸 20 % – Courant</option>
+            <option value="30">🌟 30 % – Contribution importante</option>
+          </select>
           <p className="text-xs text-gray-500 mt-1">Ex. : 20 % du prix max sera utilisé pour couvrir les frais</p>
         </div>
       )}

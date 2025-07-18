@@ -61,6 +61,9 @@ const User = require('../models/User');
 const Boutique = require('../models/Boutique');
 
 const createTransfersAfterCapture = async (paymentIntentId) => {
+  const COMMISSION_POURCENT = 8;
+  const platformAccountId = process.env.STRIPE_PLATFORM_ACCOUNT_ID;
+
   const orders = await Order.find({ paymentIntentId });
 
   if (!orders || orders.length === 0) {
@@ -82,25 +85,39 @@ const createTransfersAfterCapture = async (paymentIntentId) => {
 
       // Transfert vendeur
       if (vendeurStripeId) {
+        const commission = (produitsTotal * COMMISSION_POURCENT) / 100;
+        const montantPourVendeur = produitsTotal - participation - commission;
+
         await stripe.transfers.create({
-          amount: Math.round(produitsTotal * 100),
+          amount: Math.round(montantPourVendeur * 100),
           currency: 'eur',
           destination: vendeurStripeId,
           transfer_group: transferGroup,
         });
-        console.log(`✅ Transfert vendeur : ${produitsTotal} €`);
+        console.log(`✅ Transfert vendeur : ${montantPourVendeur} €`);
+
+        // Transfert de la commission à Riveltime
+        if (platformAccountId) {
+          await stripe.transfers.create({
+            amount: Math.round(commission * 100),
+            currency: 'eur',
+            destination: platformAccountId,
+            transfer_group: transferGroup,
+          });
+          console.log(`💰 Commission Riveltime : ${commission} €`);
+        }
       }
 
       // Transfert livreur
       if (livreurStripeId) {
-        const netPourLivreur = fraisLivraison + participation;
+        const montantPourLivreur = fraisLivraison;
         await stripe.transfers.create({
-          amount: Math.round(netPourLivreur * 100),
+          amount: Math.round(montantPourLivreur * 100),
           currency: 'eur',
           destination: livreurStripeId,
           transfer_group: transferGroup,
         });
-        console.log(`🚚 Transfert livreur : ${netPourLivreur} €`);
+        console.log(`🚚 Transfert livreur : ${montantPourLivreur} €`);
       } else {
         console.warn(`📦 Aucun livreur défini pour ${transferGroup}`);
       }
