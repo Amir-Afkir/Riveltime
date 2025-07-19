@@ -47,7 +47,6 @@ app.use('/boutiques', require('./routes/boutiqueRoutes'));
 // ✅ ROUTE PRODUITS PUBLIQUE (produits d’une boutique)
 app.use('/produits', require('./routes/publicProductRoutes')); // uniquement get /produits/boutique/:id
 
-
 // =====================================================
 // 🔐 MIDDLEWARE JWT (appliqué après les routes publiques)
 // =====================================================

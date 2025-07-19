@@ -33,13 +33,13 @@ exports.processEstimate = async (data) => {
   const products = await Product.find({ _id: { $in: productIds } });
 
   const productTotal = items.reduce((sum, item) => {
-    const prod = products.find(p => p._id.toString() === item.product);
+    const prod = products.find(p => p._id.toString() === item.product.toString());
     return prod ? sum + prod.price * item.quantity : sum;
   }, 0);
 
   let poidsKg = 0, volumeM3 = 0;
   for (const item of items) {
-    const prod = products.find(p => p._id.toString() === item.product);
+    const prod = products.find(p => p._id.toString() === item.product.toString());
     if (prod) {
       poidsKg += prod.poids_kg * item.quantity;
       volumeM3 += prod.volume_m3 * item.quantity;

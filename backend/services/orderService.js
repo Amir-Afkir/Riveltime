@@ -58,7 +58,7 @@ exports.processOrderCreation = async (data, user) => {
       poidsKg,
       volumeM3,
       distanceKm: livraison.distance,
-      horaire: livraison.horaire,
+      horaire: horaire,
       vehicule
     });
 

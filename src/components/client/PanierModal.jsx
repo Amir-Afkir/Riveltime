@@ -4,15 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import useCartStore from "../../stores/cartStore";
 import useUserStore from "../../stores/userStore";
 
-const getClientCoords = (userData) =>
-  userData?.infosClient?.latitude && userData?.infosClient?.longitude
-    ? [userData.infosClient.longitude, userData.infosClient.latitude]
-    : null;
-
-const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles, setParticipationsPerBoutique) => {
-  const clientCoords = getClientCoords(userData);
-
-  if (!cart.length || !token || !Array.isArray(clientCoords)) {
+const estimateDelivery = async (cart, token, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles, setParticipationsPerBoutique) => {
+  if (!cart.length || !token) {
     setDeliveryFee(null);
     setDeliveryFeesPerBoutique({});
     setRecommendedVehicles({});
@@ -22,75 +15,29 @@ const estimateDelivery = async (cart, token, userData, setDeliveryFee, setLoadin
 
   setLoadingFee(true);
   try {
-    const horaire = [];
-    const now = new Date();
-    const hour = now.getHours();
-    const day = now.getDay(); // 0 (dimanche) à 6 (samedi)
+    const body = {
+      cart: cart.map(item => ({
+        productId: item.product._id,
+        quantity: item.quantity,
+      })),
+    };
 
-    if (hour >= 18 && hour <= 21) horaire.push("pointe");
-    if (hour >= 22 || hour <= 6) horaire.push("nuit");
-    if (day === 0 || day === 6) horaire.push("weekend");
-
-    const boutiqueGroups = cart.reduce((acc, item) => {
-      const id = item.product.boutique;
-      acc[id] = acc[id] || [];
-      acc[id].push(item);
-      return acc;
-    }, {});
-
-    const results = await Promise.all(
-      Object.entries(boutiqueGroups).map(async ([boutiqueId, items]) => {
-        const loc = items[0]?.product?.boutiqueDetails?.location?.coordinates;
-        if (!Array.isArray(loc)) return { boutiqueId, fee: 0, participation: 0, vehicule: "inconnu" };
-
-        const productTotal = items.reduce((sum, { product, quantity }) => sum + (product.price * quantity), 0);
-
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/estimate`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            boutiqueId,
-            items: items.map(({ product, quantity }) => ({
-              product: product._id,
-              quantity,
-              poids_kg: product.poids_kg ?? 0.8,
-              volume_m3: product.volume_m3 ?? 0.003,
-            })),
-            productTotal,
-            deliveryLocation: { lat: clientCoords[1], lng: clientCoords[0] },
-            boutiqueLocation: { lat: loc[1], lng: loc[0] },
-            horaire,
-            vehicule: "velo",
-          }),
-        });
-        const data = await res.json();
-        return {
-          boutiqueId,
-          fee: res.ok && typeof data.deliveryFee === "number" ? data.deliveryFee : 0,
-          participation: data.participation || 0,
-          vehicule: data.vehiculeRecommande || "inconnu"
-        };
-      })
-    );
-
-    const feesMap = {};
-    const vehicleMap = {};
-    const participMap = {};
-    let total = 0;
-    results.forEach(({ boutiqueId, fee, participation, vehicule }) => {
-      feesMap[boutiqueId] = fee;
-      participMap[boutiqueId] = participation;
-      vehicleMap[boutiqueId] = vehicule;
-      total += fee;
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/estimate`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
     });
 
-    setDeliveryFeesPerBoutique(feesMap);
-    setRecommendedVehicles(vehicleMap);
-    setParticipationsPerBoutique(participMap);
-    setDeliveryFee(total);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur serveur");
+
+    setDeliveryFeesPerBoutique(data.fraisParBoutique || {});
+    setRecommendedVehicles(data.vehiculesRecommandes || {});
+    setParticipationsPerBoutique(data.participationsParBoutique || {});
+    setDeliveryFee(data.totalFinal || 0);
   } catch (err) {
     console.error("Erreur estimation livraison :", err);
     alert("Erreur pendant l’estimation de livraison. Veuillez réessayer.");
@@ -123,8 +70,6 @@ export default function PanierModal({ onClose }) {
   const modalRef = useRef();
   const navigate = useNavigate();
 
-  const sousTotal = cart.reduce((sum, { quantity, product }) => sum + quantity * product.price, 0);
-  const totalPrice = sousTotal + (deliveryFee || 0);
 
   useEffect(() => {
     document.body.classList.add("overflow-hidden");
@@ -137,8 +82,8 @@ export default function PanierModal({ onClose }) {
 
 
   useEffect(() => {
-    estimateDelivery(cart, token, userData, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles, setParticipationsPerBoutique);
-  }, [cart, token, userData]);
+    estimateDelivery(cart, token, setDeliveryFee, setLoadingFee, setDeliveryFeesPerBoutique, setRecommendedVehicles, setParticipationsPerBoutique);
+  }, [cart, token]);
 
   useEffect(() => {
     const el = document.getElementById("panier-message");
@@ -296,7 +241,7 @@ export default function PanierModal({ onClose }) {
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-gray-800">Total</span>
-                <span className="text-base font-bold text-[#ed354f]">{totalPrice.toFixed(2)} €</span>
+                <span className="text-base font-bold text-[#ed354f]">{deliveryFee?.toFixed(2)} €</span>
               </div>
               <p id="panier-message" className="text-xs text-gray-500 text-right mt-1 transition-opacity duration-500">
                 Commande simple, livraison fluide.

@@ -41,8 +41,8 @@ export default function Vitrine() {
   const closeNotification = () => setNotification(null);
 
   const { token, userData } = useUserStore();
-  const [estimatedFee, setEstimatedFee] = useState(null);
   const [estimatedDelay, setEstimatedDelay] = useState(null);
+  const [distanceKm, setDistanceKm] = useState(null);
 
   useEffect(() => {
     async function fetchBoutiqueAndProduits() {
@@ -107,49 +107,29 @@ export default function Vitrine() {
         lng: boutique.location.coordinates[0],
       };
 
-      const item = produits?.[0] || {
-        name: "Produit moyen",
-        price: 10,
-        logisticsCategory: "carton_moyen",
-        poids_kg: 0.8,
-        volume_m3: 0.003,
-        quantity: 1,
-      };
-
       try {
-        const response = await fetch(`${API_URL}/orders/estimate`, {
+        const response = await fetch(`${API_URL}/livraison/estimation-simple`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            boutiqueId: boutique._id,
             boutiqueLocation,
-            deliveryLocation,
-            items: [
-              {
-                poids_kg: item.poids_kg ?? 0.8,
-                volume_m3: item.volume_m3 ?? 0.003,
-                quantity: 1
-              }
-            ]
+            deliveryLocation
           }),
         });
 
         const result = await response.json();
-        if (result.deliveryFee) setEstimatedFee(result.deliveryFee);
         if (result.estimatedDelay) setEstimatedDelay(result.estimatedDelay);
-        if (result.distanceKm && !boutique?.distance) {
-          setBoutique((prev) => ({ ...prev, distance: result.distanceKm }));
-        }
+        if (result.distanceKm) setDistanceKm(result.distanceKm);
       } catch (error) {
         console.error("Erreur estimation frais livraison:", error);
       }
     }
 
     estimateFee();
-  }, [boutique, userData, token, produits]);
+  }, [boutique, userData, token]);
 
   if (error) {
     return (
@@ -203,12 +183,12 @@ export default function Vitrine() {
         </Title>
         <p className="text-sm text-gray-600">{boutique.category}</p>
         <p className="text-sm text-gray-500">{boutique.address}</p>
-        {(estimatedFee !== null || estimatedDelay !== null || boutique?.distance) && (
+        {(estimatedDelay !== null || distanceKm) && (
           <div className="mt-4 flex flex-wrap justify-center gap-3 text-gray-800">
-            {boutique?.distance && (
+            {distanceKm && (
               <div className="flex items-center gap-2 px-3 py-1.5 text-sm">
                 <MapPin className="w-4 h-4 text-[#ed354f]" />
-                <span>{boutique.distance.toFixed(1)} km</span>
+                <span>{distanceKm.toFixed(1)} km</span>
               </div>
             )}
             {estimatedDelay !== null && (
