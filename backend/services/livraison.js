@@ -88,3 +88,35 @@ exports.processEstimate = async (data) => {
     estimatedDelay
   };
 };
+
+exports.processSimpleEstimate = async ({ boutiqueLocation, deliveryLocation, vehicule = 'velo' }) => {
+  const toRad = deg => deg * Math.PI / 180;
+  const R = 6371; // Rayon de la Terre en km
+
+  const dLat = toRad(deliveryLocation.lat - boutiqueLocation.lat);
+  const dLon = toRad(deliveryLocation.lng - boutiqueLocation.lng);
+
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(boutiqueLocation.lat)) * Math.cos(toRad(deliveryLocation.lat)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distanceKm = R * c;
+
+  const estimateDelay = (distanceKm, vehicule = "velo") => {
+    const vitesses = {
+      velo: 15,
+      scooter: 30,
+      voiture: 40,
+      camionnette: 30,
+    };
+    const vitesse = vitesses[vehicule] || 15;
+    const tempsEnMinutes = (distanceKm / vitesse) * 60 + 15; // marge de préparation
+    return Math.ceil(tempsEnMinutes);
+  };
+
+  return {
+    distanceKm,
+    estimatedDelay: estimateDelay(distanceKm, vehicule)
+  };
+};

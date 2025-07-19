@@ -27,6 +27,31 @@ function handleValidation(validationFn, reqBody, res) {
 }
 
 /**
+ * Estimer la distances et le temps de livraison
+ */
+const { processSimpleEstimate } = require('../services/livraison');
+
+exports.simpleDistanceEstimate = async (req, res) => {
+  try {
+    const user = req.dbUser;
+    const { boutiqueLocation, deliveryLocation } = req.body;
+
+    if (!boutiqueLocation || !deliveryLocation) {
+      return res.status(400).json({ message: "Coordonnées manquantes." });
+    }
+
+    const estimation = await processSimpleEstimate({
+      boutiqueLocation,
+      deliveryLocation
+    });
+
+    return res.json(estimation);
+  } catch (err) {
+    serverError(res, "Erreur estimation simple distance", err);
+  }
+};
+
+/**
  * Estimer les frais de livraison
  */
 const Product = require('../models/Product');

@@ -108,7 +108,7 @@ export default function Vitrine() {
       };
 
       try {
-        const response = await fetch(`${API_URL}/livraison/estimation-simple`, {
+        const response = await fetch(`${API_URL}/orders/estimation-simple`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
