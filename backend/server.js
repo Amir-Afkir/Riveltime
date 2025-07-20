@@ -8,14 +8,15 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// 👉 À mettre avant jwtCheck : route Stripe Webhook non protégée
+app.use('/stripe/webhook', express.raw({ type: 'application/json' }), require('./routes/stripeWebhook'));
+
 // Middleware auth
 const { jwtCheck, injectUser, createUserIfNotExists } = require('./middleware/auth');
 
 // Middleware globaux
 app.use(cors());
 app.use(express.json());
-app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
-app.use('/stripe', require('./routes/stripeWebhook'));
 
 // ✅ Connexion MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -50,9 +51,13 @@ app.use('/produits', require('./routes/publicProductRoutes')); // uniquement get
 // =====================================================
 // 🔐 MIDDLEWARE JWT (appliqué après les routes publiques)
 // =====================================================
+
+// 🔐 Middleware global JWT (appliqué à toutes les autres routes)
 app.use(jwtCheck, injectUser, createUserIfNotExists);
 
 const stripeRoutes = require('./routes/paymentRoutes');
+app.use('/stripe', stripeRoutes);
+
 
 
 // ====================================
@@ -62,9 +67,6 @@ app.use('/users', require('./routes/userRoutes'));
 app.use('/produits', require('./routes/productRoutes')); // create/update/delete/mine
 app.use('/notifications', require('./routes/notificationRoutes'));
 app.use('/orders', require('./routes/orderRoutes')); 
-
-app.use('/stripe', jwtCheck, injectUser, createUserIfNotExists, stripeRoutes);
-
 // ====================================
 // 🧪 Route test sécurisée
 // ====================================

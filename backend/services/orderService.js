@@ -4,10 +4,7 @@ const Boutique = require('../models/Boutique');
 const groupCartByBoutique = require('../utils/groupCartByBoutique');
 
 const {
-  calculerPoidsFacture,
-  calculerFraisLivraison,
-  calculerParticipation,
-  recommanderVehicule,
+  computeDeliveryForBoutique
 } = require('../utils/logistique');
 
 /**
@@ -17,102 +14,127 @@ const {
  * @returns {Promise<Object>} commande créée
  */
 exports.processOrderCreation = async (data, user) => {
-  const { produits, infosClient, livraison, totalProduits } = data;
+  const { produits } = data;
 
-  // Étape 1 : récupérer les produits et regrouper par boutique
+  if (!produits?.length) {
+    throw new Error("Panier vide ou invalide.");
+  }
+
+  const infosClient = user?.infosClient;
+  const livraison = {
+    latitude: infosClient?.latitude,
+    longitude: infosClient?.longitude
+  };
+
   const productIds = produits.map(p => p.product);
   const products = await Product.find({ _id: { $in: productIds } });
+  console.log("📄 Produits en base:", products.map(p => ({ id: p._id, name: p.name, price: p.price })));
+
   const groupedCart = groupCartByBoutique(produits);
+  console.log("🛒 Produits reçus:", produits);
+  console.log("📦 Produits groupés par boutique:", groupedCart);
 
   const ordersParBoutique = [];
 
-  // Étape 2 : traiter chaque boutique séparément
   for (const boutiqueId of Object.keys(groupedCart)) {
     const boutique = await Boutique.findById(boutiqueId);
-    if (!boutique) throw new Error("Boutique introuvable");
-
+    console.log("🏪 Boutique trouvée:", boutique?.name || boutiqueId);
     const items = groupedCart[boutiqueId];
+    console.log("🧾 Items de cette boutique:", items);
 
-    // Calcul poids, volume et total produits
-    let poidsKg = 0, volumeM3 = 0, produitTotal = 0;
-
-    for (const item of items) {
-      const prod = products.find(p => p._id.toString() === item.product);
-      if (!prod || prod.prix !== item.prix) {
-        throw new Error("Produit invalide ou modifié");
-      }
-
-      poidsKg += prod.poids_kg * item.quantite;
-      volumeM3 += prod.volume_m3 * item.quantite;
-      produitTotal += prod.prix * item.quantite;
-    }
-
-    // Estimation véhicule & frais de livraison
-    const vehicule = recommanderVehicule({
-      poids_kg: poidsKg,
-      volume_m3: volumeM3,
-      distance_km: livraison.distance
+    const result = computeDeliveryForBoutique({
+      items,
+      products,
+      boutique,
+      livraison
     });
+    console.log("🚚 Détails de livraison pour", boutique.name, ":", result);
 
-    const deliveryFee = calculerFraisLivraison({
-      poidsKg,
-      volumeM3,
-      distanceKm: livraison.distance,
-      horaire: horaire,
-      vehicule
-    });
-
-    // Calcul participation (si activée)
-    let participation = 0;
-    let finalDeliveryFee = deliveryFee;
-
-    if (boutique.activerParticipation) {
-      const participationPourcent = boutique.participationPourcent ?? 50;
-      const contributionPourcent = boutique.contributionLivraisonPourcent ?? 20;
-
-      participation = calculerParticipation(
-        deliveryFee,
-        produitTotal,
-        participationPourcent,
-        contributionPourcent
-      );
-
-      finalDeliveryFee = deliveryFee - participation;
-    }
-
-    // Ajouter la sous-commande
     ordersParBoutique.push({
       boutique: boutique._id,
-      produits: items,
-      vehicule,
-      fraisLivraison: finalDeliveryFee,
-      participation,
-      statut: "en_attente"
+      produitsTotal: result.produitTotal,
+      fraisLivraison: result.finalDeliveryFee,
+      participation: result.participation,
+      items: items.map(i => ({ product: i.product, quantity: i.quantite })),
+      vendeurStripeId: boutique.stripeId || 'demo_seller',
+      transferGroup: `order-${Date.now()}`
     });
   }
 
-  // Étape 3 : sauvegarder la commande complète
+  const totalProduits = produits.reduce((sum, p) => {
+    const produit = products.find(pr => pr._id.toString() === p.product);
+    return sum + (produit?.price || 0) * p.quantite;
+  }, 0);
+
+  const totalLivraison = ordersParBoutique.reduce((sum, o) => sum + o.fraisLivraison, 0);
+
   const newOrder = new Order({
     client: user.id,
-    infosClient,
-    livraison,
-    totalProduits,
+    deliveryAddress: infosClient?.adresse || 'Adresse non spécifiée',
+    deliveryLocation: {
+      lat: livraison.latitude,
+      lng: livraison.longitude
+    },
+    totalPrice: totalProduits + totalLivraison,
+    deliveryFee: totalLivraison,
+    items: produits.map(p => ({ product: p.product, quantity: p.quantite })),
     ordersParBoutique
   });
 
+  console.log("✅ Nouvelle commande créée:", newOrder._id);
   await newOrder.save();
   return newOrder;
 };
-
 /**
  * Récupère les commandes d'un utilisateur donné
  * @param {String} userId
  * @returns {Promise<Array>}
  */
 exports.getUserOrders = async (userId) => {
-  return Order.find({ client: userId })
-    .populate('ordersParBoutique.boutique')
-    .sort({ createdAt: -1 });
+  const orders = await Order.find({ client: userId }).sort({ createdAt: -1 }).lean();
+
+  for (const order of orders) {
+    for (const ob of order.ordersParBoutique) {
+      // Charger la boutique
+      const boutique = await Boutique.findById(ob.boutique).lean();
+      ob.nomBoutique = boutique?.name || "Boutique inconnue";
+
+      // Charger les produits
+      const produitsDetails = await Promise.all(
+        ob.items.map(async (item) => {
+          const produit = await Product.findById(item.product).lean();
+          return {
+            productId: item.product.toString(),
+            nomProduit: produit?.name || "Produit inconnu",
+            quantite: item.quantity,
+            prixUnitaire: produit?.price || 0
+          };
+        })
+      );
+
+      ob.produits = produitsDetails;
+
+      // Calculs
+      ob.totalBoutique = produitsDetails.reduce(
+        (acc, p) => acc + (p.prixUnitaire * p.quantite),
+        0
+      ) + (ob.fraisLivraison || 0);
+
+      ob.participationBoutique = ob.participation || 0;
+    }
+
+    // 💡 Ici captureStatus est correctement évalué
+    const capture = order.captureStatus;
+
+    order.totalFinal = order.totalPrice || 0;
+    order.statutPaiement = ['authorized', 'succeeded', 'canceled', 'failed'].includes(capture)
+      ? capture
+      : 'unknown';
+
+    order.statutLivraison = 'en_attente'; // à adapter selon ton système
+  }
+
+  return orders;
 };
 
 /**

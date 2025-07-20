@@ -3,29 +3,29 @@ import axios from "axios";
 import Section from "../../components/ui/Section";
 import Title from "../../components/ui/Title";
 import OrderCard from "../../components/logic/OrderCard";
-import useUserStore from "../../stores/userStore"; // ✅ store
-
-const getTokenSilentlyFromStore = useUserStore.getState().getTokenSilentlyFn;
 
 export default function CommandesClient() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const token = await getTokenSilentlyFromStore();
-        if (!token) throw new Error("Token manquant");
+        const token = localStorage.getItem("accessToken");
+        if (!token) throw new Error("Token introuvable dans le localStorage");
 
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/orders/me`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        setOrders(response.data);
-      } catch (error) {
-        console.error("Erreur lors du chargement des commandes :", error);
+        setOrders(res.data);
+      } catch (err) {
+        console.error("❌ Erreur chargement commandes :", err);
+        setError("Une erreur est survenue lors du chargement de vos commandes.");
       } finally {
         setLoading(false);
       }
@@ -37,26 +37,37 @@ export default function CommandesClient() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
-        <div className="text-gray-500 animate-pulse">Chargement des commandes...</div>
+        <p className="text-gray-500 animate-pulse">Chargement de vos commandes...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <p className="text-red-500 text-center">{error}</p>
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Title level={4} className="text-gray-500 text-center">
+          Vous n’avez passé aucune commande pour le moment.
+        </Title>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {orders.length === 0 ? (
-        <div className="flex items-center justify-center h-[60vh]">
-          <Title level={4} className="text-center text-gray-500">
-            Aucune commande pour le moment.
-          </Title>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <OrderCard key={order._id} order={order} />
-          ))}
-        </div>
-      )}
-    </div>
+    <section className="pt-4 px-4">
+      <Title level={2}>Mes commandes</Title>
+      <div className="space-y-4 mt-4">
+        {orders.map((order) => (
+          <OrderCard key={order._id} order={order} />
+        ))}
+      </div>
+    </section>
   );
 }

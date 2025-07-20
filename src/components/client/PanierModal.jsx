@@ -61,7 +61,7 @@ const updateRandomMessage = (el) => {
 
 export default function PanierModal({ onClose }) {
   const { token, userData } = useUserStore();
-  const { cart, removeFromCart, placeOrder, addToCart } = useCartStore();
+  const { cart, removeFromCart, placeOrder, addToCart, clearCart } = useCartStore();
   const [deliveryFee, setDeliveryFee] = useState(null);
   const [loadingFee, setLoadingFee] = useState(false);
   const [deliveryFeesPerBoutique, setDeliveryFeesPerBoutique] = useState({});
@@ -91,6 +91,13 @@ export default function PanierModal({ onClose }) {
     updateRandomMessage(el);
     const interval = setInterval(() => updateRandomMessage(el), 5000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") === "true") {
+      clearCart(); // 🧠 Vider le panier après un paiement réussi
+    }
   }, []);
 
     const handleOrder = async () => {
@@ -133,11 +140,7 @@ export default function PanierModal({ onClose }) {
         return;
       }
 
-      placeOrder(cart, {
-        deliveryFeesPerBoutique,
-        participationsPerBoutique,
-        totalLivraison: deliveryFee
-      });
+      // La commande sera désormais créée uniquement après paiement réussi (via webhook Stripe)
 
       window.location.href = data.url;
     } catch (err) {

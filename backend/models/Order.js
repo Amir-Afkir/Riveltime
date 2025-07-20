@@ -38,11 +38,19 @@ const orderSchema = new mongoose.Schema({
     lng: Number
   },
   paymentIntentId: { type: String }, // ID Stripe de l’intention de paiement
+  checkoutSessionId: { type: String },
   captureStatus: {
     type: String,
-    enum: ['non_capture', 'capture_effectuée', 'capture_echouee'],
-    default: 'non_capture',
+    enum: ['authorized', 'succeeded', 'canceled', 'failed'],
+    default: 'authorized',
   },
+  stripeStatusHistory: [
+    {
+      status: { type: String },
+      event: { type: String },
+      date: { type: Date, default: Date.now }
+    }
+  ],
   placedAt: { type: Date, default: Date.now },
   ordersParBoutique: [orderParBoutiqueSchema],
 }, { timestamps: true });

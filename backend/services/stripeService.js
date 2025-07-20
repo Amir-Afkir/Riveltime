@@ -125,4 +125,19 @@ const createTransfersAfterCapture = async (paymentIntentId) => {
   }
 };
 
-module.exports = { createPaymentIntent, createTransfersAfterCapture };
+const capturePaymentIntent = async (paymentIntentId) => {
+  try {
+    const paymentIntent = await stripe.paymentIntents.capture(paymentIntentId);
+    console.log(`✅ Paiement capturé pour ${paymentIntentId}`);
+    return paymentIntent;
+  } catch (error) {
+    console.error(`❌ Erreur lors de la capture du paiement ${paymentIntentId} :`, error);
+    throw error;
+  }
+};
+
+module.exports = {
+  createPaymentIntent,
+  createTransfersAfterCapture,
+  capturePaymentIntent,
+};

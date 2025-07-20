@@ -209,7 +209,8 @@ exports.createOrder = async (req, res) => {
  */
 exports.getOrdersByUser = async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.userId;
+    const userId = req.dbUser?._id; // 👈 c’est bien ça qu’il faut
+
     const orders = await getUserOrders(userId);
     res.json(orders);
   } catch (err) {
