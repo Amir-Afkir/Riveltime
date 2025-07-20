@@ -1,3 +1,4 @@
+import useUserStore from "../../stores/userStore";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Section from "../../components/ui/Section";
@@ -8,17 +9,18 @@ export default function CommandesClient() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const { token, getTokenSilentlyFn } = useUserStore();
+  const getToken = getTokenSilentlyFn();
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) throw new Error("Token introuvable dans le localStorage");
+        const accessToken = token || (getToken && await getToken());
+        if (!accessToken) throw new Error("Aucun token disponible");
 
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders/me`, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         });
 
@@ -32,7 +34,7 @@ export default function CommandesClient() {
     };
 
     fetchOrders();
-  }, []);
+  }, [token]);
 
   if (loading) {
     return (

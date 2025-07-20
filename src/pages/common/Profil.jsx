@@ -104,7 +104,8 @@ export default function ProfilCommun({ isLoading }) {
     deleteAccount: useUserStore.getState().deleteAccount,
     getTokenSilentlyFromStore: useUserStore.getState().getTokenSilently,
   }), []);
-  const { getTokenSilently, logout } = useAuth0();
+  const { logout } = useAuth0();
+  const getTokenSilently = useUserStore.getState().getTokenSilently;
 
   // 🧠 State local
   const [isEditing, setIsEditing] = useState(false); // Edition du profil
@@ -214,7 +215,7 @@ export default function ProfilCommun({ isLoading }) {
   const handleUpdate = async (formData) => {
     try {
       setIsUpdating(true);
-      const token = localStorage.getItem("accessToken");
+      const token = await getTokenSilently();
       const res = await fetch(`${VITE_API_URL}/users/me`, {
         method: "PUT",
         headers: {
