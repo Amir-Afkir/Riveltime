@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+// Vérifie si des coordonnées précises sont bien récupérées depuis la suggestion
 import { LocateIcon, RouteIcon } from "lucide-react";
 import useUserStore from "../../stores/userStore";
 import Title from "../../components/ui/Title";
@@ -6,55 +7,93 @@ import Section from "../../components/ui/Section";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 
+const nextStatus = {
+  en_attente: "en_cours",
+  en_cours: "presque",
+  presque: "terminee",
+  terminee: "terminee",
+};
+
+const statusLabels = {
+  en_attente: "En attente de confirmation",
+  en_cours: "Commande à récupérer",
+  presque: "En route pour la livraison",
+  terminee: "Commande livrée",
+};
+
 export default function Courses() {
   const [status, setStatus] = useState("en_attente");
-
   const [orders, setOrders] = useState([]);
-
   const token = useUserStore(state => state.token);
-
   const [filterType, setFilterType] = useState("autour"); // "autour" ou "itineraire"
   const [depart, setDepart] = useState("");
   const [arrivee, setArrivee] = useState("");
   const [rayon, setRayon] = useState("5"); // en km, string pour compatibilité URLSearchParams
 
-  useEffect(() => {
+  const [adresseSuggestions, setAdresseSuggestions] = useState([]);
+  const adresseInputRef = useRef(null);
+  // Ajout coordsAutour pour stocker les coordonnées précises sélectionnées
+  const [coordsAutour, setCoordsAutour] = useState(null);
+
+
+useEffect(() => {
+  const fetchOrders = async () => {
+    if (filterType === "autour" && coordsAutour === null) {
+      // Récupération sans filtre géographique : toutes les annonces
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/livreur/pending`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        if (!res.ok || !Array.isArray(data)) {
+          console.error("Erreur API ou réponse inattendue :", data);
+          setOrders([]);
+          return;
+        }
+
+        setOrders(data);
+      } catch (err) {
+        console.error("Erreur lors du chargement des commandes :", err);
+        setOrders([]);
+      }
+      return;
+    }
+    if (filterType !== "autour") setCoordsAutour(null);
+
     let url = `${import.meta.env.VITE_API_URL}/orders/livreur/pending`;
     const params = new URLSearchParams();
 
-    if (filterType === "itineraire" && depart && arrivee) {
-      params.append("depart", depart);
-      params.append("arrivee", arrivee);
-    } else if (filterType === "autour" && arrivee) {
-      params.append("autour", arrivee);
-      params.append("rayon", parseFloat(rayon));
+    const rayonFloat = parseFloat(rayon);
+    if (coordsAutour && coordsAutour.lat && coordsAutour.lon) {
+      params.append("lat", coordsAutour.lat);
+      params.append("lon", coordsAutour.lon);
+      params.append("rayon", isNaN(rayonFloat) ? 5 : rayonFloat);
     }
 
     if (params.toString()) url += `?${params.toString()}`;
 
-    fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (!res.ok || !Array.isArray(data)) {
+        console.error("Erreur API ou réponse inattendue :", data);
+        setOrders([]);
+        return;
       }
-    })
-      .then(res => res.json())
-      .then(data => setOrders(data))
-      .catch(console.error);
-  }, [filterType, depart, arrivee, rayon, token]);
 
-  const nextStatus = {
-    en_attente: "en_cours",
-    en_cours: "presque",
-    presque: "terminee",
-    terminee: "terminee",
+      setOrders(data);
+    } catch (err) {
+      console.error("Erreur lors du chargement des commandes :", err);
+      setOrders([]);
+    }
   };
 
-  const statusLabels = {
-    en_attente: "En attente de confirmation",
-    en_cours: "Commande à récupérer",
-    presque: "En route pour la livraison",
-    terminee: "Commande livrée",
-  };
+  fetchOrders();
+}, [coordsAutour, filterType]);
 
   const handleAdvance = () => {
     setStatus(nextStatus[status]);
@@ -101,7 +140,7 @@ export default function Courses() {
               placeholder="Adresse de départ"
               value={depart}
               onChange={(e) => setDepart(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-[15px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
+              className="w-full pl-10 pr-4 py-2 text-[16px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
             />
           </div>
           <div className="relative w-full">
@@ -113,7 +152,7 @@ export default function Courses() {
               placeholder="Adresse d’arrivée"
               value={arrivee}
               onChange={(e) => setArrivee(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-[15px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
+              className="w-full pl-10 pr-4 py-2 text-[16px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
             />
           </div>
         </div>
@@ -127,9 +166,43 @@ export default function Courses() {
               type="text"
               placeholder="Adresse autour de..."
               value={arrivee}
-              onChange={(e) => setArrivee(e.target.value)}
+              onChange={async (e) => {
+                const value = e.target.value;
+                setArrivee(value);
+                if (value.length > 3) {
+                  const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${value}`);
+                  const dataAPI = await res.json();
+                  setAdresseSuggestions(dataAPI.features || []);
+                } else {
+                  setAdresseSuggestions([]);
+                }
+              }}
               className="w-full pl-10 pr-4 py-2 text-[15px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
+              autoComplete="off"
+              ref={adresseInputRef}
             />
+            {adresseSuggestions.length > 0 && (
+              <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-48 overflow-auto text-sm">
+                {adresseSuggestions.map((sug) => (
+                  <li
+                    key={sug.properties.id}
+                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setArrivee(sug.properties.label);
+                      setAdresseSuggestions([]);
+
+                      // ➕ Récupération des coordonnées GPS
+                      const [lon, lat] = sug.geometry.coordinates;
+                      console.log("Coordonnées sélectionnées :", lat, lon);
+                      setCoordsAutour({ lat, lon });
+                    }}
+                  >
+                    {sug.properties.label}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <input
             type="number"
@@ -138,7 +211,7 @@ export default function Courses() {
             placeholder="Rayon"
             value={rayon}
             onChange={(e) => setRayon(e.target.value.replace(/[^\d.]/g, ""))}
-            className="border border-gray-300 rounded-full px-4 py-2 w-20 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
+            className="border border-gray-300 rounded-full px-4 py-2 w-20 text-[16px] focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
           />
         </div>
       )}

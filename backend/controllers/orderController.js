@@ -109,22 +109,23 @@ async function getOrdersByUser(req, res) {
  * Rendre visible les commandes pour chaque livreur
  */
 
+import { geocodeAdresse } from '../utils/geocodeAdresse.js';
+
 async function getPendingOrdersForLivreur(req, res) {
   try {
     const { autour, rayon } = req.query;
     const rayonKm = parseFloat(rayon);
-
     let autourCoords;
-    if (autour) {
-      const response = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(autour)}`);
-      const data = await response.json();
-      if (data.features.length === 0) {
-        return res.status(400).json({ message: "Adresse non trouvée" });
+
+    if (autour && autour.length >= 3) {
+      try {
+        const geo = await geocodeAdresse(autour);
+        autourCoords = { latitude: geo.lat, longitude: geo.lon };
+      } catch (e) {
+        return res.status(400).json({ message: e.message });
       }
-      autourCoords = {
-        latitude: data.features[0].geometry.coordinates[1],
-        longitude: data.features[0].geometry.coordinates[0],
-      };
+    } else if (autour) {
+      return res.status(400).json({ message: "Adresse invalide : trop courte" });
     }
 
     const allOrders = await Order.find({ status: 'pending', deliverer: null })
