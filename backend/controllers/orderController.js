@@ -113,11 +113,16 @@ import { geocodeAdresse } from '../utils/geocodeAdresse.js';
 
 async function getPendingOrdersForLivreur(req, res) {
   try {
-    const { autour, rayon } = req.query;
+    const { autour, rayon, lat, lon } = req.query;
     const rayonKm = parseFloat(rayon);
     let autourCoords;
 
-    if (autour && autour.length >= 3) {
+    if (lat && lon) {
+      autourCoords = {
+        latitude: parseFloat(lat),
+        longitude: parseFloat(lon),
+      };
+    } else if (autour && autour.length >= 3) {
       try {
         const geo = await geocodeAdresse(autour);
         autourCoords = { latitude: geo.lat, longitude: geo.lon };
@@ -136,19 +141,37 @@ async function getPendingOrdersForLivreur(req, res) {
     }
 
     const ordersFiltrees = allOrders.filter(order => {
+      if (!order.boutiqueLocation || !order.deliveryLocation) return false;
+
       const boutiqueCoords = {
-        latitude: order.boutiqueLocation.coordinates[1],
-        longitude: order.boutiqueLocation.coordinates[0],
+        latitude: order.boutiqueLocation.lat,
+        longitude: order.boutiqueLocation.lng,
       };
       const clientCoords = {
-        latitude: order.deliveryLocation.coordinates[1],
-        longitude: order.deliveryLocation.coordinates[0],
+        latitude: order.deliveryLocation.lat,
+        longitude: order.deliveryLocation.lng,
       };
 
       const distBoutique = haversine(autourCoords, boutiqueCoords) / 1000;
       const distClient = haversine(autourCoords, clientCoords) / 1000;
 
+      console.log({
+        orderId: order._id,
+        boutiqueAddress: order.boutique?.adresseComplete || 'inconnue',
+        clientAddress: order.client?.infosClient?.adresse || 'inconnue',
+        boutiqueCoords,
+        clientCoords,
+        autourCoords,
+        distBoutique,
+        distClient,
+        rayonKm
+      });
+
       return distBoutique <= rayonKm || distClient <= rayonKm;
+    });
+    // Log each filtered order
+    ordersFiltrees.forEach(order => {
+      console.log('Commande filtrée pour livreur:', order._id);
     });
 
     res.json(ordersFiltrees);
