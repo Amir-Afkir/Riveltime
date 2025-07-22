@@ -57,8 +57,8 @@ export default function BottomNav() {
     ];
   } else if (path.startsWith("/livreur")) {
     navItems = [
-      { label: "Dashboard", path: "/livreur/dashboard", icon: Bike },
-      { label: "Courses", path: "/livreur/courses", icon: Mail },
+      { label: "Dashboard", path: "/livreur/dashboard", icon: Home },
+      { label: "Courses", path: "/livreur/courses", icon: Bike },
       { label: "Historique", path: "/livreur/historique", icon: Scroll },
       { label: "Profil", path: "/livreur/profil", icon: User },
     ];
