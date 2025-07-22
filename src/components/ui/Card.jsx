@@ -40,7 +40,7 @@ const injectKeyframes = () => {
   document.head.appendChild(style);
 };
 
-export default function Card({ title, children, className = "", delay = 0 }) {
+export default function Card({ title, action, children, className = "", delay = 0 }) {
   useEffect(() => {
     injectKeyframes();
   }, []);
@@ -50,9 +50,13 @@ export default function Card({ title, children, className = "", delay = 0 }) {
       className={`fade-in-up rounded-2xl bg-white/80 backdrop-blur-sm shadow-md border border-gray-100 p-4 mb-5 transition-all duration-300 ${className}`}
       style={{ "--fade-delay": `${delay}ms` }}
     >
-      {title && <h2 className="text-base font-semibold text-gray-800 mb-2">{title}</h2>}
+      {title && (
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-base font-semibold text-gray-800">{title}</h2>
+          {action && <div>{action}</div>}
+        </div>
+      )}
       <div className="space-y-3 text-sm text-gray-700">{children}</div>
     </div>
   );
 }
-
