@@ -101,55 +101,74 @@ export default function PanierModal({ onClose }) {
   }, []);
 
     const handleOrder = async () => {
-    try {
-      const cartToSend = cart.map(item => ({
-        productId: item.product._id,
-        quantity: item.quantity,
-        prix: item.product.price, // 👈 obligatoire pour Stripe
-        nom: item.product.name,   // 👈 utile pour affichage produit Stripe
-        boutiqueId: item.product.boutique, // ✅ AJOUTÉ
-        livraison: deliveryFeesPerBoutique[item.product.boutique] || 0,
-        participation: participationsPerBoutique[item.product.boutique] || 0,
-        livreurStripeId: item.product.boutiqueDetails?.livreurStripeId || "",
-        merchant: item.merchant || ""
+      const boutiqueId = cart[0]?.product?.boutique || "default_boutique";
+      const boutiqueName = cart[0]?.merchant || "Boutique";
+
+      const produits = cart.map(({ product, quantity }) => ({
+        productId: product._id,
+        name: product.name,
+        price: product.price,
+        quantity,
       }));
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/stripe/checkout`, {
+      const produitsTotal = produits.reduce(
+        (acc, p) => acc + p.price * p.quantity,
+        0
+      );
+
+      const fraisLivraison = deliveryFeesPerBoutique[boutiqueId] || 0;
+      const participation = participationsPerBoutique[boutiqueId] || 0;
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/stripe/multi-payment-intents`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          cart: cartToSend,
-          user: {
-            email: userData.email,
-            sub: userData.sub,
-            deliveryAddress: userData.infosClient?.adresseComplete || "",
-            deliveryLocation: {
-              lat: userData.infosClient?.latitude,
-              lng: userData.infosClient?.longitude,
-            },
-          }
+          cart: cart.map(({ product, quantity }) => ({
+            productId: product._id,
+            quantity,
+          })),
         }),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.url) {
-        alert("Erreur lors de la création de la session de paiement.");
+      if (!res.ok) throw new Error(data.error || "Erreur serveur");
+
+      const intent = data.paymentIntents.find(i => i.boutiqueId === boutiqueId);
+      const clientSecret = intent?.clientSecret;
+      if (!clientSecret) throw new Error("Client secret manquant pour cette boutique");
+
+      if (!clientSecret) {
+        alert("Impossible de récupérer les informations de paiement pour cette boutique.");
         return;
       }
 
-      // La commande sera désormais créée uniquement après paiement réussi (via webhook Stripe)
+      const paymentIntentIds = data.paymentIntents.map(p => p.paymentIntentId);
 
-      window.location.href = data.url;
-    } catch (err) {
-      console.error("Erreur Stripe :", err);
-      alert("Une erreur est survenue pendant la commande.");
-    } finally {
+      const boutiquesById = {};
+      cart.forEach(({ product, merchant }) => {
+        boutiquesById[product.boutique] = merchant;
+      });
+
+      navigate("/client/Checkout", {
+        state: {
+          clientSecret,
+          produits,
+          produitsTotal,
+          deliveryFee,
+          deliveryFeesPerBoutique,
+          participationsPerBoutique,
+          recommendedVehicles,
+          boutiqueName,
+          boutiquesById,
+          paymentIntentIds, // ✅ Ajout ici
+        },
+      });
+
       onClose();
-    }
-  };
+    };
 
   return (
     <div
@@ -228,7 +247,7 @@ export default function PanierModal({ onClose }) {
                     </div>
                     {participationsPerBoutique[id] > 0 && (
                       <div className="flex justify-between items-center text-xs text-green-700 -mt-1 mb-2">
-                        <span className="italic">Participation boutique</span>
+                        <span className="italic">Participation {boutiqueName}</span>
                         <span className="font-medium">- {participationsPerBoutique[id].toFixed(2)} €</span>
                       </div>
                     )}

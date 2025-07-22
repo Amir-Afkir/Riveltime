@@ -2,10 +2,6 @@ const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
 
-
-// Créer une commande
-router.post('/', orderController.createOrder);
-
 // Récupérer les commandes de l'utilisateur
 router.get('/me', orderController.getOrdersByUser);
 
@@ -14,9 +10,6 @@ router.post('/estimation-simple', orderController.simpleDistanceEstimate);
 
 // Estimer les frais de livraison
 router.post('/estimate', orderController.estimateDelivery);
-
-// Mettre à jour le statut d'une commande
-router.patch('/:id/status', orderController.updateOrderStatus);
 
 // Assigner un livreur à une commande
 router.post('/:id/assign-livreur', orderController.assignLivreurToOrder);

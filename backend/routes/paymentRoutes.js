@@ -4,7 +4,8 @@ const {
   createStripeAccountHandler,
   onboardStripeAccountHandler,
   manageStripeAccountHandler,
-  createPaymentIntentHandler,
+  createMultiPaymentIntentsHandler,
+  createOrderAfterConfirmation,
 } = require('../controllers/paymentController');
 
 const router = express.Router();
@@ -21,7 +22,8 @@ router.post('/onboard', onboardStripeAccountHandler);
 // Lien pour gérer son compte Stripe
 router.get('/manage', manageStripeAccountHandler);
 
-// Démarre un paiement
-router.post('/checkout', createPaymentIntentHandler);
+// Démarre un paiement multiple
+router.post('/multi-payment-intents', createMultiPaymentIntentsHandler); 
+router.post('/create', createOrderAfterConfirmation);
 
 module.exports = router;
