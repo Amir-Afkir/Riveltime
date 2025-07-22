@@ -9,7 +9,7 @@ const orderSchema = new mongoose.Schema({
   // --- En-tête de commande (identifiants, client, boutique, produits)
   client: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   deliverer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  boutique: { type: mongoose.Schema.Types.ObjectId, ref: 'boutique', required: true },
+  boutique: { type: mongoose.Schema.Types.ObjectId, ref: 'Boutique', required: true },
   orderNumber: {
     type: String,
     unique: true,
@@ -58,6 +58,7 @@ const orderSchema = new mongoose.Schema({
   // --- Détails logistiques
   vehiculeRecommande: { type: String },
   estimatedDelayMinutes: { type: Number },
+  estimatedDelayFormatted: { type: String },
   poidsTotalKg: { type: Number },
   volumeTotalM3: { type: Number },
   poidsFacture: { type: Number },
@@ -66,7 +67,7 @@ const orderSchema = new mongoose.Schema({
   // --- Détails financiers
   participation: { type: Number, required: true },
   fraisLivraison: { type: Number, required: true },
-  totalSansParticipation: { type: Number },
+  totalLivraison: { type: Number },
   commissionPlateforme: { type: Number },
   
   // --- Historique

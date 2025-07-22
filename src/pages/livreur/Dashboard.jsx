@@ -5,7 +5,7 @@ import Button from "../../components/ui/Button";
 
 export default function DashboardLivreur() {
   return (
-    <div className="space-y-6 text-gray-700">
+    <div className="space-y-6 text-gray-700 px-4 pt-4">
 
       {/* Bloc Statut Global */}
       <Section>

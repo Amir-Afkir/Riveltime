@@ -1,6 +1,7 @@
 // orderController.js
 const { buildEstimationInput, processEstimate, processSimpleEstimate } = require('../utils/estimationPipeline');
 const { serverError } = require('../utils/responseHelpers');
+const Order = require('../models/Order');
 
 const {
   getUserOrders, 
@@ -103,6 +104,23 @@ exports.getOrdersByUser = async (req, res) => {
     res.json(orders);
   } catch (err) {
     serverError(res, 'Erreur récupération commandes utilisateur', err);
+  }
+};
+
+/**
+ * Rendre visible les commandes pour chaque livreur
+ */
+exports.getPendingOrdersForLivreur = async (req, res) => {
+  try {
+    const commandes = await Order.find({
+      status: 'pending',
+      deliverer: null
+    }).populate('client boutique');
+
+    res.json(commandes);
+  } catch (err) {
+    console.error("Erreur dans /orders/livreur/pending :", err);
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 };
 

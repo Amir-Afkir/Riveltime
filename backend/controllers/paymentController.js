@@ -95,6 +95,18 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
     for (const input of groupedEstimations) {
       const estimation = await processEstimate(input);
 
+      function formatDelay(minutes) {
+        if (minutes < 60) return `${minutes} min`;
+        if (minutes < 1440) {
+          const h = Math.floor(minutes / 60);
+          const m = minutes % 60;
+          return m === 0 ? `${h}h` : `${h}h ${m}min`;
+        }
+        const d = Math.floor(minutes / 1440);
+        const h = Math.floor((minutes % 1440) / 60);
+        return h === 0 ? `${d}j` : `${d}j ${h}h`;
+      }
+
       const {
         boutiqueId, 
         vendeurStripeId,
@@ -130,12 +142,14 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
             productId: p.product.toString(),
             quantity: p.quantity
           }))),
+          vehiculeRecommande: estimation.vehiculeRecommande || 'N/A',
           transferGroup,
           poidsFacture: estimation.poidsFacture.toFixed(2),
           poidsKg: estimation.poidsKg.toFixed(2),
           volumeM3: estimation.volumeM3.toFixed(3),
           distanceKm: estimation.distanceKm.toFixed(1),
-          estimatedDelay: estimation.estimatedDelay.toString()
+          estimatedDelay: estimation.estimatedDelay.toString(),
+          estimatedDelayFormatted: formatDelay(estimation.estimatedDelay),
         },
         transfer_group: transferGroup,
         application_fee_amount: 0
@@ -197,7 +211,8 @@ const createOrderAfterConfirmation = async (req, res) => {
       poidsKg,
       volumeM3,
       distanceKm,
-      estimatedDelay
+      estimatedDelay,
+      vehiculeRecommande
     } = pi.metadata;
 
     if (!boutiqueId || !produits || !produitsTotal || !livraison || !participation) {
@@ -231,9 +246,10 @@ const createOrderAfterConfirmation = async (req, res) => {
     const poidsFactureVal = parseFloat(poidsFacture);
     const distanceKmVal = parseFloat(distanceKm);
     const estimatedDelayMinutes = parseInt(estimatedDelay);
+    const estimatedDelayFormatted = formatDelay(estimatedDelayMinutes);
 
     const totalPrice = parseFloat(produitsTotal) + parseFloat(livraison);
-    const totalSansParticipation = +(totalPrice + parseFloat(participation)).toFixed(2);
+    const totalLivraison = +(parseFloat(livraison) + parseFloat(participation)).toFixed(2);
 
     const shortId = crypto.randomUUID().slice(0, 6).toUpperCase();
     const orderNumber = `CMD-${shortId}`;
@@ -247,7 +263,7 @@ const createOrderAfterConfirmation = async (req, res) => {
       fraisLivraison: parseFloat(livraison),
       participation: parseFloat(participation),
       deliveryFee: parseFloat(livraison),
-      totalSansParticipation,
+      totalLivraison,
       totalPrice,
 
       deliveryAddress: user.infosClient?.adresseComplete || "Adresse inconnue",
@@ -285,6 +301,8 @@ const createOrderAfterConfirmation = async (req, res) => {
       poidsFacture: poidsFactureVal,
       distanceKm: distanceKmVal,
       estimatedDelayMinutes,
+      estimatedDelayFormatted,
+      vehiculeRecommande: vehiculeRecommande || 'N/A',
 
       codeVerificationClient: crypto.randomUUID().slice(0, 4).toUpperCase()
     });
@@ -308,3 +326,15 @@ module.exports = {
   createMultiPaymentIntentsHandler,
   createOrderAfterConfirmation
 };
+
+function formatDelay(minutes) {
+  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 1440) {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m === 0 ? `${h}h` : `${h}h ${m}min`;
+  }
+  const d = Math.floor(minutes / 1440);
+  const h = Math.floor((minutes % 1440) / 60);
+  return h === 0 ? `${d}j` : `${d}j ${h}h`;
+}
