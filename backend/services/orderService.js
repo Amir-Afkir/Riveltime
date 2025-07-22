@@ -1,6 +1,6 @@
-const Order = require('../models/Order');
-const Product = require('../models/Product');
-const Boutique = require('../models/Boutique');
+import Order from '../models/Order.js';
+import Product from '../models/Product.js';
+import Boutique from '../models/Boutique.js';
 
 /**
  * Crée une nouvelle commande à partir des données client et produit
@@ -14,7 +14,7 @@ const Boutique = require('../models/Boutique');
  * @param {String} userId
  * @returns {Promise<Array>}
  */
-exports.getUserOrders = async (userId) => {
+export const getUserOrders = async (userId) => {
   const orders = await Order.find({ client: userId })
     .sort({ createdAt: -1 })
     .populate('items.product') // ⬅️ Peuple les produits
@@ -68,7 +68,7 @@ exports.getUserOrders = async (userId) => {
  * @param {String} livreurId
  * @returns {Promise<Object>}
  */
-exports.assignDelivererToOrder = async (orderId, livreurId) => {
+export const assignDelivererToOrder = async (orderId, livreurId) => {
   const order = await Order.findOneAndUpdate(
     { _id: orderId },
     {

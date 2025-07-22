@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const infosClientSchema = new mongoose.Schema({
   adresseComplete: { type: String, trim: true },
@@ -40,4 +40,5 @@ const userSchema = new mongoose.Schema({
   notifications: { type: Boolean, default: true },
 }, { timestamps: true });
 
-module.exports = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+export default User;

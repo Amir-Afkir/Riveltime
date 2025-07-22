@@ -40,7 +40,7 @@ function validateProductData(req, res, next) {
   next();
 }
 
-module.exports = {
+export {
   requireVendeurRole,
   validateBoutiqueData,
   validateProductData,

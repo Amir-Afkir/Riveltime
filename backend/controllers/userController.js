@@ -1,9 +1,12 @@
-const cloudinary = require('../config/cloudinary');
-const streamifier = require('streamifier');
+import cloudinary from '../config/cloudinary.js';
+import streamifier from 'streamifier';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const fs = require('fs');
-const path = require('path');
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const defaultsPath = path.join(__dirname, '../../shared/userDefaults.json');
 const { clientDefaults, vendeurDefaults, livreurDefaults } = JSON.parse(fs.readFileSync(defaultsPath, 'utf-8'));
 
@@ -50,7 +53,7 @@ const formatUserProfile = (user) => {
   }
 };
 
-exports.getMyProfile = async (req, res) => {
+export const getMyProfile = async (req, res) => {
   try {
     const dbUser = req.dbUser;
     console.log("🔐 req.user:", req.user);
@@ -67,7 +70,7 @@ exports.getMyProfile = async (req, res) => {
   }
 };
 
-exports.updateMyProfile = async (req, res) => {
+export const updateMyProfile = async (req, res) => {
   try {
     console.log("🔄 Données reçues:", req.body);
 
@@ -128,7 +131,7 @@ exports.updateMyProfile = async (req, res) => {
   }
 };
 
-exports.uploadAvatar = async (req, res) => {
+export const uploadAvatar = async (req, res) => {
   try {
     const dbUser = req.dbUser;
     if (!req.imageData?.secure_url) {
@@ -151,7 +154,7 @@ exports.uploadAvatar = async (req, res) => {
   }
 };
 
-exports.deleteAvatar = async (req, res) => {
+export const deleteAvatar = async (req, res) => {
   try {
     const dbUser = req.dbUser;
     if (!dbUser.avatarUrl) return res.status(400).json({ error: 'Aucun avatar à supprimer' });

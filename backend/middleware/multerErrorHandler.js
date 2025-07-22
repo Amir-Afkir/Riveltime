@@ -1,4 +1,4 @@
-const multer = require('multer');
+import multer from 'multer';
 
 function multerErrorHandler(err, req, res, next) {
   if (err instanceof multer.MulterError) {
@@ -12,4 +12,4 @@ function multerErrorHandler(err, req, res, next) {
   next(err);
 }
 
-module.exports = multerErrorHandler;
+export default multerErrorHandler;

@@ -1,7 +1,12 @@
-const fs = require('fs');
-const path = require('path');
-const { auth } = require('express-oauth2-jwt-bearer');
-const User = require('../models/User');
+import fs from 'fs';
+import path from 'path';
+import { auth } from 'express-oauth2-jwt-bearer';
+import User from '../models/User.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Defaults selon le rôle (clients, vendeurs, livreurs)
 const userDefaults = JSON.parse(fs.readFileSync(path.join(__dirname, '../../shared/userDefaults.json'), 'utf-8'));
@@ -69,4 +74,4 @@ const createUserIfNotExists = async (req, res, next) => {
   }
 };
 
-module.exports = { jwtCheck, injectUser, createUserIfNotExists };
+export { jwtCheck, injectUser, createUserIfNotExists };

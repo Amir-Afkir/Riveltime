@@ -1,9 +1,9 @@
 // backend/controllers/boutiqueController.js
-const Boutique = require('../models/Boutique');
-const Product = require('../models/Product');
-const cloudinary = require('../config/cloudinary');
-const mongoose = require('mongoose');
-
+import Boutique from '../models/Boutique.js';
+import Product from '../models/Product.js';
+import cloudinary from '../config/cloudinary.js';
+import mongoose from 'mongoose';
+import streamifier from 'streamifier';
 
 function isValidObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -19,7 +19,7 @@ function isOwner(user, doc) {
 }
 
 // 🌐 GET - Toutes les boutiques (public)
-exports.getAllBoutiques = async (_req, res) => {
+export async function getAllBoutiques(_req, res) {
   try {
     const boutiques = await Boutique.find()
       .populate('owner', 'avatarUrl fullname')
@@ -28,10 +28,10 @@ exports.getAllBoutiques = async (_req, res) => {
   } catch (err) {
     handleServerError(res, err, 'Erreur récupération boutiques');
   }
-};
+}
 
 // 🔐 GET - Boutiques du vendeur connecté
-exports.getMyBoutiques = async (req, res) => {
+export async function getMyBoutiques(req, res) {
   try {
     const boutiques = await Boutique.find({ owner: req.dbUser._id })
       .populate('owner', 'avatarUrl fullname')
@@ -40,11 +40,10 @@ exports.getMyBoutiques = async (req, res) => {
   } catch (err) {
     handleServerError(res, err, 'Erreur récupération boutiques');
   }
-};
-
+}
 
 // 🌐 GET - Une boutique par ID (public)
-exports.getBoutiqueById = async (req, res) => {
+export async function getBoutiqueById(req, res) {
   const { id } = req.params;
   if (!isValidObjectId(id)) return res.status(400).json({ error: 'ID de boutique invalide.' });
   try {
@@ -56,10 +55,10 @@ exports.getBoutiqueById = async (req, res) => {
   } catch (err) {
     handleServerError(res, err, 'Erreur récupération boutique');
   }
-};
+}
 
 // 🌐 GET - Produits publics d'une boutique (public)
-exports.getProduitsParBoutique = async (req, res) => {
+export async function getProduitsParBoutique(req, res) {
   const { id } = req.params;
   if (!isValidObjectId(id)) return res.status(400).json({ error: 'ID de boutique invalide.' });
   try {
@@ -68,10 +67,10 @@ exports.getProduitsParBoutique = async (req, res) => {
   } catch (err) {
     handleServerError(res, err, 'Erreur récupération produits boutique');
   }
-};
+}
 
 // 🔐 POST - Créer une boutique (privée)
-exports.createBoutique = async (req, res) => {
+export async function createBoutique(req, res) {
   try {
     let {
       name,
@@ -129,7 +128,6 @@ exports.createBoutique = async (req, res) => {
 
     // Sinon, gérer l'upload après la création si une image est présente dans req.file
     if (req.file?.buffer) {
-      const streamifier = require('streamifier');
       const folderPath = `riveltime/${req.dbUser.auth0Id}/boutiques/${boutique._id}`;
       const uploadOptions = {
         folder: folderPath,
@@ -159,10 +157,10 @@ exports.createBoutique = async (req, res) => {
   } catch (err) {
     handleServerError(res, err, 'Erreur création boutique');
   }
-};
+}
 
 // 🔐 PUT - Modifier une boutique (privée)
-exports.updateBoutique = async (req, res) => {
+export async function updateBoutique(req, res) {
   const { id } = req.params;
   if (!isValidObjectId(id)) return res.status(400).json({ error: 'ID de boutique invalide.' });
   try {
@@ -223,10 +221,10 @@ exports.updateBoutique = async (req, res) => {
   } catch (err) {
     handleServerError(res, err, 'Erreur modification boutique');
   }
-};
+}
 
 // 🔐 DELETE - Supprimer une boutique (privée)
-exports.deleteBoutiqueById = async (req, res) => {
+export async function deleteBoutiqueById(req, res) {
   const { id } = req.params;
   if (!isValidObjectId(id)) return res.status(400).json({ error: 'ID de boutique invalide.' });
   try {
@@ -267,4 +265,4 @@ exports.deleteBoutiqueById = async (req, res) => {
   } catch (err) {
     handleServerError(res, err, 'Erreur suppression boutique');
   }
-};
+}

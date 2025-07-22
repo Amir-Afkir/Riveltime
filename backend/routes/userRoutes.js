@@ -1,12 +1,13 @@
 // backend/routes/userRoutes.js
-const express = require('express');
-const router = express.Router();
-const upload = require('../middleware/multerConfig');
-const cloudinaryUpload = require('../middleware/cloudinaryUpload');
+import express from 'express';
+import upload from '../middleware/multerConfig.js';
+import cloudinaryUpload from '../middleware/cloudinaryUpload.js';
 
-const { getMyProfile, updateMyProfile, uploadAvatar, deleteAvatar } = require('../controllers/userController');
-const { jwtCheck, injectUser } = require('../middleware/auth');
-const { requireRole } = require('../middleware/requireRole');
+import { getMyProfile, updateMyProfile, uploadAvatar, deleteAvatar } from '../controllers/userController.js';
+import { jwtCheck, injectUser } from '../middleware/auth.js';
+import { requireRole } from '../middleware/requireRole.js';
+
+const router = express.Router();
 
 // ✅ Middleware global : vérifie le token et injecte l'utilisateur MongoDB
 router.use(jwtCheck, injectUser);
@@ -28,4 +29,4 @@ router.put(
 
 router.delete('/me/avatar', deleteAvatar);
 
-module.exports = router;
+export default router;

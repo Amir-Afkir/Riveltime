@@ -1,4 +1,4 @@
-const stripe = require('../utils/stripeClient');
+import stripe from '../utils/stripeClient.js';
 
 /**
  * Crée un compte Stripe Express pour un utilisateur vendeur
@@ -47,7 +47,7 @@ const generateOnboardingLink = async (stripeAccountId, frontendUrl, role) => {
   return accountLink;
 };
 
-module.exports = {
+export {
   createExpressAccount,
   generateOnboardingLink,
 };

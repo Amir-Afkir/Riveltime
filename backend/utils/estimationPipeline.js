@@ -1,8 +1,8 @@
 // estimationPipeline.js
 // Fusion logique de buildEstimationInput, processEstimate, logistique
 
-const Product = require('../models/Product');
-const Boutique = require('../models/Boutique');
+import Product from '../models/Product.js';
+import Boutique from '../models/Boutique.js';
 
 // --- UTILS LOGISTIQUE ---
 const calculerPoidsFacture = (poidsKg, volumeM3) => Math.max(poidsKg, volumeM3 * 250);
@@ -155,7 +155,7 @@ const processEstimate = async (input) => {
   };
 };
 
-module.exports = {
+export {
   calculerPoidsFacture,
   buildEstimationInput,
   processEstimate,

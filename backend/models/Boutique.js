@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Schéma pour la boutique
@@ -103,4 +103,5 @@ const boutiqueSchema = new mongoose.Schema({
 // Index géospatial 2dsphere pour les requêtes spatiales
 boutiqueSchema.index({ location: '2dsphere' });
 
-module.exports = mongoose.model('Boutique', boutiqueSchema);
+const Boutique = mongoose.model('Boutique', boutiqueSchema);
+export default Boutique;

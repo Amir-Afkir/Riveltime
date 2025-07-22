@@ -1,6 +1,6 @@
 // backend/middleware/cloudinaryUpload.js
-const cloudinary = require('../config/cloudinary');
-const streamifier = require('streamifier');
+import cloudinary from '../config/cloudinary.js';
+import streamifier from 'streamifier';
 
 /**
  * Middleware de traitement Cloudinary
@@ -41,4 +41,4 @@ function cloudinaryUpload(getFolderPath) {
   };
 }
 
-module.exports = cloudinaryUpload;
+export default cloudinaryUpload;

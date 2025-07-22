@@ -1,18 +1,32 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
+import 'dotenv/config';
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
+
+import stripeWebhook from './routes/stripeWebhook.js';
+import { jwtCheck, injectUser, createUserIfNotExists } from './middleware/auth.js';
+import testRoutes from './routes/testRoutes.js';
+import accountRoutes from './routes/accountRoutes.js';
+import addressRoutes from './routes/addressRoutes.js';
+import vendorRoutes from './routes/vendorRoutes.js';
+import boutiqueRoutes from './routes/boutiqueRoutes.js';
+import publicProductRoutes from './routes/publicProductRoutes.js';
+import stripeRoutes from './routes/paymentRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import productRoutes from './routes/productRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // 👉 À mettre avant jwtCheck : route Stripe Webhook non protégée
-app.use('/stripe/webhook', express.raw({ type: 'application/json' }), require('./routes/stripeWebhook'));
+app.use('/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
 
 // Middleware auth
-const { jwtCheck, injectUser, createUserIfNotExists } = require('./middleware/auth');
+// const { jwtCheck, injectUser, createUserIfNotExists } = require('./middleware/auth');
 
 // Middleware globaux
 app.use(cors());
@@ -38,15 +52,15 @@ app.get('/', (req, res) => {
 // ====================================
 // 🌐 ROUTES PUBLIQUES (AVANT jwtCheck)
 // ====================================
-app.use('/', require('./routes/testRoutes'));
-app.use('/account', require('./routes/accountRoutes'));
-app.use('/address', require('./routes/addressRoutes'));
-app.use('/client/accueil', require('./routes/vendorRoutes'));
+app.use('/', testRoutes);
+app.use('/account', accountRoutes);
+app.use('/address', addressRoutes);
+app.use('/client/accueil', vendorRoutes);
 
-app.use('/boutiques', require('./routes/boutiqueRoutes'));
+app.use('/boutiques', boutiqueRoutes);
 
 // ✅ ROUTE PRODUITS PUBLIQUE (produits d’une boutique)
-app.use('/produits', require('./routes/publicProductRoutes')); // uniquement get /produits/boutique/:id
+app.use('/produits', publicProductRoutes); // uniquement get /produits/boutique/:id
 
 // =====================================================
 // 🔐 MIDDLEWARE JWT (appliqué après les routes publiques)
@@ -55,7 +69,6 @@ app.use('/produits', require('./routes/publicProductRoutes')); // uniquement get
 // 🔐 Middleware global JWT (appliqué à toutes les autres routes)
 app.use(jwtCheck, injectUser, createUserIfNotExists);
 
-const stripeRoutes = require('./routes/paymentRoutes');
 app.use('/stripe', stripeRoutes);
 
 
@@ -63,10 +76,10 @@ app.use('/stripe', stripeRoutes);
 // ====================================
 // 🔐 ROUTES PRIVÉES (PROTÉGÉES PAR JWT)
 // ====================================
-app.use('/users', require('./routes/userRoutes'));
-app.use('/produits', require('./routes/productRoutes')); // create/update/delete/mine
-app.use('/notifications', require('./routes/notificationRoutes'));
-app.use('/orders', require('./routes/orderRoutes')); 
+app.use('/users', userRoutes);
+app.use('/produits', productRoutes); // create/update/delete/mine
+app.use('/notifications', notificationRoutes);
+app.use('/orders', orderRoutes); 
 // ====================================
 // 🧪 Route test sécurisée
 // ====================================

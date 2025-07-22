@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { getProduitsParBoutique } = require('../controllers/productController');
+import { getProduitsParBoutique } from '../controllers/productController.js';
 
 // 🌐 Route publique (pas protégée par JWT)
 router.get('/boutique/:id', getProduitsParBoutique);
 
-module.exports = router;
+export default router;

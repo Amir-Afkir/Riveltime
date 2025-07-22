@@ -1,10 +1,12 @@
 // backend/controllers/accountController.js
-const axios = require('axios');
-const User = require('../models/User');
-const cloudinary = require('../config/cloudinary');
+import axios from 'axios';
+import User from '../models/User.js';
+import cloudinary from '../config/cloudinary.js';
+import Boutique from '../models/Boutique.js';
+import Product from '../models/Product.js';
 
 //Supprime le compte utilisateur (Auth0 + MongoDB + Cloudinary)
-exports.deleteMyAccount = async (req, res) => {
+export const deleteMyAccount = async (req, res) => {
   try {
     const userId = req.user?.sub;
     const dbUser = req.dbUser;
@@ -45,8 +47,6 @@ exports.deleteMyAccount = async (req, res) => {
     }
 
     // 🔥 Supprimer les boutiques et produits associés
-    const Boutique = require('../models/Boutique');
-    const Product = require('../models/Product');
 
     const boutiques = await Boutique.find({ owner: dbUser._id });
 
@@ -96,7 +96,7 @@ exports.deleteMyAccount = async (req, res) => {
 };
 
 //Change le mot de passe du compte utilisateur
-exports.requestPasswordReset = async (req, res) => {
+export const requestPasswordReset = async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email requis" });
 

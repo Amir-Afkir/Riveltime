@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const orderController = require('../controllers/orderController');
+import * as orderController from '../controllers/orderController.js';
 
 // Récupérer les commandes de l'utilisateur
 router.get('/me', orderController.getOrdersByUser);
@@ -17,4 +17,4 @@ router.post('/estimate', orderController.estimateDelivery);
 // Assigner un livreur à une commande
 router.post('/:id/assign-livreur', orderController.assignLivreurToOrder);
 
-module.exports = router;
+export default router;

@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
-const Product = require('../models/Product');
-const Boutique = require('../models/Boutique');
-const cloudinary = require('../config/cloudinary');
+import mongoose from 'mongoose';
+import Product from '../models/Product.js';
+import Boutique from '../models/Boutique.js';
+import cloudinary from '../config/cloudinary.js';
 
 // 🚀 Créer un produit
-exports.createProduct = async (req, res) => {
+export const createProduct = async (req, res) => {
   try {
     const { name, price, collectionName, description, boutiqueId } = req.body;
 
@@ -66,7 +66,7 @@ exports.createProduct = async (req, res) => {
 };
 
 // 🛒 Obtenir tous les produits des boutiques du vendeur
-exports.getMyProducts = async (req, res) => {
+export const getMyProducts = async (req, res) => {
   try {
     const boutiques = await Boutique.find({ owner: req.dbUser._id });
     const boutiqueIds = boutiques.map(b => b._id);
@@ -79,7 +79,7 @@ exports.getMyProducts = async (req, res) => {
 };
 
 // 🗑️ Supprimer un produit
-exports.deleteProduct = async (req, res) => {
+export const deleteProduct = async (req, res) => {
   try {
     const produit = await Product.findById(req.params.id).populate('boutique');
     if (!produit || !produit.boutique.owner.equals(req.dbUser._id)) {
@@ -99,7 +99,7 @@ exports.deleteProduct = async (req, res) => {
 };
 
 // ✏️ Modifier un produit
-exports.updateProduct = async (req, res) => {
+export const updateProduct = async (req, res) => {
   try {
     const produit = await Product.findById(req.params.id).populate('boutique');
     if (!produit || !produit.boutique || !produit.boutique.owner.equals(req.dbUser._id)) {
@@ -149,7 +149,7 @@ exports.updateProduct = async (req, res) => {
 };
 
 // 🌐 Produits publics d’une boutique
-exports.getProduitsParBoutique = async (req, res) => {
+export const getProduitsParBoutique = async (req, res) => {
   try {
     const boutiqueId = req.params.id;
 

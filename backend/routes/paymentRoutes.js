@@ -1,12 +1,12 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   getStripeStatusHandler,
   createStripeAccountHandler,
   onboardStripeAccountHandler,
   manageStripeAccountHandler,
   createMultiPaymentIntentsHandler,
   createOrderAfterConfirmation,
-} = require('../controllers/paymentController');
+} from '../controllers/paymentController.js';
 
 const router = express.Router();
 
@@ -26,4 +26,4 @@ router.get('/manage', manageStripeAccountHandler);
 router.post('/multi-payment-intents', createMultiPaymentIntentsHandler); 
 router.post('/create', createOrderAfterConfirmation);
 
-module.exports = router;
+export default router;

@@ -1,17 +1,15 @@
 // orderController.js
-const { buildEstimationInput, processEstimate, processSimpleEstimate } = require('../utils/estimationPipeline');
-const { serverError } = require('../utils/responseHelpers');
-const Order = require('../models/Order');
-
-const {
-  getUserOrders, 
-  assignDelivererToOrder
-} = require('../services/orderService');
+import { buildEstimationInput, processEstimate, processSimpleEstimate } from '../utils/estimationPipeline.js';
+import { serverError } from '../utils/responseHelpers.js';
+import Order from '../models/Order.js';
+import { getUserOrders, assignDelivererToOrder } from '../services/orderService.js';
+import haversine from 'haversine-distance';
+import fetch from 'node-fetch';
 
 /**
  * Estimer la distances et le temps de livraison
  */
-exports.simpleDistanceEstimate = async (req, res) => {
+async function simpleDistanceEstimate(req, res) {
   try {
     const user = req.dbUser;
     const { boutiqueLocation, deliveryLocation } = req.body;
@@ -29,12 +27,12 @@ exports.simpleDistanceEstimate = async (req, res) => {
   } catch (err) {
     serverError(res, "Erreur estimation simple distance", err);
   }
-};
+}
 
 /**
  * Devis commande
  */
-exports.estimateDelivery = async (req, res) => {
+async function estimateDelivery(req, res) {
   try {
     const user = req.dbUser;
     const { cart } = req.body;
@@ -91,12 +89,12 @@ exports.estimateDelivery = async (req, res) => {
     console.error("❌ Erreur estimation livraison :", err);
     res.status(500).json({ message: "Erreur lors de l'estimation de livraison." });
   }
-};
+}
 
 /**
  * Récupérer les commandes d’un utilisateur
  */
-exports.getOrdersByUser = async (req, res) => {
+async function getOrdersByUser(req, res) {
   try {
     const userId = req.dbUser?._id; // 👈 c’est bien ça qu’il faut
 
@@ -105,29 +103,63 @@ exports.getOrdersByUser = async (req, res) => {
   } catch (err) {
     serverError(res, 'Erreur récupération commandes utilisateur', err);
   }
-};
+}
 
 /**
  * Rendre visible les commandes pour chaque livreur
  */
-exports.getPendingOrdersForLivreur = async (req, res) => {
-  try {
-    const commandes = await Order.find({
-      status: 'pending',
-      deliverer: null
-    }).populate('client boutique');
 
-    res.json(commandes);
+async function getPendingOrdersForLivreur(req, res) {
+  try {
+    const { autour, rayon } = req.query;
+    const rayonKm = parseFloat(rayon);
+
+    let autourCoords;
+    if (autour) {
+      const response = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(autour)}`);
+      const data = await response.json();
+      if (data.features.length === 0) {
+        return res.status(400).json({ message: "Adresse non trouvée" });
+      }
+      autourCoords = {
+        latitude: data.features[0].geometry.coordinates[1],
+        longitude: data.features[0].geometry.coordinates[0],
+      };
+    }
+
+    const allOrders = await Order.find({ status: 'pending', deliverer: null })
+      .populate('client boutique');
+
+    if (!autourCoords || isNaN(rayonKm)) {
+      return res.json(allOrders);
+    }
+
+    const ordersFiltrees = allOrders.filter(order => {
+      const boutiqueCoords = {
+        latitude: order.boutiqueLocation.coordinates[1],
+        longitude: order.boutiqueLocation.coordinates[0],
+      };
+      const clientCoords = {
+        latitude: order.deliveryLocation.coordinates[1],
+        longitude: order.deliveryLocation.coordinates[0],
+      };
+
+      const distBoutique = haversine(autourCoords, boutiqueCoords) / 1000;
+      const distClient = haversine(autourCoords, clientCoords) / 1000;
+
+      return distBoutique <= rayonKm || distClient <= rayonKm;
+    });
+
+    res.json(ordersFiltrees);
   } catch (err) {
     console.error("Erreur dans /orders/livreur/pending :", err);
     res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
-};
-
+}
 /**
  * Assigner un livreur à une commande
  */
-exports.assignLivreurToOrder = async (req, res) => {
+async function assignLivreurToOrder(req, res) {
   try {
     const { id } = req.params;
     const updatedOrder = await assignDelivererToOrder(id, req.user?.id);
@@ -135,4 +167,12 @@ exports.assignLivreurToOrder = async (req, res) => {
   } catch (err) {
     serverError(res, 'Erreur assignation livreur', err);
   }
+};
+
+export {
+  simpleDistanceEstimate,
+  estimateDelivery,
+  getOrdersByUser,
+  getPendingOrdersForLivreur,
+  assignLivreurToOrder
 };

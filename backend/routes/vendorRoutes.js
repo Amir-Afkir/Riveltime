@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import User from '../models/User.js';
+import Boutique from '../models/Boutique.js';
+
 const router = express.Router();
-const User = require('../models/User');
-const Boutique = require('../models/Boutique');
 
 // Route publique pour récupérer tous les vendeurs
 router.get('/vendeurs', async (req, res) => {
@@ -25,4 +26,4 @@ router.get('/boutiques', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

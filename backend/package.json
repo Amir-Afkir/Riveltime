@@ -1,5 +1,6 @@
 {
   "name": "backend",
+  "type": "module",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
@@ -18,11 +19,12 @@
     "express": "^5.1.0",
     "express-jwt": "^8.5.1",
     "express-oauth2-jwt-bearer": "^1.6.1",
+    "haversine-distance": "^1.2.4",
     "jwks-rsa": "^3.2.0",
     "mongodb": "^6.17.0",
     "mongoose": "^8.15.1",
     "multer": "^2.0.1",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "streamifier": "^0.1.1",
     "stripe": "^18.3.0"
   }

@@ -1,5 +1,5 @@
 // backend/models/AdminLog.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const adminLogSchema = new mongoose.Schema({
   admin: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -11,4 +11,5 @@ const adminLogSchema = new mongoose.Schema({
 
 adminLogSchema.index({ admin: 1 });
 
-module.exports = mongoose.model('AdminLog', adminLogSchema);
+const AdminLog = mongoose.model('AdminLog', adminLogSchema);
+export default AdminLog;

@@ -16,7 +16,7 @@ export default function Courses() {
   const [filterType, setFilterType] = useState("autour"); // "autour" ou "itineraire"
   const [depart, setDepart] = useState("");
   const [arrivee, setArrivee] = useState("");
-  const [rayon, setRayon] = useState(5); // en km
+  const [rayon, setRayon] = useState("5"); // en km, string pour compatibilité URLSearchParams
 
   useEffect(() => {
     let url = `${import.meta.env.VITE_API_URL}/orders/livreur/pending`;
@@ -27,7 +27,7 @@ export default function Courses() {
       params.append("arrivee", arrivee);
     } else if (filterType === "autour" && arrivee) {
       params.append("autour", arrivee);
-      params.append("rayon", rayon);
+      params.append("rayon", parseFloat(rayon));
     }
 
     if (params.toString()) url += `?${params.toString()}`;
@@ -137,7 +137,7 @@ export default function Courses() {
             max={30}
             placeholder="Rayon"
             value={rayon}
-            onChange={(e) => setRayon(e.target.value)}
+            onChange={(e) => setRayon(e.target.value.replace(/[^\d.]/g, ""))}
             className="border border-gray-300 rounded-full px-4 py-2 w-20 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
           />
         </div>

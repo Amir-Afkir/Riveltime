@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
+import notificationController from '../controllers/notificationController.js';
 const router = express.Router();
-const notificationController = require('../controllers/notificationController');
 
 // GET toutes les notifications de l'utilisateur
 router.get('/', notificationController.getAllNotifications);
@@ -11,4 +11,4 @@ router.post('/', notificationController.createNotification);
 // PATCH → marquer comme lue
 router.patch('/:id/read', notificationController.markAsRead);
 
-module.exports = router;
+export default router;

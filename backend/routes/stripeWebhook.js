@@ -1,7 +1,7 @@
-const express = require('express');
-const Stripe = require('stripe');
-const bodyParser = require('body-parser');
-const Order = require('../models/Order.js');
+import express from 'express';
+import Stripe from 'stripe';
+import bodyParser from 'body-parser';
+import Order from '../models/Order.js';
 
 const HANDLED_EVENTS = [
   'payment_intent.succeeded',
@@ -76,4 +76,4 @@ router.post(
   }
 );
 
-module.exports = router;
+export default router;

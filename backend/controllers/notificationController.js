@@ -1,15 +1,15 @@
-const Notification = require('../models/Notification');
+import Notification from '../models/Notification.js';
 
-exports.getAllNotifications = async (req, res) => {
+export async function getAllNotifications(req, res) {
   try {
     const notifications = await Notification.find({ user: req.user.id }).sort({ createdAt: -1 });
     res.json(notifications);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-};
+}
 
-exports.createNotification = async (req, res) => {
+export async function createNotification(req, res) {
   try {
     const notification = new Notification(req.body);
     await notification.save();
@@ -17,9 +17,9 @@ exports.createNotification = async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-};
+}
 
-exports.markAsRead = async (req, res) => {
+export async function markAsRead(req, res) {
   try {
     const notification = await Notification.findByIdAndUpdate(
       req.params.id,
@@ -31,4 +31,6 @@ exports.markAsRead = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-};
+}
+
+export default { getAllNotifications, createNotification, markAsRead };

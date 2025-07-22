@@ -1,5 +1,6 @@
-const express = require('express');
-const router = express.Router();
+import express from 'express';
+import { Router } from 'express';
+const router = Router();
 
 router.get('/search', async (req, res) => {
   const q = req.query.q;
@@ -28,6 +29,6 @@ router.get('/search', async (req, res) => {
     console.error("Erreur lors de la requête à Nominatim :", err);
     res.status(500).json({ error: "Erreur lors de la recherche d'adresse" });
   }
-});
+}); 
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema({
   boutique: { type: mongoose.Schema.Types.ObjectId, ref: 'Boutique', required: true },
@@ -20,4 +20,4 @@ const productSchema = new mongoose.Schema({
 
 productSchema.index({ name: 'text', description: 'text', collectionName: 'text' });
 
-module.exports = mongoose.model('Product', productSchema);
+export default mongoose.model('Product', productSchema);

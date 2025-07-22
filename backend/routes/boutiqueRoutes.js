@@ -1,26 +1,33 @@
-const express = require('express');
-const router = express.Router();
+import express from 'express';
+import {
+  getAllBoutiques,
+  getMyBoutiques,
+  getBoutiqueById,
+  createBoutique,
+  updateBoutique,
+  deleteBoutiqueById,
+} from '../controllers/boutiqueController.js';
+import * as productController from '../controllers/productController.js';
 
-const boutiqueController = require('../controllers/boutiqueController');
-const productController = require('../controllers/productController');
-
-const {
+import {
   jwtCheck,
   injectUser,
   createUserIfNotExists,
-} = require('../middleware/auth');
+} from '../middleware/auth.js';
 
-const {
+import {
   validateBoutiqueData,
   requireVendeurRole,
-} = require('../middleware/validationMiddleware');
+} from '../middleware/validationMiddleware.js';
 
-const cloudinaryUpload = require('../middleware/cloudinaryUpload');
-const multerErrorHandler = require('../middleware/multerErrorHandler');
-const upload = require('../middleware/multerConfig');
+import cloudinaryUpload from '../middleware/cloudinaryUpload.js';
+import multerErrorHandler from '../middleware/multerErrorHandler.js';
+import upload from '../middleware/multerConfig.js';
+
+const router = express.Router();
 
 // 🌐 Routes publiques
-router.get('/', boutiqueController.getAllBoutiques);
+router.get('/', getAllBoutiques);
 
 router.get(
   '/mine',
@@ -28,10 +35,10 @@ router.get(
   injectUser,
   createUserIfNotExists,
   requireVendeurRole,
-  boutiqueController.getMyBoutiques
+  getMyBoutiques
 );
 
-router.get('/:id', boutiqueController.getBoutiqueById);
+router.get('/:id', getBoutiqueById);
 router.get('/:id/produits', productController.getProduitsParBoutique);
 
 
@@ -50,8 +57,7 @@ router.post(
     next();
   },
   validateBoutiqueData,
-  // Champs personnalisés supportés : activerParticipation, participationPourcent, contributionLivraisonPourcent
-  boutiqueController.createBoutique
+  createBoutique
 );
 
 router.put(
@@ -64,8 +70,7 @@ router.put(
   multerErrorHandler,
   cloudinaryUpload((req) => `riveltime/${req.dbUser.auth0Id}/boutiques/${req.params.id}`),
   validateBoutiqueData,
-  // Prise en compte des champs : activerParticipation, participationPourcent, contributionLivraisonPourcent
-  boutiqueController.updateBoutique
+  updateBoutique
 );
 
 router.delete(
@@ -74,7 +79,7 @@ router.delete(
   injectUser,
   createUserIfNotExists,
   requireVendeurRole,
-  boutiqueController.deleteBoutiqueById
+  deleteBoutiqueById
 );
 
-module.exports = router;
+export default router;

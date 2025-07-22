@@ -1,28 +1,25 @@
-const upload = require('../middleware/multerConfig');
-// ✅ routes/productRoutes.js
-const express = require('express');
-const router = express.Router();
-const cloudinaryUpload = require('../middleware/cloudinaryUpload');
-
-const {
+import express from 'express';
+import upload from '../middleware/multerConfig.js';
+import cloudinaryUpload from '../middleware/cloudinaryUpload.js';
+import {
   createProduct,
   getMyProducts,
   deleteProduct,
   updateProduct,
-} = require('../controllers/productController');
-
-const {
+  getProduitsParBoutique,
+} from '../controllers/productController.js';
+import {
   jwtCheck,
   injectUser,
   createUserIfNotExists,
-} = require('../middleware/auth');
-
-const {
+} from '../middleware/auth.js';
+import {
   requireVendeurRole,
   validateProductData,
-} = require('../middleware/validationMiddleware');
+} from '../middleware/validationMiddleware.js';
+import multerErrorHandler from '../middleware/multerErrorHandler.js';
 
-const multerErrorHandler = require('../middleware/multerErrorHandler');
+const router = express.Router();
 
 
 // 🔒 Routes privées (vendeur connecté)
@@ -76,4 +73,4 @@ router.delete(
   deleteProduct
 );
 
-module.exports = router;
+export default router;

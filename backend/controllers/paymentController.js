@@ -1,9 +1,9 @@
-const stripe = require('../utils/stripeClient');
-const { createExpressAccount, generateOnboardingLink } = require('../services/stripeAccounts');
-const Product = require('../models/Product');
-const Boutique = require('../models/Boutique');
-const Order = require('../models/Order');
-const User = require('../models/User');
+import stripe from '../utils/stripeClient.js';
+import { createExpressAccount, generateOnboardingLink } from '../services/stripeAccounts.js';
+import Product from '../models/Product.js';
+import Boutique from '../models/Boutique.js';
+import Order from '../models/Order.js';
+import User from '../models/User.js';
 
 // ======================= Handlers Stripe Express ========================= //
 
@@ -75,7 +75,7 @@ const manageStripeAccountHandler = async (req, res) => {
 
 // ======================= Payment Intents ========================= //
 
-const { buildEstimationInput, processEstimate } = require('../utils/estimationPipeline');
+import { buildEstimationInput, processEstimate } from '../utils/estimationPipeline.js';
 
 const createMultiPaymentIntentsHandler = async (req, res) => {
   try {
@@ -181,8 +181,9 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
 
 // ======================= Commande après confirmation ========================= //
 
-const crypto = require('crypto');
-const stripeLib = require('stripe')(process.env.STRIPE_SECRET_KEY);
+import crypto from 'crypto';
+import Stripe from 'stripe';
+const stripeLib = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const createOrderAfterConfirmation = async (req, res) => {
   try {
@@ -318,7 +319,7 @@ const createOrderAfterConfirmation = async (req, res) => {
 
 // ======================= Export ========================= //
 
-module.exports = {
+export {
   getStripeStatusHandler,
   createStripeAccountHandler,
   onboardStripeAccountHandler,
