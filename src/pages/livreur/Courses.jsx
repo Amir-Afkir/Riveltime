@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import {
@@ -37,15 +37,25 @@ export default function Courses() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  const modalRef = useRef(null);
+
+  const closeModal = useCallback(() => {
+    setModalOpen(false);
+    setSelectedOrder(null);
+  }, []);
+
+  const closeModalWithAnimation = () => {
+    if (modalRef.current?.startExit) {
+      modalRef.current.startExit();
+    } else {
+      closeModal(); // fallback
+    }
+  };
+
   const openModal = useCallback((order) => {
     setSelectedOrder(order);
     setModalOpen(true);
   }, []);
-
-  const closeModal = () => {
-    setSelectedOrder(null);
-    setModalOpen(false);
-  };
 
   // Fonction pour fetch suggestions d'adresse
   const fetchSuggestions = async (query, setSuggestions) => {
@@ -318,7 +328,7 @@ export default function Courses() {
           })}
         </div>
       )}
-      <Modal open={modalOpen} onClose={closeModal} title="Détails de la commande">
+      <Modal ref={modalRef} open={modalOpen} onClose={closeModal}>
         {selectedOrder ? (
           <div className="flex flex-col max-h-[70vh]">
             {/* Section titre fixe */}
@@ -448,7 +458,7 @@ export default function Courses() {
                 type="button"
                 variant="primary"
                 onClick={() => {
-                  closeModal();
+                  closeModalWithAnimation();
                 }}
               >
                 Passer
@@ -459,7 +469,7 @@ export default function Courses() {
                 variant="secondary"
                 onClick={() => {
                   alert("Course acceptée !");
-                  closeModal();
+                  closeModalWithAnimation();
                 }}
               >
                 Accepter
