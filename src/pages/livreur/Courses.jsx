@@ -141,6 +141,32 @@ export default function Courses() {
     setRayon("5");
   };
 
+  // Fonction pour accepter une commande
+  const handleAcceptOrder = async (orderId) => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/accept-delivery`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        alert(`Erreur : ${errorData.error || "Impossible d'accepter la commande"}`);
+        return;
+      }
+      const data = await res.json();
+      alert("Commande acceptée !");
+      
+      setOrders((prev) => prev.filter(order => order._id !== orderId));
+      closeModalWithAnimation();
+    } catch (error) {
+      alert("Erreur réseau lors de l’acceptation de la commande.");
+      console.error(error);
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="flex items-center justify-between">
@@ -468,8 +494,7 @@ export default function Courses() {
                 type="button"
                 variant="secondary"
                 onClick={() => {
-                  alert("Course acceptée !");
-                  closeModalWithAnimation();
+                  handleAcceptOrder(selectedOrder._id);
                 }}
               >
                 Accepter

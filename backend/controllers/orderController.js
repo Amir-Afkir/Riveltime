@@ -166,14 +166,15 @@ async function getPendingOrdersForLivreur(req, res) {
   }
 }
 
-async function acceptDelivery (req, res) {
+async function acceptDelivery(req, res) {
   try {
     const user = req.dbUser;
     if (user.role !== 'livreur') 
       return res.status(403).json({ error: 'Accès réservé aux livreurs' });
 
-    const { orderId } = req.params;
-    const order = await Order.findById(orderId);
+    // Utilise 'id' ici car c'est ce qui est défini dans la route
+    const { id } = req.params;
+    const order = await Order.findById(id);
     if (!order) 
       return res.status(404).json({ error: 'Commande introuvable' });
 
@@ -182,7 +183,7 @@ async function acceptDelivery (req, res) {
 
     // Assignation du livreur et mise à jour du statut
     order.status = 'accepted';
-    order.livreurId = user._id;                   // cohérence du nommage
+    order.livreurId = user._id;                   
     order.livreurStripeId = user.infosLivreur?.stripeAccountId || null;
     order.deliveryStatusHistory.push({ status: 'accepted', date: new Date() });
 
