@@ -1,30 +1,65 @@
 import stripe from '../utils/stripeClient.js';
 
 /**
- * Crée un compte Stripe Express pour un utilisateur vendeur
+ * Crée un compte Stripe Express pour un utilisateur vendeur ou livreur
  * @param {Object} user - L'utilisateur connecté
- * @returns {Promise<Object>} - Le compte Stripe Express créé
+ * @returns {Promise<Object>} - Le compte Stripe Express créé ou existant
  */
 const createExpressAccount = async (user) => {
-  if (!user || user.role !== 'vendeur') {
-    throw new Error("Accès réservé aux vendeurs.");
+  if (!user || (user.role !== 'vendeur' && user.role !== 'livreur')) {
+    throw new Error("Accès réservé aux vendeurs ou livreurs.");
   }
 
-  if (user.infosVendeur?.stripeAccountId) {
-    return { alreadyExists: true, accountId: user.infosVendeur.stripeAccountId };
+  // Pour vendeur
+  if (user.role === 'vendeur') {
+    if (user.infosVendeur?.stripeAccountId) {
+      console.log(`Compte Stripe existant trouvé pour vendeur avec ID: ${user.infosVendeur.stripeAccountId}`);
+      // Retourner un objet avec account simulé pour homogénéité
+      return { alreadyExists: true, account: { id: user.infosVendeur.stripeAccountId } };
+    }
+    const account = await stripe.accounts.create({
+      type: 'express',
+      country: 'FR',
+      email: user.email,
+      capabilities: {
+        transfers: { requested: true },
+        card_payments: { requested: true },
+      },
+    });
+    console.log(`Compte Stripe créé pour vendeur avec ID: ${account.id}`);
+    if (!user.infosVendeur) user.infosVendeur = {};
+    user.infosVendeur.stripeAccountId = account.id;
+    if (typeof user.save === 'function') {
+      await user.save();
+      console.log(`Utilisateur vendeur mis à jour avec stripeAccountId: ${account.id}`);
+    }
+    return { alreadyExists: false, account };
   }
 
-  const account = await stripe.accounts.create({
-    type: 'express',
-    country: 'FR',
-    email: user.email,
-    capabilities: {
-      transfers: { requested: true },
-      card_payments: { requested: true },
-    },
-  });
-
-  return { alreadyExists: false, account };
+  // Pour livreur
+  if (user.role === 'livreur') {
+    if (user.infosLivreur?.stripeAccountId) {
+      console.log(`Compte Stripe existant trouvé pour livreur avec ID: ${user.infosLivreur.stripeAccountId}`);
+      return { alreadyExists: true, account: { id: user.infosLivreur.stripeAccountId } };
+    }
+    const account = await stripe.accounts.create({
+      type: 'express',
+      country: 'FR',
+      email: user.email,
+      capabilities: {
+        transfers: { requested: true },
+        card_payments: { requested: true },
+      },
+    });
+    console.log(`Compte Stripe créé pour livreur avec ID: ${account.id}`);
+    if (!user.infosLivreur) user.infosLivreur = {};
+    user.infosLivreur.stripeAccountId = account.id;
+    if (typeof user.save === 'function') {
+      await user.save();
+      console.log(`Utilisateur livreur mis à jour avec stripeAccountId: ${account.id}`);
+    }
+    return { alreadyExists: false, account };
+  }
 };
 
 /**

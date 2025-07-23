@@ -313,7 +313,9 @@ export default function ProfilCommun({ isLoading }) {
   if (!user) return <p>Erreur : utilisateur introuvable</p>;
 
   // 📦 Données des sections
-  const stripeAccountId = infosVendeur?.stripeAccountId;
+  const stripeAccountId =
+    role === "vendeur" ? infosVendeur?.stripeAccountId :
+    role === "livreur" ? infosLivreur?.stripeAccountId : null;
   const sections = [
     {
       key: "infos",
@@ -465,7 +467,7 @@ export default function ProfilCommun({ isLoading }) {
       title: "Notifications",
       content: <ToggleSwitch label="Recevoir les alertes e-mail" checked={notifications ?? false} role={role} />,
     },
-    ...(role === "vendeur"
+    ...(role === "vendeur" || role === "livreur"
       ? [{
           key: "paiement",
           title: "Paiement avec Stripe",

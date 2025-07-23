@@ -16,6 +16,7 @@ const infosVendeurSchema = new mongoose.Schema({
 
 const infosLivreurSchema = new mongoose.Schema({
   typeDeTransport: { type: String, trim: true },
+  stripeAccountId: { type: String, trim: true }, // ✅ Ajout ici
 }, { _id: false });
 
 const userSchema = new mongoose.Schema({

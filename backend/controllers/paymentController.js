@@ -9,8 +9,20 @@ import User from '../models/User.js';
 
 const getStripeStatusHandler = async (req, res) => {
   try {
-    const stripeAccountId = req.dbUser?.infosVendeur?.stripeAccountId;
-    if (!stripeAccountId) return res.status(404).json({ message: 'Compte Stripe non trouvé.' });
+    const user = req.dbUser;
+    if (!user || (user.role !== 'vendeur' && user.role !== 'livreur')) {
+      return res.status(403).json({ message: 'Accès réservé aux vendeurs ou livreurs.' });
+    }
+
+    const stripeAccountId = user.role === 'vendeur'
+      ? user.infosVendeur?.stripeAccountId
+      : user.role === 'livreur'
+        ? user.infosLivreur?.stripeAccountId
+        : null;
+
+    if (!stripeAccountId) {
+      return res.status(404).json({ message: 'Compte Stripe non trouvé.' });
+    }
 
     const account = await stripe.accounts.retrieve(stripeAccountId);
     res.json({
@@ -26,16 +38,19 @@ const getStripeStatusHandler = async (req, res) => {
 const createStripeAccountHandler = async (req, res) => {
   try {
     const user = req.dbUser;
-    if (!user || user.role !== 'vendeur') return res.status(403).json({ error: "Accès réservé aux vendeurs" });
+    if (!user || (user.role !== 'vendeur' && user.role !== 'livreur')) {
+      return res.status(403).json({ error: "Accès réservé aux vendeurs ou livreurs" });
+    }
 
-    const existingId = user.infosVendeur?.stripeAccountId;
-    if (existingId) return res.status(200).json({ message: "Compte Stripe déjà existant", stripeAccountId: existingId });
+    // Appelle la fonction normalisée qui gère l'existence et la création
+    const { account, alreadyExists } = await createExpressAccount(user);
 
-    const { account } = await createExpressAccount(user);
-    user.infosVendeur = { ...user.infosVendeur, stripeAccountId: account.id };
-    await user.save();
+    // Pas besoin de resauvegarder user ici, c'est fait dans la fonction
 
-    res.status(201).json({ message: "Compte Stripe créé", stripeAccountId: account.id });
+    res.status(alreadyExists ? 200 : 201).json({
+      message: alreadyExists ? "Compte Stripe déjà existant" : "Compte Stripe créé",
+      stripeAccountId: account.id,
+    });
   } catch (err) {
     console.error("❌ Erreur création Stripe :", err);
     res.status(500).json({ error: "Erreur lors de la création du compte Stripe" });
@@ -45,13 +60,20 @@ const createStripeAccountHandler = async (req, res) => {
 const onboardStripeAccountHandler = async (req, res) => {
   try {
     const user = req.dbUser;
-    if (!user || user.role !== 'vendeur') return res.status(403).json({ error: "Accès réservé aux vendeurs" });
+    if (!user || (user.role !== 'vendeur' && user.role !== 'livreur')) {
+      return res.status(403).json({ error: "Accès réservé aux vendeurs ou livreurs" });
+    }
 
-    const stripeAccountId = user.infosVendeur?.stripeAccountId;
+    const stripeAccountId = user.role === 'vendeur'
+      ? user.infosVendeur?.stripeAccountId
+      : user.role === 'livreur'
+        ? user.infosLivreur?.stripeAccountId
+        : null;
+
     if (!stripeAccountId) return res.status(400).json({ error: 'Aucun compte Stripe trouvé pour cet utilisateur.' });
 
     const origin = req.headers.origin;
-    const link = await generateOnboardingLink(stripeAccountId, origin, user.role, stripe);
+    const link = await generateOnboardingLink(stripeAccountId, origin, user.role);
 
     res.json({ url: link.url });
   } catch (err) {
@@ -61,16 +83,19 @@ const onboardStripeAccountHandler = async (req, res) => {
 };
 
 const manageStripeAccountHandler = async (req, res) => {
-  try {
-    const stripeAccountId = req.dbUser?.infosVendeur?.stripeAccountId;
-    if (!stripeAccountId) return res.status(400).json({ error: 'Aucun compte Stripe trouvé.' });
+  const user = req.dbUser;
+  if (!user) return res.status(400).json({ error: 'Utilisateur non trouvé.' });
 
-    const link = await stripe.accounts.createLoginLink(stripeAccountId);
-    res.json({ url: link.url });
-  } catch (err) {
-    console.error('Erreur lien Stripe :', err);
-    res.status(500).json({ error: "Impossible de générer le lien Stripe." });
-  }
+  const stripeAccountId = user.role === 'vendeur'
+    ? user.infosVendeur?.stripeAccountId
+    : user.role === 'livreur'
+      ? user.infosLivreur?.stripeAccountId
+      : null;
+
+  if (!stripeAccountId) return res.status(400).json({ error: 'Aucun compte Stripe trouvé.' });
+
+  const link = await stripe.accounts.createLoginLink(stripeAccountId);
+  res.json({ url: link.url });
 };
 
 // ======================= Payment Intents ========================= //
@@ -152,7 +177,7 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
           estimatedDelayFormatted: formatDelay(estimation.estimatedDelay),
         },
         transfer_group: transferGroup,
-        application_fee_amount: 0
+        application_fee_amount: Math.round(totalProduits * 0.08 * 100), // 8% commission
       });
 
       createdIntents.push({
@@ -286,6 +311,7 @@ const createOrderAfterConfirmation = async (req, res) => {
       paymentIntentId,
       transferGroup,
       vendeurStripeId: vendeur.infosVendeur?.stripeAccountId || null,
+      livreurStripeId: null,
       captureStatus: 'authorized',
       status: 'pending',
       deliveryStatusHistory: [{

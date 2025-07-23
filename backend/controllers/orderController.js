@@ -1,5 +1,6 @@
 // orderController.js
 import haversine from 'haversine-distance';
+import stripe from '../utils/stripeClient.js';
 import fetch from 'node-fetch';
 
 import Order from '../models/Order.js';
@@ -166,6 +167,36 @@ async function getPendingOrdersForLivreur(req, res) {
     res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 }
+
+
+export const acceptDelivery = async (req, res) => {
+  try {
+    const user = req.dbUser;
+    if (user.role !== 'livreur') return res.status(403).json({ error: 'Accès réservé aux livreurs' });
+
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ error: 'Commande introuvable' });
+    if (order.status !== 'pending') return res.status(400).json({ error: 'Commande déjà prise' });
+
+    order.status = 'accepted';
+    order.deliverer = user._id;
+    order.livreurStripeId = user.infosLivreur?.stripeAccountId || null;
+
+    // Capture paiement Stripe
+    await stripe.paymentIntents.capture(order.paymentIntentId);
+
+    order.captureStatus = 'succeeded';
+    order.deliveryStatusHistory.push({ status: 'accepted', date: new Date() });
+
+    await order.save();
+
+    res.json({ message: 'Livraison acceptée, paiement capturé.', order });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
 
 async function assignLivreurToOrder(req, res) {
   try {
