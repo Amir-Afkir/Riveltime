@@ -119,8 +119,13 @@ export default function ProfilCommun({ isLoading }) {
 
     if (onboardingSuccessParam === "success") {
       // Vérifie dans le store si le compte Stripe est réellement activé (details_submitted + charges_enabled)
-      const vendeur = useUserStore.getState().userData?.infosVendeur;
-      const isStripeOk = vendeur?.stripeDetailsSubmitted && vendeur?.stripeChargesEnabled;
+      const user = useUserStore.getState().userData;
+      let isStripeOk = false;
+      if (user?.role === "vendeur") {
+        isStripeOk = user.infosVendeur?.stripeDetailsSubmitted && user.infosVendeur?.stripeChargesEnabled;
+      } else if (user?.role === "livreur") {
+        isStripeOk = user.infosLivreur?.stripeDetailsSubmitted && user.infosLivreur?.stripeChargesEnabled;
+      }
 
       if (isStripeOk) {
         setOnboardingSuccess(true);
@@ -314,7 +319,7 @@ export default function ProfilCommun({ isLoading }) {
 
   // 📦 Données des sections
   const stripeAccountId =
-    role === "vendeur" ? infosVendeur?.stripeAccountId :
+    role === "vendeur" ? infosVendeur?.stripeAccountId : 
     role === "livreur" ? infosLivreur?.stripeAccountId : null;
   const sections = [
     {

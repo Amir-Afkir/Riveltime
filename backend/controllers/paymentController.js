@@ -20,11 +20,18 @@ const getStripeStatusHandler = async (req, res) => {
         ? user.infosLivreur?.stripeAccountId
         : null;
 
+    console.log("💳 Stripe Account ID:", stripeAccountId);
+
     if (!stripeAccountId) {
       return res.status(404).json({ message: 'Compte Stripe non trouvé.' });
     }
 
     const account = await stripe.accounts.retrieve(stripeAccountId);
+    console.log("💳 Stripe Account status:", {
+      charges_enabled: account.charges_enabled,
+      details_submitted: account.details_submitted
+    });
+
     res.json({
       enabled: account.charges_enabled,
       details_submitted: account.details_submitted,

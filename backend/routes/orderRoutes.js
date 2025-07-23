@@ -15,6 +15,6 @@ router.post('/estimation-simple', orderController.simpleDistanceEstimate);
 router.post('/estimate', orderController.estimateDelivery);
 
 // Assigner un livreur à une commande
-router.post('/:id/assign-livreur', orderController.assignLivreurToOrder);
+router.post('/:id/accept-delivery', orderController.acceptDelivery);
 
 export default router;

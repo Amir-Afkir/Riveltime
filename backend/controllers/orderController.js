@@ -1,7 +1,5 @@
 // orderController.js
-import haversine from 'haversine-distance';
-import stripe from '../utils/stripeClient.js';
-import fetch from 'node-fetch';
+import haversine from 'haversine-distance'; 
 
 import Order from '../models/Order.js';
 import { getUserOrders, assignDelivererToOrder } from '../services/orderService.js';
@@ -97,10 +95,6 @@ async function getOrdersByUser(req, res) {
   }
 }
 
-function isCoordValid(coord) {
-  return coord && typeof coord.latitude === 'number' && typeof coord.longitude === 'number';
-}
-
 /**
  * Récupérer les commandes en attente visibles par livreurs,
  * avec filtres géographiques "autour" ou "itinéraire".
@@ -108,6 +102,10 @@ function isCoordValid(coord) {
  * - boutique sur segment départ→arrivée (tolérance rayonKm)
  * - direction boutique→client cohérente avec départ→arrivée (angle max 45°)
  */
+
+function isCoordValid(coord) {
+  return coord && typeof coord.latitude === 'number' && typeof coord.longitude === 'number';
+}
 async function getPendingOrdersForLivreur(req, res) {
   try {
     const {
@@ -168,43 +166,32 @@ async function getPendingOrdersForLivreur(req, res) {
   }
 }
 
-
-export const acceptDelivery = async (req, res) => {
+async function acceptDelivery (req, res) {
   try {
     const user = req.dbUser;
-    if (user.role !== 'livreur') return res.status(403).json({ error: 'Accès réservé aux livreurs' });
+    if (user.role !== 'livreur') 
+      return res.status(403).json({ error: 'Accès réservé aux livreurs' });
 
     const { orderId } = req.params;
     const order = await Order.findById(orderId);
-    if (!order) return res.status(404).json({ error: 'Commande introuvable' });
-    if (order.status !== 'pending') return res.status(400).json({ error: 'Commande déjà prise' });
+    if (!order) 
+      return res.status(404).json({ error: 'Commande introuvable' });
 
+    if (order.status !== 'pending') 
+      return res.status(400).json({ error: 'Commande déjà prise' });
+
+    // Assignation du livreur et mise à jour du statut
     order.status = 'accepted';
-    order.deliverer = user._id;
+    order.livreurId = user._id;                   // cohérence du nommage
     order.livreurStripeId = user.infosLivreur?.stripeAccountId || null;
-
-    // Capture paiement Stripe
-    await stripe.paymentIntents.capture(order.paymentIntentId);
-
-    order.captureStatus = 'succeeded';
     order.deliveryStatusHistory.push({ status: 'accepted', date: new Date() });
 
     await order.save();
 
-    res.json({ message: 'Livraison acceptée, paiement capturé.', order });
+    res.json({ message: 'Commande acceptée par le livreur.', order });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erreur serveur' });
-  }
-};
-
-async function assignLivreurToOrder(req, res) {
-  try {
-    const { id } = req.params;
-    const updatedOrder = await assignDelivererToOrder(id, req.user?.id);
-    res.json(updatedOrder);
-  } catch (err) {
-    serverError(res, 'Erreur assignation livreur', err);
   }
 };
 
@@ -213,5 +200,5 @@ export {
   estimateDelivery,
   getOrdersByUser,
   getPendingOrdersForLivreur,
-  assignLivreurToOrder
+  acceptDelivery
 };

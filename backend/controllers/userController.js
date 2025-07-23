@@ -46,6 +46,7 @@ const formatUserProfile = (user) => {
         notifications: user.notifications,
         infosLivreur: {
           typeDeTransport: user.infosLivreur?.typeDeTransport || "",
+          stripeAccountId: user.infosLivreur?.stripeAccountId || null,
         },
       };
     default:
@@ -118,6 +119,7 @@ export const updateMyProfile = async (req, res) => {
         ...livreurDefaults,
         ...dbUser.infosLivreur,
         typeDeTransport: infosLivreur.typeDeTransport.trim(),
+        stripeAccountId: (infosLivreur && infosLivreur.stripeAccountId) || dbUser.infosLivreur?.stripeAccountId || null,
       };
       dbUser.infosClient = null;
       dbUser.infosVendeur = null;
