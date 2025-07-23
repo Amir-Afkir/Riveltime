@@ -184,7 +184,7 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
           estimatedDelayFormatted: formatDelay(estimation.estimatedDelay),
         },
         transfer_group: transferGroup,
-        application_fee_amount: Math.round(totalProduits * 0.08 * 100), // 8% commission
+        application_fee_amount: 0, //Math.round(totalProduits * 0.08 * 100), // 8% commission
       });
 
       createdIntents.push({
@@ -311,6 +311,7 @@ const createOrderAfterConfirmation = async (req, res) => {
       },
 
       boutiqueNom: boutique.name,
+      boutiqueCoverUrl: boutique.coverImageUrl || null, // <-- ajouté ici
       boutiqueTelephone: vendeur.phone || "",
       clientNom: user.fullname || "",
       clientTelephone: user.phone || "",

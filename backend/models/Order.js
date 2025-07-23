@@ -53,6 +53,7 @@ const orderSchema = new mongoose.Schema({
   clientNom: { type: String },
   clientTelephone: { type: String },
   boutiqueNom: { type: String },
+  boutiqueCoverUrl: { type: String, trim: true },
   boutiqueTelephone: { type: String },
 
   // --- Détails logistiques

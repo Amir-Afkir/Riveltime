@@ -40,15 +40,24 @@ const injectKeyframes = () => {
   document.head.appendChild(style);
 };
 
-export default function Card({ title, action, children, className = "", delay = 0 }) {
+export default function Card({ title, action, children, className = "", delay = 0, onClick }) {
   useEffect(() => {
     injectKeyframes();
   }, []);
 
   return (
     <div
-      className={`fade-in-up rounded-2xl bg-white/80 backdrop-blur-sm shadow-md border border-gray-100 p-4 mb-5 transition-all duration-300 ${className}`}
+      onClick={onClick}
+      tabIndex={onClick ? 0 : undefined}
+      role={onClick ? "button" : undefined}
+      className={`fade-in-up rounded-2xl bg-white/80 backdrop-blur-sm shadow-md border border-gray-100 p-4 mb-5 transition-all duration-300 ${onClick ? "cursor-pointer" : ""} ${className}`}
       style={{ "--fade-delay": `${delay}ms` }}
+      onKeyDown={e => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
     >
       {title && (
         <div className="flex items-center justify-between mb-2">

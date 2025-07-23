@@ -1,5 +1,22 @@
-import { useState, useEffect } from "react";
-import { LocateIcon, RouteIcon } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import Modal from "../../components/ui/Modal";
+import Button from "../../components/ui/Button";
+import {
+  Home,
+  LocateIcon,
+  RouteIcon,
+  StoreIcon,
+  MapPinIcon,
+  ClockIcon,
+  NavigationIcon,
+  CreditCardIcon,
+  TruckIcon,
+  PackageIcon,
+  HardDriveIcon,
+  Box,
+  Phone,
+  ScaleIcon,
+} from "lucide-react";
 import useUserStore from "../../stores/userStore";
 import Card from "../../components/ui/Card";
 
@@ -16,6 +33,19 @@ export default function Courses() {
   const [coordsArrivee, setCoordsArrivee] = useState(null);
   const [coordsAutour, setCoordsAutour] = useState(null);
   const [rayon, setRayon] = useState("5"); // en km, string pour URLSearchParams
+
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const openModal = useCallback((order) => {
+    setSelectedOrder(order);
+    setModalOpen(true);
+  }, []);
+
+  const closeModal = () => {
+    setSelectedOrder(null);
+    setModalOpen(false);
+  };
 
   // Fonction pour fetch suggestions d'adresse
   const fetchSuggestions = async (query, setSuggestions) => {
@@ -258,31 +288,188 @@ export default function Courses() {
         <p className="text-gray-500 mt-6">Aucune commande en attente.</p>
       ) : (
         <div className="space-y-4">
-          {orders.map((order, index) => (
-            <Card
-              key={order._id}
-              title={order.boutiqueNom}
-              action={
-                <span className="text-green-600 font-bold text-sm">
-                  {order.totalLivraison.toFixed(2)} €
-                </span>
-              }
-              delay={index * 80}
-            >
-              <div>• {order.boutiqueAddress}</div>
-              <div>• {order.deliveryAddress}</div>
-              <div className="flex justify-between items-center text-xs text-gray-500">
-                <span>
-                  {order.estimatedDelayFormatted} ({order.distanceKm} km)
-                </span>
-                <span className="border px-3 py-0.5 rounded-full bg-gray-100 text-gray-700 text-xs font-medium border-gray-300">
-                  {order.vehiculeRecommande}
-                </span>
-              </div>
-            </Card>
-          ))}
+          {orders.map((order, index) => {
+            const totalItems = order.items ? order.items.reduce((sum, item) => sum + item.quantity, 0) : 0;
+            return (
+              <Card
+                key={order._id}
+                title={order.boutiqueNom}
+                action={
+                  <span className="text-[#ed354f] font-bold text-sm">
+                    {order.totalLivraison.toFixed(2)} €
+                  </span>
+                }
+                delay={index * 80}
+                onClick={() => openModal(order)}
+                className="cursor-pointer"
+              >
+                <div>• {order.boutiqueAddress}</div>
+                <div>• {order.deliveryAddress}</div>
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>
+                    {order.estimatedDelayFormatted} ({order.distanceKm} km)
+                  </span>
+                  <span className="border px-3 py-0.5 rounded-full bg-gray-100 text-gray-700 text-xs font-medium border-gray-300">
+                    {order.vehiculeRecommande}
+                  </span>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
+      <Modal open={modalOpen} onClose={closeModal} title="Détails de la commande">
+        {selectedOrder ? (
+          <div className="flex flex-col max-h-[70vh]">
+            {/* Section titre fixe */}
+            <header className="sticky top-0 bg-white z-20 px-4 py-3 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">Détails de la commande</h3>
+            </header>
+
+            {/* Section contenu scrollable */}
+            <main className="flex-1 overflow-auto p-4 space-y-6 text-sm">
+              {/* Résumé rapide en haut avec proposition livraison en premier */}
+              <div
+                className="max-w-md w-full mx-auto bg-[#ed354f]/10 rounded-xl px-5 py-4 shadow-lg border border-[#ed354f] flex flex-row gap-5 items-start"
+              >
+                {/* Colonne gauche image */}
+                <div
+                  className="w-[100px] h-[100px] flex-shrink-0 rounded-xl overflow-hidden border border-gray-300 shadow-md ring-1 ring-[#ed354f]/30 bg-white flex items-center justify-center"
+                >
+                  {selectedOrder.boutiqueCoverUrl ? (
+                    <img
+                      src={selectedOrder.boutiqueCoverUrl}
+                      alt={`Photo de la boutique ${selectedOrder.boutiqueNom}`}
+                      className="w-full h-full object-cover rounded-xl"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <div className="text-gray-400 text-xs select-none px-2 text-center">
+                      Pas d’image
+                    </div>
+                  )}
+                </div>
+
+                {/* Colonne droite infos */}
+                <div className="flex-1 flex flex-col min-w-0">
+                  {/* Prix livraison tout en haut à droite */}
+                  <div className="flex justify-end mb-4">
+                    <div
+                      className="flex items-center gap-2 bg-[#ed354f]/10 text-[#ed354f] font-extrabold text-xl tracking-wide rounded-full px-4 py-2 select-none shadow-sm min-w-[96px] justify-center ring-1 ring-[#ed354f]/40 drop-shadow-sm leading-none whitespace-nowrap"
+                      aria-label="Prix livraison"
+                    >
+                      <CreditCardIcon className="w-6 h-6" />
+                      <span>{selectedOrder.totalLivraison.toFixed(2)} €</span>
+                    </div>
+                  </div>
+
+                  {/* Infos complémentaires sous le prix, alignées et centrées */}
+                  <div className="flex flex-nowrap gap-3 justify-between mt-1 text-center">
+                    <div className="flex flex-col items-center min-w-[36px]">
+                      <ClockIcon className="w-5 h-5 text-gray-600" aria-label="Délai estimé" />
+                      <span className="text-gray-700 font-semibold text-xs truncate">{selectedOrder.estimatedDelayFormatted}</span>
+                    </div>
+                    <div className="flex flex-col items-center min-w-[36px]">
+                      <NavigationIcon className="w-5 h-5 text-gray-600" aria-label="Distance" />
+                      <span className="text-gray-700 font-semibold text-xs truncate">{selectedOrder.distanceKm} km</span>
+                    </div>
+                    <div className="flex flex-col items-center min-w-[36px]">
+                      <TruckIcon className="w-5 h-5 text-gray-600" aria-label="Véhicule recommandé" />
+                      <span className="text-gray-700 font-semibold text-xs truncate">{selectedOrder.vehiculeRecommande}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section Articles & Logistique */}
+              <section className="bg-white/90 rounded-lg p-4 shadow-sm border border-gray-200">
+                <h3 className="font-semibold text-gray-800 mb-3">
+                  {selectedOrder.items ? selectedOrder.items.reduce((sum, item) => sum + item.quantity, 0) : 0} Articles
+                </h3>
+                <div className="flex flex-wrap justify-between gap-4 items-center">
+                  <div className="flex items-center gap-1">
+                    <HardDriveIcon className="w-5 h-5 text-gray-600" aria-label="Poids total" />
+                    <span className="text-gray-700">{selectedOrder.poidsTotalKg} kg</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Box className="w-5 h-5 text-gray-600" aria-label="Volume total" />
+                    <span className="text-gray-700">{selectedOrder.volumeTotalM3} m³</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <ScaleIcon className="w-5 h-5 text-gray-600" aria-label="Poids facturé" />
+                    <span className="text-gray-700">{selectedOrder.poidsFacture} kg</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Section Boutique */}
+              <section className="bg-white/90 rounded-lg p-4 shadow-sm border border-gray-200">
+                <h3 className="font-semibold text-gray-800 mb-3">Boutique</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <StoreIcon className="w-5 h-5 text-gray-600" aria-label="Boutique" />
+                    <span className="truncate">{selectedOrder.boutiqueNom}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPinIcon className="w-5 h-5 text-gray-600" aria-label="Adresse boutique" />
+                    <span className="truncate">{selectedOrder.boutiqueAddress}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-5 h-5 text-gray-600" aria-label="Téléphone boutique" />
+                    <span>{selectedOrder.boutiqueTelephone || "Non renseignée"}</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Section Livraison */}
+              <section className="bg-white/90 rounded-lg p-4 shadow-sm border border-gray-200">
+                <h3 className="font-semibold text-gray-800 mb-3">Livraison</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Home className="w-5 h-5 text-gray-600" aria-label="Client" />
+                    <span className="truncate">{selectedOrder.clientNom || "Non renseigné"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPinIcon className="w-5 h-5 text-gray-600" aria-label="Adresse livraison" />
+                    <span className="truncate">{selectedOrder.deliveryAddress}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-5 h-5 text-gray-600" aria-label="Téléphone client" />
+                    <span>{selectedOrder.clientTelephone || "Non renseignée"}</span>
+                  </div>
+                </div>
+              </section>
+            </main>
+
+            {/* Section boutons fixes */}
+            <footer className="sticky bottom-0 bg-white z-20 px-4 py-3 border-t border-gray-200 flex gap-4 justify-end">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => {
+                  closeModal();
+                }}
+              >
+                Passer
+              </Button>
+
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  alert("Course acceptée !");
+                  closeModal();
+                }}
+              >
+                Accepter
+              </Button>
+            </footer>
+          </div>
+        ) : (
+          <p>Chargement...</p>
+        )}
+      </Modal>
     </div>
   );
 }
