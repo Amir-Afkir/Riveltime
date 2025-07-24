@@ -286,6 +286,8 @@ const createOrderAfterConfirmation = async (req, res) => {
 
     const shortId = crypto.randomUUID().slice(0, 6).toUpperCase();
     const orderNumber = `CMD-${shortId}`;
+
+    const clientAvatarUrl = user.avatarUrl || null;
     
     const order = new Order({
       client: user._id,
@@ -315,6 +317,7 @@ const createOrderAfterConfirmation = async (req, res) => {
       boutiqueTelephone: vendeur.phone || "",
       clientNom: user.fullname || "",
       clientTelephone: user.phone || "",
+      clientAvatarUrl: clientAvatarUrl,
 
       paymentIntentId,
       transferGroup,

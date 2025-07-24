@@ -52,6 +52,7 @@ const orderSchema = new mongoose.Schema({
   // --- Informations figées (snapshot)
   clientNom: { type: String },
   clientTelephone: { type: String },
+  clientAvatarUrl: { type: String },
   boutiqueNom: { type: String },
   boutiqueCoverUrl: { type: String, trim: true },
   boutiqueTelephone: { type: String },

@@ -1,5 +1,7 @@
 // orderController.js
 import haversine from 'haversine-distance'; 
+import stripe from '../utils/stripeClient.js';
+import Boutique from '../models/Boutique.js';
 
 import Order from '../models/Order.js';
 import { getUserOrders, assignDelivererToOrder } from '../services/orderService.js';
@@ -8,6 +10,8 @@ import { serverError } from '../utils/responseHelpers.js';
 import { isPointOnSegment, isDirectionConsistent } from '../utils/geoUtils.js';
 import { geocodeAdresse } from '../utils/geocodeAdresse.js';
 
+
+// Espace client
 async function simpleDistanceEstimate(req, res) {
   try {
     const { boutiqueLocation, deliveryLocation } = req.body;
@@ -95,14 +99,7 @@ async function getOrdersByUser(req, res) {
   }
 }
 
-/**
- * Récupérer les commandes en attente visibles par livreurs,
- * avec filtres géographiques "autour" ou "itinéraire".
- * Filtre itinéraire :
- * - boutique sur segment départ→arrivée (tolérance rayonKm)
- * - direction boutique→client cohérente avec départ→arrivée (angle max 45°)
- */
-
+// Espace livreur
 function isCoordValid(coord) {
   return coord && typeof coord.latitude === 'number' && typeof coord.longitude === 'number';
 }
@@ -183,7 +180,7 @@ async function acceptDelivery(req, res) {
 
     // Assignation du livreur et mise à jour du statut
     order.status = 'accepted';
-    order.livreurId = user._id;                   
+    order.deliverer = user._id;                 
     order.livreurStripeId = user.infosLivreur?.stripeAccountId || null;
     order.deliveryStatusHistory.push({ status: 'accepted', date: new Date() });
 
@@ -196,10 +193,85 @@ async function acceptDelivery(req, res) {
   }
 };
 
+// Espace vendeur
+
+// Preparer une commande accepter par un livreur
+async function getAcceptedOrdersForBoutique(req, res) {
+  try {
+    const user = req.dbUser;
+    if (user.role !== 'vendeur') {
+      return res.status(403).json({ error: "Accès réservé aux vendeurs." });
+    }
+
+    // 🔍 Trouver toutes les boutiques appartenant à ce vendeur
+    const boutiques = await Boutique.find({ owner: user._id }, '_id');
+
+    const boutiqueIds = boutiques.map(b => b._id);
+
+    const orders = await Order.find({
+      boutique: { $in: boutiqueIds },
+      status: 'accepted'
+    })
+    .populate([
+      { path: 'items.product' },
+      { path: 'deliverer', select: 'fullname phone avatarUrl' }
+    ])
+    .sort({ placedAt: -1 });
+
+    res.json(orders);
+  } catch (err) {
+    serverError(res, 'Erreur récupération commandes vendeur', err);
+  }
+}
+// Annule une commande manuellement (par vendeur, client ou système)
+async function cancelOrderHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const user = req.dbUser;
+
+    const order = await Order.findById(id).populate('boutique');
+    if (!order) return res.status(404).json({ message: "Commande introuvable." });
+
+    const isClient = user._id.equals(order.client);
+    const isVendeur = order.boutique && user._id.equals(order.boutique.owner);
+    const isAdmin = user.role === 'admin';
+
+    if (!isClient && !isVendeur && !isAdmin) {
+      return res.status(403).json({ message: "Accès non autorisé." });
+    }
+
+    if (order.captureStatus === 'authorized') {
+      try {
+        await stripe.paymentIntents.cancel(order.paymentIntentId);
+      } catch (stripeError) {
+        console.warn("⚠️ Annulation Stripe échouée :", stripeError.message);
+      }
+    }
+
+    order.status = 'cancelled';
+    order.captureStatus = 'canceled';
+    order.deliveryStatusHistory.push({ status: 'cancelled', date: new Date() });
+    order.stripeStatusHistory.push({
+      status: 'canceled',
+      event: 'cancel_order_handler',
+      date: new Date()
+    });
+
+    await order.save();
+
+    return res.status(200).json({ message: "Commande annulée avec succès." });
+  } catch (err) {
+    console.error("❌ Erreur dans cancelOrderHandler :", err);
+    return res.status(500).json({ message: "Erreur serveur lors de l'annulation." });
+  }
+}
+
 export {
   simpleDistanceEstimate,
   estimateDelivery,
   getOrdersByUser,
   getPendingOrdersForLivreur,
-  acceptDelivery
+  acceptDelivery,
+  getAcceptedOrdersForBoutique,
+  cancelOrderHandler,
 };

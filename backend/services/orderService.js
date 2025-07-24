@@ -73,8 +73,8 @@ export const assignDelivererToOrder = async (orderId, livreurId) => {
     { _id: orderId },
     {
       $set: {
-        livreur: livreurId,
-        statut: 'en_cours'
+        deliverer: livreurId,
+        status: 'accepted'
       }
     },
     { new: true }
