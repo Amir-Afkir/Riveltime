@@ -242,6 +242,15 @@
     animation: morph-grid-to-list 300ms ease-out forwards;
   }
 
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE et Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
 /* -------- COMPOSANTS GRAPHIQUES -------- */
 
 .header-home-logo-container {

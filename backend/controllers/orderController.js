@@ -195,32 +195,56 @@ async function acceptDelivery(req, res) {
 
 // Espace vendeur
 
-// Preparer une commande accepter par un livreur
-async function getAcceptedOrdersForBoutique(req, res) {
+// Rendre visible une commande accepter par un livreur
+async function getStatutOrdersForBoutique(req, res) {
   try {
     const user = req.dbUser;
     if (user.role !== 'vendeur') {
       return res.status(403).json({ error: "Accès réservé aux vendeurs." });
     }
 
-    // 🔍 Trouver toutes les boutiques appartenant à ce vendeur
     const boutiques = await Boutique.find({ owner: user._id }, '_id');
-
     const boutiqueIds = boutiques.map(b => b._id);
+
+    const activeStatuses = ['accepted', 'preparing', 'shipped', 'delivered', 'cancelled']; // ou ce que tu utilises
 
     const orders = await Order.find({
       boutique: { $in: boutiqueIds },
-      status: 'accepted'
+      status: { $in: activeStatuses }
     })
-    .populate([
-      { path: 'items.product' },
-      { path: 'deliverer', select: 'fullname phone avatarUrl' }
-    ])
-    .sort({ placedAt: -1 });
+      .populate([
+        { path: 'items.product' },
+        { path: 'deliverer', select: 'fullname phone avatarUrl' }
+      ])
+      .sort({ placedAt: -1 });
 
     res.json(orders);
   } catch (err) {
-    serverError(res, 'Erreur récupération commandes vendeur', err);
+    serverError(res, 'Erreur récupération commandes actives vendeur', err);
+  }
+}
+// Preparer une commande accepter par un livreur
+async function getPreparingOrdersHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const user = req.dbUser;
+
+    const order = await Order.findById(id).populate('boutique');
+    if (!order) return res.status(404).json({ message: "Commande introuvable." });
+
+    const isVendeur = order.boutique && user._id.equals(order.boutique.owner);
+    if (!isVendeur) return res.status(403).json({ message: "Accès non autorisé." });
+
+    order.status = status;
+    order.deliveryStatusHistory.push({ status, date: new Date() });
+
+    await order.save();
+
+    return res.status(200).json({ message: `Commande marquée comme ${status}.` });
+  } catch (err) {
+    console.error("❌ Erreur mise à jour statut commande :", err);
+    return res.status(500).json({ message: "Erreur serveur." });
   }
 }
 // Annule une commande manuellement (par vendeur, client ou système)
@@ -272,6 +296,7 @@ export {
   getOrdersByUser,
   getPendingOrdersForLivreur,
   acceptDelivery,
-  getAcceptedOrdersForBoutique,
+  getStatutOrdersForBoutique,
+  getPreparingOrdersHandler,
   cancelOrderHandler,
 };

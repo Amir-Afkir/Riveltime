@@ -3,6 +3,8 @@ import axios from "axios";
 import useUserStore from "../../stores/userStore";
 import Button from "../../components/ui/Button";
 import Title from "../../components/ui/Title";
+import Card from "../../components/ui/Card";
+
 import {
   Home,
   LocateIcon,
@@ -21,6 +23,14 @@ import {
 } from "lucide-react";
 
 export default function CommandesBoutique() {
+  const [selectedStatus, setSelectedStatus] = useState("pending");
+  const STATUSES = {
+    pending: "En attente",
+    preparing: "Préparée",
+    delivered: "Livrée",
+    cancelled: "Annulée",
+  };
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const { token } = useUserStore();
@@ -28,7 +38,7 @@ export default function CommandesBoutique() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders/boutique/accepted`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders/boutique/statut`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setOrders(res.data);
@@ -44,7 +54,7 @@ export default function CommandesBoutique() {
 
   const handleMarkAsPreparing = async (orderId) => {
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/orders/${orderId}/status`, {
+      await axios.put(`${import.meta.env.VITE_API_URL}/orders/${orderId}/preparing`, {
         status: "preparing"
       }, {
         headers: { Authorization: `Bearer ${token}` },
@@ -72,17 +82,72 @@ export default function CommandesBoutique() {
 
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto">
-      <Title level={2} className="mb-4 text-center">Commandes en cours</Title>
-      {orders.length === 0 ? (
-        <p className="text-center text-gray-500">Aucune commande à préparer.</p>
+      <div className="mb-4 overflow-x-auto whitespace-nowrap no-scrollbar flex gap-2 px-1">
+        {Object.keys(STATUSES).map((statusKey) => (
+          <button
+            key={statusKey}
+            onClick={() => setSelectedStatus(statusKey)}
+            className={`px-4 py-1.5 rounded-full border text-sm ${
+              selectedStatus === statusKey
+                ? "bg-black text-white"
+                : "bg-gray-100 text-gray-700"
+            }`}
+          >
+            {STATUSES[statusKey]}
+          </button>
+        ))}
+      </div>
+      {orders.filter((order) => order.status === selectedStatus).length === 0 ? (
+        <Card className="text-center py-8 px-4 bg-white">
+          {selectedStatus === "pending" && (
+            <>
+              <Title level={3}>Aucune commande en attente</Title>
+              <p className="text-sm text-gray-500 mb-4">
+                Les commandes apparaîtront ici dès qu’un client aura passé commande.
+              </p>
+              <div className="flex justify-center mb-4">
+                <img src="/boxe-vide.webp" alt="Aucune commande" className="w-32 h-auto opacity-80" />
+              </div>
+            </>
+          )}
+          {selectedStatus === "preparing" && (
+            <>
+              <Title level={3}>Aucune commande préparée</Title>
+              <p className="text-sm text-gray-500 mb-4">Vous n’avez encore marqué aucune commande comme étant en préparation.</p>
+              <div className="flex justify-center mb-4">
+                <img src="/boxe-vide.webp" alt="Aucune commande" className="w-32 h-auto opacity-80" />
+              </div>
+            </>
+          )}
+          {selectedStatus === "delivered" && (
+            <>
+              <Title level={3}>Aucune commande livrée</Title>
+              <p className="text-sm text-gray-500 mb-4">Aucune commande n’a encore été marquée comme livrée.</p>
+              <div className="flex justify-center mb-4">
+                <img src="/boxe-vide.webp" alt="Aucune commande" className="w-32 h-auto opacity-80" />
+              </div>
+            </>
+          )}
+          {selectedStatus === "cancelled" && (
+            <>
+              <Title level={3}>Aucune commande annulée</Title>
+              <p className="text-sm text-gray-500 mb-4">Vous n’avez annulé aucune commande récemment.</p>
+              <div className="flex justify-center mb-4">
+                <img src="/boxe-vide.webp" alt="Aucune commande" className="w-32 h-auto opacity-80" />
+              </div>
+            </>
+          )}
+        </Card>
       ) : (
         <div className="space-y-4">
-          {orders.map((order) => (
-            <div key={order._id} className="border rounded-xl p-4 shadow-sm bg-white space-y-4">
+          {orders
+            .filter((order) => order.status === selectedStatus)
+            .map((order) => (
+            <Card key={order._id} className="space-y-4">
               <div className="text-center space-y-1">
                 <p className="text-sm text-gray-600 font-medium flex items-center gap-1"><PackageIcon size={14} />Commande n° {order.orderNumber}</p>
                 <span className="inline-block text-xs font-medium bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                  ⏳ En attente de préparation
+                  {STATUSES[order.status] || "Statut inconnu"}
                 </span>
               </div>
 
@@ -157,15 +222,21 @@ export default function CommandesBoutique() {
                 </div>
               )}
 
-              <div className="flex gap-3 mt-2 justify-between">
-                <Button onClick={() => handleCancelOrder(order._id)} variant="primary" className="w-1/3">
-                  Annuler
-                </Button>
-                <Button onClick={() => handleMarkAsPreparing(order._id)} variant="secondary" className="w-2/3">
-                  En préparation
-                </Button>
-              </div>
-            </div>
+              {order.status === "pending" && (
+                <div className="flex gap-3 mt-2 justify-between">
+                  <Button onClick={() => handleCancelOrder(order._id)} variant="primary" className="w-1/3">
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={() => handleMarkAsPreparing(order._id)}
+                    variant="secondary"
+                    className="w-2/3"
+                  >
+                    En préparation
+                  </Button>
+                </div>
+              )}
+            </Card>
           ))}
         </div>
       )}

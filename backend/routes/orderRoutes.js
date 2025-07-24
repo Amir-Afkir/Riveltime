@@ -18,7 +18,10 @@ router.post('/:id/accept-delivery', orderController.acceptDelivery);
 
 // --------------------Vendeur-----------------------------
 // Rendre visible les commandes accepter pour chaque vendeur
-router.get('/boutique/accepted', orderController.getAcceptedOrdersForBoutique); 
+//router.get('/boutique/accepted', orderController.getAcceptedOrdersForBoutique);
+router.get('/boutique/statut', orderController.getStatutOrdersForBoutique);
+// Annuler une commandes accepter par un vendeur
+router.put('/:id/preparing', orderController.getPreparingOrdersHandler);
 // Annuler une commandes accepter par un vendeur
 router.put('/:id/cancel', orderController.cancelOrderHandler);
 
