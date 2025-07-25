@@ -5,27 +5,17 @@ import Button from "../../components/ui/Button";
 import Title from "../../components/ui/Title";
 import Card from "../../components/ui/Card";
 
-import {
-  Home,
-  LocateIcon,
-  RouteIcon,
-  StoreIcon,
-  MapPinIcon,
-  ClockIcon,
-  NavigationIcon,
-  CreditCardIcon,
-  TruckIcon,
-  PackageIcon,
-  HardDriveIcon,
+import { 
+  MapPinIcon, 
+  PackageIcon, 
   Box,
-  Phone,
-  ScaleIcon,
+  Phone, 
 } from "lucide-react";
 
 export default function CommandesBoutique() {
-  const [selectedStatus, setSelectedStatus] = useState("pending");
+  const [selectedStatus, setSelectedStatus] = useState("accepted");
   const STATUSES = {
-    pending: "En attente",
+    accepted: "En attente",
     preparing: "Préparée",
     delivered: "Livrée",
     cancelled: "Annulée",
@@ -59,9 +49,26 @@ export default function CommandesBoutique() {
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setOrders((prev) => prev.filter((o) => o._id !== orderId));
+      setOrders((prev) =>
+        prev.map((o) => (o._id === orderId ? { ...o, status: "preparing" } : o))
+      );
     } catch (err) {
       alert("Erreur mise à jour du statut");
+      console.error(err);
+    }
+  };
+
+  // Exemple de fonction pour marquer comme livrée avec code de vérification
+  const handleMarkAsDelivered = async (orderId, code) => {
+    try {
+      await axios.put(`${import.meta.env.VITE_API_URL}/orders/${orderId}/mark-delivered`, {
+        code
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert("Commande marquée comme livrée !");
+    } catch (err) {
+      alert("Erreur lors de la livraison : " + (err.response?.data?.message || err.message));
       console.error(err);
     }
   };
@@ -99,7 +106,7 @@ export default function CommandesBoutique() {
       </div>
       {orders.filter((order) => order.status === selectedStatus).length === 0 ? (
         <Card className="text-center py-8 px-4 bg-white">
-          {selectedStatus === "pending" && (
+          {selectedStatus === "accepted" && (
             <>
               <Title level={3}>Aucune commande en attente</Title>
               <p className="text-sm text-gray-500 mb-4">
@@ -198,16 +205,18 @@ export default function CommandesBoutique() {
                     <div>
                       <p className="text-xs font-semibold text-gray-800 mb-1">Client</p>
                       <div className="flex items-start gap-2">
-                        {order.clientAvatarUrl && (
+                        {order.client?.avatarUrl && (
                           <img
-                            src={order.clientAvatarUrl}
+                            src={order.client?.avatarUrl}
                             alt={`Avatar de ${order.clientNom}`}
                             className="w-8 h-8 rounded-full object-cover border"
                           />
                         )}
                         <div className="text-xs text-gray-700">
                           <p className="truncate">{order.clientNom}</p>
-                          <p className="flex items-center gap-1 truncate"><Phone size={12} /> {order.clientTelephone}</p>
+                          <p className="flex items-center gap-1 truncate">
+                            <Phone size={12} /> {order.boutiqueTelephone || order.clientTelephone}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -222,7 +231,7 @@ export default function CommandesBoutique() {
                 </div>
               )}
 
-              {order.status === "pending" && (
+              {order.status === "accepted" && (
                 <div className="flex gap-3 mt-2 justify-between">
                   <Button onClick={() => handleCancelOrder(order._id)} variant="primary" className="w-1/3">
                     Annuler

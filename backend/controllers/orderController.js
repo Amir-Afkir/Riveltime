@@ -162,7 +162,6 @@ async function getPendingOrdersForLivreur(req, res) {
     res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 }
-
 async function acceptDelivery(req, res) {
   try {
     const user = req.dbUser;
@@ -192,6 +191,38 @@ async function acceptDelivery(req, res) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 };
+async function getPreparingOrdersForLivreur(req, res) {
+  try {
+    const user = req.dbUser;
+    if (user.role !== 'livreur') {
+      return res.status(403).json({ message: 'Accès réservé aux livreurs.' });
+    }
+
+    const orders = await Order.find({
+      deliverer: user._id,
+      status: 'preparing'
+    })
+      .sort({ placedAt: -1 })
+      .populate([
+        {
+          path: 'boutique',
+          select: 'name coverImageUrl',
+          populate: { path: 'owner', select: 'phone' },
+          options: { strictPopulate: false }
+        },
+        {
+          path: 'client',
+          select: 'fullname phone avatarUrl',
+          options: { strictPopulate: false }
+        }
+      ]);
+
+    res.json(orders);
+  } catch (err) {
+    console.error('❌ Erreur récupération commandes preparing livreur :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
 
 // Espace vendeur
 
@@ -214,7 +245,9 @@ async function getStatutOrdersForBoutique(req, res) {
     })
       .populate([
         { path: 'items.product' },
-        { path: 'deliverer', select: 'fullname phone avatarUrl' }
+        { path: 'deliverer', select: 'fullname phone avatarUrl' },
+        { path: 'client', select: 'fullname phone avatarUrl' },
+        { path: 'boutique', populate: { path: 'owner', select: 'phone' } }
       ])
       .sort({ placedAt: -1 });
 
@@ -290,11 +323,72 @@ async function cancelOrderHandler(req, res) {
   }
 }
 
+// Marquer une commande comme livrée avec code de vérification
+async function markOrderAsDelivered(req, res) {
+  try {
+    const user = req.dbUser;
+    const { id } = req.params;
+    const { code } = req.body;
+
+    // Vérifier rôle
+    if (user.role !== 'livreur') {
+      return res.status(403).json({ message: "Accès réservé aux livreurs." });
+    }
+
+    // Récupérer la commande
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ message: "Commande introuvable." });
+    }
+
+    // Vérifier que le livreur est bien assigné à cette commande
+    if (!order.deliverer || !user._id.equals(order.deliverer)) {
+      return res.status(403).json({ message: "Vous n'êtes pas assigné à cette commande." });
+    }
+
+    // Vérifier que la commande est en cours de livraison
+    if (order.status !== 'preparing') {
+      return res.status(400).json({ message: "Commande non livrable à ce stade." });
+    }
+
+    console.log("✅ Code attendu :", order.codeVerificationClient);
+    console.log("📥 Code saisi :", code);
+    // Vérifier le code de vérification
+    if (!code || code !== order.codeVerificationClient) {
+      return res.status(400).json({ message: "Code de vérification incorrect." });
+    }
+
+    // Capturer le paiement Stripe
+    if (order.captureStatus === 'authorized') {
+      await stripe.paymentIntents.capture(order.paymentIntentId);
+      order.captureStatus = 'captured';
+      order.stripeStatusHistory.push({
+        status: 'captured',
+        event: 'payment_intent.captured',
+        date: new Date()
+      });
+    }
+
+    // Mettre à jour le statut de la commande
+    order.status = 'delivered';
+    order.deliveryStatusHistory.push({ status: 'delivered', date: new Date() });
+
+    await order.save();
+
+    res.json({ message: "Commande marquée comme livrée avec succès." });
+  } catch (err) {
+    console.error("❌ Erreur dans markOrderAsDelivered :", err);
+    res.status(500).json({ message: "Erreur serveur lors de la confirmation de livraison." });
+  }
+}
+
 export {
   simpleDistanceEstimate,
   estimateDelivery,
   getOrdersByUser,
   getPendingOrdersForLivreur,
+  getPreparingOrdersForLivreur,
+  markOrderAsDelivered,
   acceptDelivery,
   getStatutOrdersForBoutique,
   getPreparingOrdersHandler,

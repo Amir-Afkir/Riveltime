@@ -39,10 +39,12 @@ const orderSchema = new mongoose.Schema({
 
   // --- Informations de paiement Stripe
   paymentIntentId: { type: String, required: true },
+  stripeAuthorizedAmount: { type: Number }, // Montant autorisé en centimes
+  stripeCreatedAt: { type: Date }, // Date de création du PaymentIntent
   checkoutSessionId: { type: String },
   captureStatus: {
     type: String,
-    enum: ['authorized', 'succeeded', 'canceled', 'failed'],
+    enum: ['authorized', 'succeeded', 'captured', 'canceled', 'failed'],
     default: 'authorized',
   },
   transferGroup: { type: String, required: true },
@@ -61,6 +63,7 @@ const orderSchema = new mongoose.Schema({
   vehiculeRecommande: { type: String },
   estimatedDelayMinutes: { type: Number },
   estimatedDelayFormatted: { type: String },
+  estimatedDeliveryAt: { type: Date },
   poidsTotalKg: { type: Number },
   volumeTotalM3: { type: Number },
   poidsFacture: { type: Number },

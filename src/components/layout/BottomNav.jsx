@@ -1,7 +1,7 @@
 // ✅ src/components/BottomNav.jsx
 import { useNavigate, useLocation } from "react-router-dom";
 import useCartStore from "../../stores/cartStore";
-import { Home, ShoppingCart, Boxes, User, Store, FileText, Bike, Mail, Scroll, Package } from "lucide-react";
+import { Home, ShoppingCart, Boxes, User, Store, FileText, Bike, RouteIcon, Package } from "lucide-react";
 import PanierModal from "../../components/client/PanierModal";
 import { useState } from "react";
 
@@ -59,7 +59,7 @@ export default function BottomNav() {
     navItems = [
       { label: "Dashboard", path: "/livreur/dashboard", icon: Home },
       { label: "Courses", path: "/livreur/courses", icon: Bike },
-      { label: "Historique", path: "/livreur/historique", icon: Scroll },
+      { label: "Tournée", path: "/livreur/tournee", icon: RouteIcon },
       { label: "Profil", path: "/livreur/profil", icon: User },
     ];
   }

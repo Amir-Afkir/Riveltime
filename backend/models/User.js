@@ -21,6 +21,7 @@ const infosLivreurSchema = new mongoose.Schema({
 
 const userSchema = new mongoose.Schema({
   auth0Id: { type: String, required: true, unique: true },
+  stripeCustomerId: { type: String, trim: true }, // ✅ Ajout ici
   email: { type: String, required: true },
   fullname: { type: String, default: 'Utilisateur', trim: true },
   phone: {

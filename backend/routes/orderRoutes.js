@@ -15,6 +15,10 @@ router.post('/estimate', orderController.estimateDelivery);
 router.get('/livreur/pending', orderController.getPendingOrdersForLivreur);
 // Assigner un livreur à une commande
 router.post('/:id/accept-delivery', orderController.acceptDelivery);
+// Rendre visible au livreur une commande assignée 
+router.get('/livreur/preparing', orderController.getPreparingOrdersForLivreur);
+// Marquer une commande comme livrée (avec code de vérification)
+router.put('/:id/mark-delivered', orderController.markOrderAsDelivered);
 
 // --------------------Vendeur-----------------------------
 // Rendre visible les commandes accepter pour chaque vendeur

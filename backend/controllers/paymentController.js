@@ -185,6 +185,10 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
         },
         transfer_group: transferGroup,
         application_fee_amount: 0, //Math.round(totalProduits * 0.08 * 100), // 8% commission
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'never'
+        }
       });
 
       createdIntents.push({
@@ -201,13 +205,79 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
     }
 
     return res.status(200).json({
-      paymentIntents: createdIntents,
-      clientSecret: createdIntents[0]?.clientSecret
+    paymentIntents: createdIntents.map(intent => ({
+        paymentIntentId: intent.paymentIntentId,
+        clientSecret: intent.clientSecret,
+        boutiqueId: intent.boutiqueId  
+    }))
     });
 
   } catch (err) {
     console.error("❌ Erreur multi-intents :", err);
     return res.status(500).json({ message: "Erreur lors de la création des paiements." });
+  }
+};
+
+
+
+const confirmMultipleIntentsHandler = async (req, res) => {
+  try {
+    // Nouveau bloc pour récupérer automatiquement le paymentMethodId si non fourni
+    const { paymentMethodId: clientProvidedId, intents } = req.body;
+    let paymentMethodId = clientProvidedId;
+
+    if (!paymentMethodId) {
+      const firstPI = await stripe.paymentIntents.retrieve(intents[0].paymentIntentId);
+      paymentMethodId = firstPI.payment_method;
+
+      if (!paymentMethodId) {
+        return res.status(400).json({ message: "Aucun paymentMethodId trouvé dans les PaymentIntents." });
+      }
+
+      console.log("✅ paymentMethodId récupéré automatiquement :", paymentMethodId);
+    }
+
+    // validation
+    if (!Array.isArray(intents) || intents.length === 0) {
+      return res.status(400).json({ message: "Requête invalide." });
+    }
+
+    for (const { paymentIntentId, boutiqueId } of intents) {
+      if (!paymentIntentId || !boutiqueId) {
+        console.warn("⏭️ Données manquantes, saut :", { paymentIntentId, boutiqueId });
+        continue;
+      }
+
+      const piBefore = await stripe.paymentIntents.retrieve(paymentIntentId);
+      console.log(`🔎 Statut actuel de ${paymentIntentId} : ${piBefore.status}`);
+
+      if (piBefore.status === 'requires_capture') {
+        console.log(`⏭️ PaymentIntent déjà confirmé : ${paymentIntentId}`);
+        continue;
+      }
+
+      // Remplacement de la validation du paymentMethodId par une vérification du statut
+      if (piBefore.status === 'requires_payment_method') {
+        console.warn(`❌ Ce PaymentIntent (${paymentIntentId}) nécessite un paymentMethod mais aucun n'a été fourni.`);
+        continue;
+      }
+
+      const confirmParams = paymentMethodId
+        ? { payment_method: paymentMethodId, off_session: true }
+        : {};
+
+      try {
+        const pi = await stripe.paymentIntents.confirm(paymentIntentId, confirmParams);
+        console.log(`✅ Confirmé : ${paymentIntentId} → statut = ${pi.status}`);
+      } catch (err) {
+        console.error(`❌ Échec confirmation ${paymentIntentId} :`, err.message);
+      }
+    }
+
+    res.status(200).json({ message: "Tous les PaymentIntents ont été traités." });
+  } catch (err) {
+    console.error("❌ Erreur dans confirmMultipleIntentsHandler :", err);
+    res.status(500).json({ message: "Erreur serveur lors de la confirmation multiple." });
   }
 };
 
@@ -227,8 +297,19 @@ const createOrderAfterConfirmation = async (req, res) => {
     }
 
     const pi = await stripeLib.paymentIntents.retrieve(paymentIntentId);
+    console.log("🔍 Tentative création commande pour PaymentIntent :", paymentIntentId);
+    console.log("📦 Statut PaymentIntent :", pi.status);
+    console.log("📦 Métadonnées :", pi.metadata);
+
+    if (pi.status !== 'requires_capture') {
+      return res.status(400).json({ message: `Le paiement n'est pas confirmé (statut = ${pi.status})` });
+    }
 
     if (!pi || pi.metadata.clientId !== user._id.toString()) {
+      console.warn("⚠️ Mismatch user/paymentIntent :",
+        "\npi.metadata.clientId =", pi.metadata.clientId,
+        "\nuser._id =", user._id.toString()
+      );
       return res.status(403).json({ message: 'Tentative de fraude détectée.' });
     }
 
@@ -331,7 +412,7 @@ const createOrderAfterConfirmation = async (req, res) => {
       }],
       stripeStatusHistory: [{
         status: pi.status,
-        event: 'payment_intent.confirmed'
+        event: pi.status === 'requires_capture' ? 'payment_intent.confirmed' : 'payment_intent.invalid'
       }],
 
       poidsTotalKg,
@@ -340,16 +421,26 @@ const createOrderAfterConfirmation = async (req, res) => {
       distanceKm: distanceKmVal,
       estimatedDelayMinutes,
       estimatedDelayFormatted,
+      estimatedDeliveryAt: new Date(Date.now() + estimatedDelayMinutes * 60 * 1000),
       vehiculeRecommande: vehiculeRecommande || 'N/A',
 
-      codeVerificationClient: crypto.randomUUID().slice(0, 4).toUpperCase()
+      codeVerificationClient: crypto.randomUUID().slice(0, 4).toUpperCase(),
+
+      stripeAuthorizedAmount: pi.amount,
+      stripeCreatedAt: new Date(pi.created * 1000),
     });
 
+    console.log("✅ Commande prête à être sauvegardée :", {
+      orderNumber,
+      boutique: boutiqueId,
+      produits: parsedProduits.length,
+      totalPrice
+    });
     await order.save();
     res.status(201).json({ orderId: order._id });
 
   } catch (err) {
-    console.error('❌ Erreur création commande après confirmation :', err);
+    console.error('❌ Erreur création commande après confirmation :', err.message, err.stack);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
@@ -362,6 +453,7 @@ export {
   onboardStripeAccountHandler,
   manageStripeAccountHandler,
   createMultiPaymentIntentsHandler,
+  confirmMultipleIntentsHandler,
   createOrderAfterConfirmation
 };
 

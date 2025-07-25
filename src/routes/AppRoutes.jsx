@@ -35,7 +35,7 @@ const routesConfig = {
   livreur: [
     { path: "/livreur/dashboard", key: "livreur/Dashboard" },
     { path: "/livreur/courses",   key: "livreur/Courses" },
-    { path: "/livreur/historique",key: "livreur/Historique" },
+    { path: "/livreur/tournee",   key: "livreur/Tournee" },
     { path: "/livreur/profil",    key: "common/Profil" },
     { path: "/livreur/messages",  key: "livreur/Messages" },
   ],
