@@ -12,7 +12,7 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
   );
 
   const avatarUrl = useMemo(
-    () => selectedBoutique?.owner?.avatarUrl || "/src/assets/avatar-default.png",
+    () => selectedBoutique?.owner?.avatarUrl || "/avatar-default.png",
     [selectedBoutique]
   );
 

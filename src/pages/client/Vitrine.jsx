@@ -170,7 +170,7 @@ export default function Vitrine() {
         </div>
         <div className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 w-[72px] h-[72px] rounded-full border-2 border-white shadow overflow-hidden bg-white z-[60]">
           <img
-            src={boutique.owner?.avatarUrl || "/src/assets/avatar-default.png"}
+            src={boutique.owner?.avatarUrl || "/avatar-default.png"}
             alt={`Avatar de ${boutique.owner?.fullname || "vendeur"}`}
             title={boutique.owner?.fullname || "Vendeur"}
             className="w-full h-full object-cover rounded-full"
