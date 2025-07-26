@@ -38,9 +38,20 @@ const useUserStore = create(devtools((set, get) => {
     restoreUserFromCache: () => {
       const token = localStorage.getItem("accessToken");
       const raw = localStorage.getItem("userData");
-      const userData = raw ? JSON.parse(raw) : null;
+      let userData = raw ? JSON.parse(raw) : null;
 
-      if (token && userData) {
+      // 🩹 Compatibilité : transforme 'id' en '_id' si nécessaire
+      if (userData) {
+        if (typeof userData._id === 'object' && userData._id.$oid) {
+          userData._id = userData._id.$oid; // 🔁 Cas export MongoDB avec $oid
+        } else if (!userData._id && userData.id) {
+          userData._id = userData.id; // 🔁 Compatibilité si seulement `id`
+        }
+      }
+
+      console.log("🗂️ Restauration depuis le cache local...", { token, userData });
+
+      if (token && userData && userData._id) {
         set({
           token,
           userData,
@@ -51,9 +62,17 @@ const useUserStore = create(devtools((set, get) => {
 
     // 🔐 Initialise depuis Auth0
     initAuth0Session: function initAuth0Session({ auth0User, getTokenSilently }) {
-      const cached = getCachedUser();
+      let cached = getCachedUser();
+      if (cached) {
+        if (typeof cached._id === 'object' && cached._id.$oid) {
+          cached._id = cached._id.$oid;
+        } else if (!cached._id && cached.id) {
+          cached._id = cached.id;
+        }
+      }
 
       if (cached?.auth0Id === auth0User?.sub) {
+        console.log("🔄 Session restaurée depuis le cache local");
         set({
           userData: cached,
           token: localStorage.getItem("accessToken"),
@@ -62,6 +81,7 @@ const useUserStore = create(devtools((set, get) => {
           loadingUser: false,
         });
       } else {
+        console.log("📡 Aucun cache valide, récupération distante...");
         localStorage.removeItem("userData");
         set({ auth0User, getTokenSilently });
         get().fetchUser({ getTokenSilently });
@@ -80,13 +100,17 @@ const useUserStore = create(devtools((set, get) => {
         saveAccessToken(accessToken);
         set({ token: accessToken });
 
+        console.log("🌐 Récupération de l'utilisateur via :", `${import.meta.env.VITE_API_URL}/users/me`);
+
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!res.ok) throw new Error("Échec récupération utilisateur");
 
         const data = await res.json();
+        console.log("👤 Données utilisateur reçues :", data);
         const finalUser = { ...(data.user || data), auth0Id: get().auth0User?.sub };
+        console.log("🧩 Utilisateur final (transformé et enrichi) :", finalUser);
 
         saveUserData(finalUser);
         set({ userData: finalUser });

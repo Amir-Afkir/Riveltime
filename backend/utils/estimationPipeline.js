@@ -76,7 +76,10 @@ const buildEstimationInput = async ({ cart, user, vehicule = 'velo' }) => {
   if (!cart?.length) throw new Error("Panier vide");
 
   const productIds = cart.map(item => item.productId);
-  const products = await Product.find({ _id: { $in: productIds } }).populate('boutique');
+  const products = await Product.find({ _id: { $in: productIds } }).populate({
+    path: 'boutique',
+    populate: { path: 'owner' }
+  });
 
   const grouped = {};
   for (const item of cart) {
@@ -99,6 +102,7 @@ const buildEstimationInput = async ({ cart, user, vehicule = 'velo' }) => {
 
   return Object.entries(grouped).map(([boutiqueId, data]) => {
     const coords = data.boutique.location?.coordinates || [0, 0];
+    console.log("🔎 Boutique:", data.boutique.name, "→ vendeurStripeId:", data.boutique.owner?.infosVendeur?.stripeAccountId);
     return {
       boutiqueId,
       boutiqueLocation: { lat: coords[1], lng: coords[0] },
@@ -110,7 +114,7 @@ const buildEstimationInput = async ({ cart, user, vehicule = 'velo' }) => {
       activerParticipation: data.boutique.activerParticipation,
       participationPourcent: data.boutique.participationPourcent,
       contributionLivraisonPourcent: data.boutique.contributionPourcent,
-      vendeurStripeId: data.boutique.stripeId,
+      vendeurStripeId: data.boutique.owner?.infosVendeur?.stripeAccountId,
       boutique: data.boutique
     };
   });

@@ -114,6 +114,11 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
     const { cart } = req.body;
     const user = req.dbUser;
 
+    // Log détaillé de la requête reçue
+    console.log("📥 createMultiPaymentIntentsHandler - Requête reçue :");
+    console.log("🧺 Cart :", JSON.stringify(cart, null, 2));
+    console.log("👤 Utilisateur :", user?.email);
+
     // Vérification des entrées minimales
     if (!cart?.length || !user?.infosClient?.latitude || !user?.infosClient?.longitude) {
       return res.status(400).json({ message: "Panier ou coordonnées invalides." });
@@ -184,7 +189,10 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
           estimatedDelayFormatted: formatDelay(estimation.estimatedDelay),
         },
         transfer_group: transferGroup,
-        application_fee_amount: 0, //Math.round(totalProduits * 0.08 * 100), // 8% commission
+        transfer_data: {
+          destination: vendeurStripeId // 👈 ici tu mets le compte vendeur
+        },
+        application_fee_amount: Math.round(totalProduits * 0.08 * 100), // 8% de commission sur les produits uniquement
         automatic_payment_methods: {
           enabled: true,
           allow_redirects: 'never'
@@ -205,21 +213,20 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
     }
 
     return res.status(200).json({
-    paymentIntents: createdIntents.map(intent => ({
+      paymentIntents: createdIntents.map(intent => ({
         paymentIntentId: intent.paymentIntentId,
         clientSecret: intent.clientSecret,
         boutiqueId: intent.boutiqueId  
-    }))
+      }))
     });
 
-  } catch (err) {
-    console.error("❌ Erreur multi-intents :", err);
+  } catch (error) {
+    console.error("❌ Erreur dans createMultiPaymentIntentsHandler :", error);
     return res.status(500).json({ message: "Erreur lors de la création des paiements." });
   }
 };
 
-
-
+/*
 const confirmMultipleIntentsHandler = async (req, res) => {
   try {
     // Nouveau bloc pour récupérer automatiquement le paymentMethodId si non fourni
@@ -279,7 +286,7 @@ const confirmMultipleIntentsHandler = async (req, res) => {
     console.error("❌ Erreur dans confirmMultipleIntentsHandler :", err);
     res.status(500).json({ message: "Erreur serveur lors de la confirmation multiple." });
   }
-};
+};*/
 
 // ======================= Commande après confirmation ========================= //
 
@@ -453,7 +460,7 @@ export {
   onboardStripeAccountHandler,
   manageStripeAccountHandler,
   createMultiPaymentIntentsHandler,
-  confirmMultipleIntentsHandler,
+  //confirmMultipleIntentsHandler,
   createOrderAfterConfirmation
 };
 

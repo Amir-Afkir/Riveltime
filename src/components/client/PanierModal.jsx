@@ -163,7 +163,8 @@ export default function PanierModal({ onClose }) {
           recommendedVehicles,
           boutiqueName,
           boutiquesById,
-          paymentIntentIds, // ✅ Ajout ici
+          paymentIntentIds,
+          cart: cart,
         },
       });
 

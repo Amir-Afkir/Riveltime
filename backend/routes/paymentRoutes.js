@@ -5,7 +5,7 @@ import {
   onboardStripeAccountHandler,
   manageStripeAccountHandler,
   createMultiPaymentIntentsHandler,
-  confirmMultipleIntentsHandler,
+  //confirmMultipleIntentsHandler,
   createOrderAfterConfirmation,
 } from '../controllers/paymentController.js';
 
@@ -18,7 +18,7 @@ router.get('/status', getStripeStatusHandler);
 router.post('/create-account', createStripeAccountHandler);
 
 // Stripe confirme chaque PaymentIntent avec le même paymentMethodId
-router.post('/confirm-many', confirmMultipleIntentsHandler);
+//router.post('/confirm-many', confirmMultipleIntentsHandler);
 
 // Route pour onboarding Stripe Connect
 router.post('/onboard', onboardStripeAccountHandler);
@@ -30,4 +30,4 @@ router.get('/manage', manageStripeAccountHandler);
 router.post('/multi-payment-intents', createMultiPaymentIntentsHandler); 
 router.post('/create', createOrderAfterConfirmation);
 
-export default router;
+export default router; 

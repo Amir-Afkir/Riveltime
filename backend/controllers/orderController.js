@@ -367,6 +367,24 @@ async function markOrderAsDelivered(req, res) {
         event: 'payment_intent.captured',
         date: new Date()
       });
+
+      // Transfert vers le livreur
+      await stripe.transfers.create({
+        amount: Math.round(order.deliveryFee * 100), // frais de livraison
+        currency: 'eur',
+        destination: order.livreurStripeId,
+        transfer_group: order.transferGroup,
+      });
+
+      // Transfert vers le vendeur
+      const produitsTotalCents = Math.round(order.produitsTotal * 100);
+      const commission = Math.round(produitsTotalCents * 0.08);
+      await stripe.transfers.create({
+        amount: produitsTotalCents - commission,
+        currency: 'eur',
+        destination: order.vendeurStripeId,
+        transfer_group: order.transferGroup,
+      });
     }
 
     // Mettre à jour le statut de la commande

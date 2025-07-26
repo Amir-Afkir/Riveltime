@@ -31,6 +31,11 @@ export default function App() {
       const parsedUser = rawUser ? JSON.parse(rawUser) : null;
 
       if (token && parsedUser) {
+        // 🛠 Patch de sécurité si _id est absent mais id présent
+        if (!parsedUser._id && parsedUser.id) {
+          parsedUser._id = parsedUser.id;
+        }
+
         useUserStore.setState({
           token,
           userData: parsedUser,

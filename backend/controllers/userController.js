@@ -64,7 +64,12 @@ export const getMyProfile = async (req, res) => {
     const formatted = formatUserProfile(dbUser);
     if (!formatted) return res.status(400).json({ error: 'Rôle utilisateur inconnu' });
 
-    return res.json({ ...formatted, avatarUrl: dbUser.avatarUrl });
+    return res.json({
+      _id: dbUser._id, // ✅ Ajouté ici
+      auth0Id: dbUser.auth0Id,
+      avatarUrl: dbUser.avatarUrl,
+      ...formatted,
+    });
   } catch (err) {
     console.error('❌ Erreur lors de la récupération du profil :', err);
     res.status(500).json({ error: 'Erreur serveur' });
