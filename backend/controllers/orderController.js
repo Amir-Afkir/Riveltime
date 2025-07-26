@@ -370,7 +370,7 @@ async function markOrderAsDelivered(req, res) {
 
       // Transfert vers le livreur
       await stripe.transfers.create({
-        amount: Math.round(order.deliveryFee * 100), // frais de livraison
+        amount: Math.round(order.totalLivraison * 100),
         currency: 'eur',
         destination: order.livreurStripeId,
         transfer_group: order.transferGroup,

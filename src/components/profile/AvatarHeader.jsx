@@ -51,7 +51,7 @@ export default function AvatarHeader() {
           </div>
         )}
         <img
-          src={hasAvatar ? `${userData.avatarUrl}?v=${avatarVersion}` : "/src/assets/avatar-default.png"}
+          src={hasAvatar ? `${userData.avatarUrl}?v=${avatarVersion}` : "/avatar-default.png"}
           alt="Avatar utilisateur"
           className="w-full h-full object-cover"
         />
