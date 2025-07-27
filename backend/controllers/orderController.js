@@ -323,63 +323,86 @@ async function cancelOrderHandler(req, res) {
   }
 }
 
-  // Marquer une commande comme livrée avec code de vérification
-  async function markOrderAsDelivered(req, res) {
-    try {
-      const user = req.dbUser;
-      const { id } = req.params;
-      const { code } = req.body;
+// Marquer une commande comme livrée avec code de vérification
+async function markOrderAsDelivered(req, res) {
+  try {
+    const user = req.dbUser;
+    const { id } = req.params;
+    const { code } = req.body;
 
-      if (user.role !== 'livreur') {
-        return res.status(403).json({ message: "Accès réservé aux livreurs." });
-      }
-
-      const order = await Order.findById(id);
-      if (!order) {
-        return res.status(404).json({ message: "Commande introuvable." });
-      }
-
-      if (!order.deliverer || !user._id.equals(order.deliverer)) {
-        return res.status(403).json({ message: "Vous n'êtes pas assigné à cette commande." });
-      }
-
-      if (order.status !== 'preparing') {
-        return res.status(400).json({ message: "Commande non livrable à ce stade." });
-      }
-
-      if (!code || code !== order.codeVerificationClient) {
-        return res.status(400).json({ message: "Code de vérification incorrect." });
-      }
-
-      console.log("✅ Code vérifié :", code);
-
-      // Capture du paiement si pas encore fait
-      if (order.captureStatus !== 'captured') {
-        const paymentIntent = await stripe.paymentIntents.capture(order.paymentIntentId);
-        order.captureStatus = 'captured';
-        order.stripeStatusHistory.push({
-          status: 'captured',
-          event: 'payment_intent.captured',
-          date: new Date()
-        });
-        console.log("✅ Paiement capturé :", paymentIntent.amount);
-      }
-
-      // Les transferts vers le vendeur et le livreur ont déjà été effectués automatiquement
-      // via `transfer_data.destination` au moment de la capture du paiement.
-
-      // Mise à jour commande
-      order.status = 'delivered';
-      order.deliveryStatusHistory.push({ status: 'delivered', date: new Date() });
-
-      await order.save();
-      res.json({ message: "Commande livrée et fonds redistribués avec succès." });
-
-    } catch (err) {
-      console.error("❌ Erreur markOrderAsDelivered :", err);
-      res.status(500).json({ message: "Erreur serveur lors de la livraison." });
+    if (user.role !== 'livreur') {
+      return res.status(403).json({ message: "Accès réservé aux livreurs." });
     }
+
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ message: "Commande introuvable." });
+    }
+
+    if (!order.deliverer || !user._id.equals(order.deliverer)) {
+      return res.status(403).json({ message: "Vous n'êtes pas assigné à cette commande." });
+    }
+
+    if (order.status !== 'preparing') {
+      return res.status(400).json({ message: "Commande non livrable à ce stade." });
+    }
+
+    if (!code || code !== order.codeVerificationClient) {
+      return res.status(400).json({ message: "Code de vérification incorrect." });
+    }
+
+    console.log("✅ Code vérifié :", code);
+
+    // Capture du paiement si pas encore fait
+    if (order.captureStatus !== 'captured') {
+      const paymentIntent = await stripe.paymentIntents.capture(order.paymentIntentId);
+      order.captureStatus = 'captured';
+      order.stripeStatusHistory.push({
+        status: 'captured',
+        event: 'payment_intent.captured',
+        date: new Date()
+      });
+      console.log("✅ Paiement capturé :", paymentIntent.amount);
+
+      if (order.vendeurStripeId) {
+        await stripe.transfers.create({
+          amount: Math.round(order.montantVendeur * 100),
+          currency: 'eur',
+          destination: order.vendeurStripeId,
+          transfer_group: order.transferGroup,
+          source_transaction: paymentIntent.latest_charge
+        });
+        console.log("💸 Transfert vendeur effectué :", order.montantVendeur);
+      } else {
+        console.warn("⚠️ vendeurStripeId manquant pour le transfert.");
+      }
+
+      if (order.livreurStripeId) {
+        await stripe.transfers.create({
+          amount: Math.round(order.montantLivreur * 100),
+          currency: 'eur',
+          destination: order.livreurStripeId,
+          transfer_group: order.transferGroup,
+          source_transaction: paymentIntent.latest_charge
+        });
+        console.log("🚚 Transfert livreur effectué :", order.montantLivreur);
+      } else {
+        console.warn("⚠️ livreurStripeId manquant pour le transfert.");
+      }
+    }
+
+    // Mise à jour commande
+    order.status = 'delivered';
+    order.deliveryStatusHistory.push({ status: 'delivered', date: new Date() });
+
+    await order.save();
+    res.json({ message: "Commande livrée et fonds redistribués avec succès." });
+
+  } catch (err) {
+    console.error("❌ Erreur markOrderAsDelivered :", err);
+    res.status(500).json({ message: "Erreur serveur lors de la livraison." });
   }
+}
 
 export {
   simpleDistanceEstimate,

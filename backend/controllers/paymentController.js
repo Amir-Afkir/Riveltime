@@ -142,12 +142,13 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
         return res.status(400).json({ message: "Boutique ou compte vendeur introuvable." });
       }
 
-      // ❗ À adapter : trouver un livreur réel une fois l'assignation faite
+      // ❗ À remplacer par un vrai assignateur de livreur
       const livreur = await User.findOne({ role: 'livreur' }).sort({ createdAt: -1 });
       const livreurStripeId = livreur?.infosLivreur?.stripeAccountId || null;
 
       const livraison = estimation.deliveryFee;
       const participation = estimation.participation;
+
       const {
         commissionGlobale,
         commissionVendeur,
@@ -160,7 +161,7 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
         participation
       });
 
-      // Vérification des montants (centimes)
+      // Sécurité : vérification des montants
       if ([montantVendeur, montantLivreur, commissionVendeur, commissionLivreur].some(x => typeof x !== 'number' || isNaN(x))) {
         console.error("❌ Montant invalide détecté :", {
           montantVendeur, montantLivreur, commissionVendeur, commissionLivreur
@@ -177,11 +178,11 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
         : minutes < 1440 ? `${Math.floor(minutes / 60)}h ${minutes % 60 || ''}min`
         : `${Math.floor(minutes / 1440)}j ${Math.floor((minutes % 1440) / 60)}h`;
 
-      // ✅ Création PaymentIntent dans le compte plateforme
+      // ✅ Création du PaymentIntent dans le compte plateforme
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: totalAmount,
+        amount: Math.round(totalAmount * 100), // centimes
         currency: 'eur',
-        capture_method: 'manual', // paiement différé (capturé après livraison)
+        capture_method: 'manual',
         confirm: false,
         transfer_group: transferGroup,
         automatic_payment_methods: {
@@ -216,11 +217,7 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
           estimatedDelay: estimation.estimatedDelay.toString(),
           estimatedDelayFormatted: formatDelay(estimation.estimatedDelay),
           transferGroup
-        },
-        transfer_data: {
-          destination: vendeurStripeId
-        },
-        application_fee_amount: applicationFee
+        }, 
       });
 
       createdIntents.push({
