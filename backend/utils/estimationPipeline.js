@@ -159,9 +159,39 @@ const processEstimate = async (input) => {
   };
 };
 
+//---
+const calculerMontantsCommande = ({
+  produitsTotal,
+  livraison,
+  participation,
+  tauxCommission = 0.08,
+}) => {
+  const totalPrice = produitsTotal + livraison;
+  const totalLivraison = livraison + participation;
+  const netProduits = produitsTotal - participation;
+
+  const commissionGlobale = Math.round(totalPrice * tauxCommission * 100);
+  const commissionVendeur = Math.round(netProduits * tauxCommission * 100);
+  const commissionLivreur = Math.round(totalLivraison * tauxCommission * 100);
+
+  const montantVendeur = Math.round(netProduits * 100) - commissionVendeur;
+  const montantLivreur = Math.round(totalLivraison * 100) - commissionLivreur;
+
+  return {
+    totalPrice,
+    totalLivraison,
+    commissionGlobale,
+    commissionVendeur,
+    commissionLivreur,
+    montantVendeur,
+    montantLivreur,
+  };
+}
+
 export {
   calculerPoidsFacture,
   buildEstimationInput,
   processEstimate,
-  processSimpleEstimate
+  processSimpleEstimate,
+  calculerMontantsCommande
 };

@@ -121,6 +121,13 @@ const orderSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now },
   }],
 
+  // --- Montants & commissions calculés lors de la commande (pour transfert)
+  commissionGlobale: { type: Number }, // Commission totale Riveltime (en centimes)
+  commissionVendeur: { type: Number }, // Part de la commission supportée par le vendeur (en centimes)
+  commissionLivreur: { type: Number }, // Part de la commission supportée par le livreur (en centimes)
+  montantVendeur: { type: Number }, // Montant net à transférer au vendeur (en centimes)
+  montantLivreur: { type: Number }, // Montant net à transférer au livreur (en centimes)
+
   // --- Informations figées (snapshot au moment de la commande)
   clientNom: { type: String },
   clientTelephone: { type: String },

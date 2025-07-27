@@ -1,5 +1,12 @@
 import stripe from '../utils/stripeClient.js';
 import { createExpressAccount, generateOnboardingLink } from '../services/stripeAccounts.js';
+
+import crypto from 'crypto';
+import Stripe from 'stripe';
+const stripeLib = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+import { buildEstimationInput, processEstimate, calculerMontantsCommande } from '../utils/estimationPipeline.js';
+
 import Product from '../models/Product.js';
 import Boutique from '../models/Boutique.js';
 import Order from '../models/Order.js';
@@ -107,193 +114,138 @@ const manageStripeAccountHandler = async (req, res) => {
 
 // ======================= Payment Intents ========================= //
 
-import { buildEstimationInput, processEstimate } from '../utils/estimationPipeline.js';
 
+// Handler pour créer plusieurs PaymentIntents (un par boutique)
 const createMultiPaymentIntentsHandler = async (req, res) => {
   try {
     const { cart } = req.body;
     const user = req.dbUser;
 
-    // Log détaillé de la requête reçue
-    console.log("📥 createMultiPaymentIntentsHandler - Requête reçue :");
-    console.log("🧺 Cart :", JSON.stringify(cart, null, 2));
-    console.log("👤 Utilisateur :", user?.email);
-
-    // Vérification des entrées minimales
     if (!cart?.length || !user?.infosClient?.latitude || !user?.infosClient?.longitude) {
       return res.status(400).json({ message: "Panier ou coordonnées invalides." });
     }
 
-    // Préparation des données groupées par boutique
     const groupedEstimations = await buildEstimationInput({ cart, user });
-    const multiIntentSessionId = `multi_${Date.now()}_${user._id}`;
     const createdIntents = [];
 
     for (const input of groupedEstimations) {
       const estimation = await processEstimate(input);
-
-      function formatDelay(minutes) {
-        if (minutes < 60) return `${minutes} min`;
-        if (minutes < 1440) {
-          const h = Math.floor(minutes / 60);
-          const m = minutes % 60;
-          return m === 0 ? `${h}h` : `${h}h ${m}min`;
-        }
-        const d = Math.floor(minutes / 1440);
-        const h = Math.floor((minutes % 1440) / 60);
-        return h === 0 ? `${d}j` : `${d}j ${h}h`;
-      }
-
       const {
-        boutiqueId, 
-        vendeurStripeId,
+        boutiqueId,
         totalProduits,
-        items
+        items,
+        vendeurStripeId
       } = input;
 
+      const boutique = await Boutique.findById(boutiqueId).populate('owner');
+      if (!boutique || !vendeurStripeId) {
+        return res.status(400).json({ message: "Boutique ou compte vendeur introuvable." });
+      }
+
+      // ❗ À adapter : trouver un livreur réel une fois l'assignation faite
+      const livreur = await User.findOne({ role: 'livreur' }).sort({ createdAt: -1 });
+      const livreurStripeId = livreur?.infosLivreur?.stripeAccountId || null;
+
+      const livraison = estimation.deliveryFee;
+      const participation = estimation.participation;
       const {
-        deliveryFee: livraison,
+        commissionGlobale,
+        commissionVendeur,
+        commissionLivreur,
+        montantVendeur,
+        montantLivreur
+      } = calculerMontantsCommande({
+        produitsTotal: totalProduits,
+        livraison,
         participation
-      } = estimation;
+      });
 
-      const total = totalProduits + livraison;
+      // Vérification des montants (centimes)
+      if ([montantVendeur, montantLivreur, commissionVendeur, commissionLivreur].some(x => typeof x !== 'number' || isNaN(x))) {
+        console.error("❌ Montant invalide détecté :", {
+          montantVendeur, montantLivreur, commissionVendeur, commissionLivreur
+        });
+        return res.status(500).json({ message: "Montant invalide détecté." });
+      }
+
       const transferGroup = `order_${Date.now()}_${boutiqueId}`;
+      const totalAmount = montantVendeur + montantLivreur;
+      const applicationFee = commissionVendeur + commissionLivreur;
 
+      const formatDelay = (minutes) =>
+        minutes < 60 ? `${minutes} min`
+        : minutes < 1440 ? `${Math.floor(minutes / 60)}h ${minutes % 60 || ''}min`
+        : `${Math.floor(minutes / 1440)}j ${Math.floor((minutes % 1440) / 60)}h`;
+
+      // ✅ Création PaymentIntent dans le compte plateforme
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(total * 100),
+        amount: totalAmount,
         currency: 'eur',
-        capture_method: 'manual',
+        capture_method: 'manual', // paiement différé (capturé après livraison)
         confirm: false,
+        transfer_group: transferGroup,
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'never'
+        },
         metadata: {
-          clientId: user._id.toString(),
-          multiIntentSessionId,
           boutiqueId,
+          clientId: user._id.toString(),
+          vendeurStripeId,
+          livreurStripeId: livreurStripeId || 'pending',
+          montantVendeur: montantVendeur.toString(),
+          montantLivreur: montantLivreur.toString(),
+          commissionVendeur: commissionVendeur.toString(),
+          commissionLivreur: commissionLivreur.toString(),
+          produits: JSON.stringify(items.map(item => ({
+            productId: item.productId || item.product.toString(),
+            quantity: item.quantity
+          }))),
           produitsTotal: totalProduits.toFixed(2),
-          livraison: livraison.toFixed(2),
-          participation: participation.toFixed(2),
+          livraison: estimation.deliveryFee.toFixed(2),
+          participation: estimation.participation.toFixed(2),
           deliveryLocation: JSON.stringify({
             lat: user.infosClient.latitude,
             lng: user.infosClient.longitude
           }),
-          produits: JSON.stringify(items.map(p => ({
-            productId: p.product.toString(),
-            quantity: p.quantity
-          }))),
           vehiculeRecommande: estimation.vehiculeRecommande || 'N/A',
-          transferGroup,
           poidsFacture: estimation.poidsFacture.toFixed(2),
           poidsKg: estimation.poidsKg.toFixed(2),
           volumeM3: estimation.volumeM3.toFixed(3),
           distanceKm: estimation.distanceKm.toFixed(1),
           estimatedDelay: estimation.estimatedDelay.toString(),
           estimatedDelayFormatted: formatDelay(estimation.estimatedDelay),
+          transferGroup
         },
-        transfer_group: transferGroup,
         transfer_data: {
-          destination: vendeurStripeId // 👈 ici tu mets le compte vendeur
+          destination: vendeurStripeId
         },
-        application_fee_amount: Math.round(totalProduits * 0.08 * 100), // 8% de commission sur les produits uniquement
-        automatic_payment_methods: {
-          enabled: true,
-          allow_redirects: 'never'
-        }
+        application_fee_amount: applicationFee
       });
 
       createdIntents.push({
         boutiqueId,
         paymentIntentId: paymentIntent.id,
         clientSecret: paymentIntent.client_secret,
-        produitsTotal: totalProduits,
-        fraisLivraison: livraison,
-        participation,
-        transferGroup,
         vendeurStripeId,
-        produits: items
+        livreurStripeId,
+        transferGroup,
+        montantVendeur,
+        montantLivreur
       });
     }
 
-    return res.status(200).json({
-      paymentIntents: createdIntents.map(intent => ({
-        paymentIntentId: intent.paymentIntentId,
-        clientSecret: intent.clientSecret,
-        boutiqueId: intent.boutiqueId  
-      }))
-    });
-
+    return res.status(200).json({ paymentIntents: createdIntents });
   } catch (error) {
     console.error("❌ Erreur dans createMultiPaymentIntentsHandler :", error);
     return res.status(500).json({ message: "Erreur lors de la création des paiements." });
   }
 };
 
-/*
-const confirmMultipleIntentsHandler = async (req, res) => {
-  try {
-    // Nouveau bloc pour récupérer automatiquement le paymentMethodId si non fourni
-    const { paymentMethodId: clientProvidedId, intents } = req.body;
-    let paymentMethodId = clientProvidedId;
-
-    if (!paymentMethodId) {
-      const firstPI = await stripe.paymentIntents.retrieve(intents[0].paymentIntentId);
-      paymentMethodId = firstPI.payment_method;
-
-      if (!paymentMethodId) {
-        return res.status(400).json({ message: "Aucun paymentMethodId trouvé dans les PaymentIntents." });
-      }
-
-      console.log("✅ paymentMethodId récupéré automatiquement :", paymentMethodId);
-    }
-
-    // validation
-    if (!Array.isArray(intents) || intents.length === 0) {
-      return res.status(400).json({ message: "Requête invalide." });
-    }
-
-    for (const { paymentIntentId, boutiqueId } of intents) {
-      if (!paymentIntentId || !boutiqueId) {
-        console.warn("⏭️ Données manquantes, saut :", { paymentIntentId, boutiqueId });
-        continue;
-      }
-
-      const piBefore = await stripe.paymentIntents.retrieve(paymentIntentId);
-      console.log(`🔎 Statut actuel de ${paymentIntentId} : ${piBefore.status}`);
-
-      if (piBefore.status === 'requires_capture') {
-        console.log(`⏭️ PaymentIntent déjà confirmé : ${paymentIntentId}`);
-        continue;
-      }
-
-      // Remplacement de la validation du paymentMethodId par une vérification du statut
-      if (piBefore.status === 'requires_payment_method') {
-        console.warn(`❌ Ce PaymentIntent (${paymentIntentId}) nécessite un paymentMethod mais aucun n'a été fourni.`);
-        continue;
-      }
-
-      const confirmParams = paymentMethodId
-        ? { payment_method: paymentMethodId, off_session: true }
-        : {};
-
-      try {
-        const pi = await stripe.paymentIntents.confirm(paymentIntentId, confirmParams);
-        console.log(`✅ Confirmé : ${paymentIntentId} → statut = ${pi.status}`);
-      } catch (err) {
-        console.error(`❌ Échec confirmation ${paymentIntentId} :`, err.message);
-      }
-    }
-
-    res.status(200).json({ message: "Tous les PaymentIntents ont été traités." });
-  } catch (err) {
-    console.error("❌ Erreur dans confirmMultipleIntentsHandler :", err);
-    res.status(500).json({ message: "Erreur serveur lors de la confirmation multiple." });
-  }
-};*/
-
 // ======================= Commande après confirmation ========================= //
 
-import crypto from 'crypto';
-import Stripe from 'stripe';
-const stripeLib = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// Version optimisée de createOrderAfterConfirmation
 const createOrderAfterConfirmation = async (req, res) => {
   try {
     const { paymentIntentId } = req.body;
@@ -303,16 +255,16 @@ const createOrderAfterConfirmation = async (req, res) => {
       return res.status(400).json({ message: 'paymentIntentId requis.' });
     }
 
+    // Récupérer le PaymentIntent Stripe
     const pi = await stripeLib.paymentIntents.retrieve(paymentIntentId);
     console.log("🔍 Tentative création commande pour PaymentIntent :", paymentIntentId);
-    console.log("📦 Statut PaymentIntent :", pi.status);
-    console.log("📦 Métadonnées :", pi.metadata);
-
+    if (!pi) {
+      return res.status(404).json({ message: "PaymentIntent introuvable." });
+    }
     if (pi.status !== 'requires_capture') {
       return res.status(400).json({ message: `Le paiement n'est pas confirmé (statut = ${pi.status})` });
     }
-
-    if (!pi || pi.metadata.clientId !== user._id.toString()) {
+    if (pi.metadata.clientId !== user._id.toString()) {
       console.warn("⚠️ Mismatch user/paymentIntent :",
         "\npi.metadata.clientId =", pi.metadata.clientId,
         "\nuser._id =", user._id.toString()
@@ -320,6 +272,7 @@ const createOrderAfterConfirmation = async (req, res) => {
       return res.status(403).json({ message: 'Tentative de fraude détectée.' });
     }
 
+    // Extraction et parsing robustes des metadata
     const {
       boutiqueId,
       produits,
@@ -340,43 +293,59 @@ const createOrderAfterConfirmation = async (req, res) => {
       return res.status(400).json({ message: 'Metadata Stripe incomplète.' });
     }
 
+    // Vérification existence boutique & vendeur
     const boutique = await Boutique.findById(boutiqueId).lean();
     if (!boutique) return res.status(404).json({ message: 'Boutique introuvable.' });
-
     const vendeur = await User.findById(boutique.owner).lean();
     if (!vendeur) return res.status(404).json({ message: 'Vendeur introuvable.' });
 
-    const parsedProduits = JSON.parse(produits);
-    const parsedLocation = JSON.parse(deliveryLocation);
+    // Parsing JSON robuste des produits et de la localisation
+    const parsedProduits = tryParseJSON(produits);
+    if (!Array.isArray(parsedProduits) || !parsedProduits.length) {
+      return res.status(400).json({ message: "Produits invalides dans metadata Stripe." });
+    }
+    const parsedLocation = tryParseJSON(deliveryLocation);
+    if (!parsedLocation || typeof parsedLocation.lat !== "number" || typeof parsedLocation.lng !== "number") {
+      return res.status(400).json({ message: "Coordonnées de livraison invalides." });
+    }
 
+    // Validation existence produits
+    const produitsExist = await validateAllProductsExist(parsedProduits);
+    if (!produitsExist.ok) {
+      return res.status(400).json({ message: produitsExist.message });
+    }
+
+    // Format items pour la commande
     const items = parsedProduits.map(({ productId, quantity }) => ({
       product: productId,
       quantity
     }));
 
-    const produitsDetails = await Promise.all(
-      parsedProduits.map(async ({ productId }) => {
-        const produit = await Product.findById(productId).lean();
-        if (!produit) throw new Error(`Produit introuvable : ${productId}`);
-        return produit;
-      })
-    );
-
+    // Calculs des montants et commissions
     const poidsTotalKg = parseFloat(poidsKg);
     const volumeTotalM3 = parseFloat(volumeM3);
     const poidsFactureVal = parseFloat(poidsFacture);
     const distanceKmVal = parseFloat(distanceKm);
-    const estimatedDelayMinutes = parseInt(estimatedDelay);
+    const estimatedDelayMinutes = parseInt(estimatedDelay, 10);
     const estimatedDelayFormatted = formatDelay(estimatedDelayMinutes);
-
-    const totalPrice = parseFloat(produitsTotal) + parseFloat(livraison);
-    const totalLivraison = +(parseFloat(livraison) + parseFloat(participation)).toFixed(2);
-
     const shortId = crypto.randomUUID().slice(0, 6).toUpperCase();
     const orderNumber = `CMD-${shortId}`;
-
     const clientAvatarUrl = user.avatarUrl || null;
-    
+    const {
+      totalPrice,
+      totalLivraison,
+      commissionGlobale,
+      commissionVendeur,
+      commissionLivreur,
+      montantVendeur,
+      montantLivreur,
+    } = calculerMontantsCommande({
+      produitsTotal: parseFloat(produitsTotal),
+      livraison: parseFloat(livraison),
+      participation: parseFloat(participation),
+    });
+
+    // Création de la commande
     const order = new Order({
       client: user._id,
       orderNumber,
@@ -388,7 +357,13 @@ const createOrderAfterConfirmation = async (req, res) => {
       deliveryFee: parseFloat(livraison),
       totalLivraison,
       totalPrice,
-
+      commissionGlobale,
+      commissionVendeur,
+      commissionLivreur,
+      montantVendeur,
+      montantLivreur,
+      stripeAuthorizedAmount: pi.amount,
+      stripeCreatedAt: new Date(pi.created * 1000),
       deliveryAddress: user.infosClient?.adresseComplete || "Adresse inconnue",
       deliveryLocation: {
         lat: parsedLocation.lat,
@@ -399,14 +374,12 @@ const createOrderAfterConfirmation = async (req, res) => {
         lat: boutique.location?.coordinates?.[1] || 0,
         lng: boutique.location?.coordinates?.[0] || 0
       },
-
       boutiqueNom: boutique.name,
-      boutiqueCoverUrl: boutique.coverImageUrl || null, // <-- ajouté ici
+      boutiqueCoverUrl: boutique.coverImageUrl || null,
       boutiqueTelephone: vendeur.phone || "",
       clientNom: user.fullname || "",
       clientTelephone: user.phone || "",
       clientAvatarUrl: clientAvatarUrl,
-
       paymentIntentId,
       transferGroup,
       vendeurStripeId: vendeur.infosVendeur?.stripeAccountId || null,
@@ -421,7 +394,6 @@ const createOrderAfterConfirmation = async (req, res) => {
         status: pi.status,
         event: pi.status === 'requires_capture' ? 'payment_intent.confirmed' : 'payment_intent.invalid'
       }],
-
       poidsTotalKg,
       volumeTotalM3,
       poidsFacture: poidsFactureVal,
@@ -430,11 +402,7 @@ const createOrderAfterConfirmation = async (req, res) => {
       estimatedDelayFormatted,
       estimatedDeliveryAt: new Date(Date.now() + estimatedDelayMinutes * 60 * 1000),
       vehiculeRecommande: vehiculeRecommande || 'N/A',
-
       codeVerificationClient: crypto.randomUUID().slice(0, 4).toUpperCase(),
-
-      stripeAuthorizedAmount: pi.amount,
-      stripeCreatedAt: new Date(pi.created * 1000),
     });
 
     console.log("✅ Commande prête à être sauvegardée :", {
@@ -445,26 +413,38 @@ const createOrderAfterConfirmation = async (req, res) => {
     });
     await order.save();
     res.status(201).json({ orderId: order._id });
-
   } catch (err) {
     console.error('❌ Erreur création commande après confirmation :', err.message, err.stack);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
-// ======================= Export ========================= //
+// Helpers
+function tryParseJSON(str) {
+  try {
+    return JSON.parse(str);
+  } catch {
+    return null;
+  }
+}
 
-export {
-  getStripeStatusHandler,
-  createStripeAccountHandler,
-  onboardStripeAccountHandler,
-  manageStripeAccountHandler,
-  createMultiPaymentIntentsHandler,
-  //confirmMultipleIntentsHandler,
-  createOrderAfterConfirmation
-};
+async function validateAllProductsExist(produits) {
+  if (!Array.isArray(produits) || !produits.length) {
+    return { ok: false, message: "Liste de produits vide." };
+  }
+  const ids = produits.map(p => p.productId);
+  const found = await Product.find({ _id: { $in: ids } }).lean();
+  if (found.length !== ids.length) {
+    // Trouver l'id manquant
+    const foundIds = found.map(p => p._id.toString());
+    const missing = ids.find(id => !foundIds.includes(id));
+    return { ok: false, message: `Produit introuvable : ${missing}` };
+  }
+  return { ok: true };
+}
 
 function formatDelay(minutes) {
+  if (typeof minutes !== "number" || isNaN(minutes)) return "";
   if (minutes < 60) return `${minutes} min`;
   if (minutes < 1440) {
     const h = Math.floor(minutes / 60);
@@ -475,3 +455,14 @@ function formatDelay(minutes) {
   const h = Math.floor((minutes % 1440) / 60);
   return h === 0 ? `${d}j` : `${d}j ${h}h`;
 }
+
+// ======================= Export ========================= //
+
+export {
+  getStripeStatusHandler,
+  createStripeAccountHandler,
+  onboardStripeAccountHandler,
+  manageStripeAccountHandler,
+  createMultiPaymentIntentsHandler,
+  createOrderAfterConfirmation
+};

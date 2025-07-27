@@ -173,7 +173,7 @@ export default function CommandesBoutique() {
                   ))}
                 </ul>
                 <div className="text-right text-sm font-semibold text-gray-800 pt-1 border-t border-yellow-100 mt-2">
-                  Total : {order.produitsTotal?.toFixed(2)} €
+                  Total : {(order.montantVendeur / 100)?.toFixed(2)} €
                 </div>
               </div>
               

@@ -43,7 +43,7 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
           <li>{livraison.deliveryAddress}</li>
         </ul>
                 <div className="text-right text-sm font-semibold text-gray-800 pt-1 border-t border-yellow-100 mt-2">
-                  Total : {livraison.totalLivraison} €
+                  Total : {livraison.montantLivreur / 100} €
                 </div>
       </div>
 

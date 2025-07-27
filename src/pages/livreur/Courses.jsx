@@ -332,7 +332,7 @@ export default function Courses() {
                 title={order.boutiqueNom}
                 action={
                   <span className="text-[#ed354f] font-bold text-sm">
-                    {order.totalLivraison.toFixed(2)} €
+                    {(order.montantLivreur / 100).toFixed(2)} €
                   </span>
                 }
                 delay={index * 80}
@@ -396,7 +396,7 @@ export default function Courses() {
                       aria-label="Prix livraison"
                     >
                       <CreditCardIcon className="w-6 h-6" />
-                      <span>{selectedOrder.totalLivraison.toFixed(2)} €</span>
+                      <span>{(selectedOrder.montantLivreur / 100).toFixed(2)} €</span>
                     </div>
                   </div>
 
