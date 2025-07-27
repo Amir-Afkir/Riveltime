@@ -366,7 +366,7 @@ async function markOrderAsDelivered(req, res) {
 
       if (order.vendeurStripeId) {
         await stripe.transfers.create({
-          amount: Math.round(order.montantVendeur * 100),
+          amount: order.montantVendeur,
           currency: 'eur',
           destination: order.vendeurStripeId,
           transfer_group: order.transferGroup,
@@ -379,7 +379,7 @@ async function markOrderAsDelivered(req, res) {
 
       if (order.livreurStripeId) {
         await stripe.transfers.create({
-          amount: Math.round(order.montantLivreur * 100),
+          amount: order.montantLivreur,
           currency: 'eur',
           destination: order.livreurStripeId,
           transfer_group: order.transferGroup,
