@@ -50,12 +50,18 @@
 /* -------- UTILITIES LAYER -------- */
 @layer utilities {
   @keyframes slide-up {
-    from { transform: translateY(100%); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0%);
+      opacity: 1;
+    }
   }
 
   .animate-slide-up {
-    animation: slide-up 0.4s ease-out forwards;
+    animation: slide-up 0.3s ease-out forwards;
   }
 
   @keyframes fade-in {
@@ -284,4 +290,30 @@
 
 .read-the-docs {
   color: #888;
+}
+
+@keyframes slideUpFull {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0%);
+  }
+}
+
+@keyframes slideDownPartial {
+  from {
+    transform: translateY(0%);
+  }
+  to {
+    transform: translateY(calc(100% - 48px));
+  }
+}
+
+.dialog-open {
+  animation: slideUpFull 0.3s ease-out forwards;
+}
+
+.dialog-closed {
+  animation: slideDownPartial 0.3s ease-in forwards;
 }

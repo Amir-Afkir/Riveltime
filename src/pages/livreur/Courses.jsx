@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
+
 import {
   Home,
   LocateIcon,
@@ -507,4 +508,5 @@ export default function Courses() {
       </Modal>
     </div>
   );
+  <BottomSheetTournee/>
 }
