@@ -269,7 +269,7 @@ export default function Tournee() {
           </section>
         </main>
         <button
-          className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-full shadow-lg text-sm font-medium z-50
+          className="fixed bottom-[max(5rem,env(safe-area-inset-bottom))] left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-full shadow-lg text-sm font-medium z-50
               
     bg-[#fde6ea]  
     shadow-lg border border-[#ed354f]
