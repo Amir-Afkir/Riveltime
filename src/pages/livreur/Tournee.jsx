@@ -7,8 +7,7 @@ import useUserStore from "../../stores/userStore";
 
 const tabs = [
   { key: "en_cours", label: "En cours" },
-  { key: "delivered", label: "Livrées" },
-  { key: "cancelled", label: "Annulées" },
+  { key: "historique", label: "Historique" },
 ];
 
 function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
@@ -166,7 +165,7 @@ function ListeLivraisonsParStatut({ livraisons, statut }) {
 }
 
 export default function Tournee() {
-  const [activeFilter, setActiveFilter] = useState("preparing");
+  const [activeFilter, setActiveFilter] = useState("en_cours");
   const [livraisons, setLivraisons] = useState([]);
   const [code, setCode] = useState("");
   const token = useUserStore(state => state.token);
@@ -260,11 +259,11 @@ export default function Tournee() {
                   <Card><p className="text-sm text-gray-500">Aucune livraison en cours</p></Card>
                 )
               )}
-              {["delivered", "cancelled"].includes(activeFilter) && (
-                <ListeLivraisonsParStatut
-                  livraisons={livraisons}
-                  statut={activeFilter}
-                />
+              {activeFilter === "historique" && (
+                <>
+                  <ListeLivraisonsParStatut livraisons={livraisons} statut="delivered" />
+                  <ListeLivraisonsParStatut livraisons={livraisons} statut="cancelled" />
+                </>
               )}
             </div>
           </section>
