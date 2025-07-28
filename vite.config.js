@@ -25,37 +25,26 @@ export default defineConfig({
         description: 'Livraison locale rapide et responsable',
         start_url: '/',
         scope: '/',
-        display: 'standalone', 
-        theme_color: '#ed354f', 
-        background_color: '#f3f4f6', 
+        display: 'standalone',
+        theme_color: '#ed354f',
+        background_color: '#f3f4f6',
         orientation: 'portrait',
         icons: [
-          {
-            src: 'icon-192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'icon-512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'apple-touch-icon.png',
-            sizes: '180x180',
-            type: 'image/png'
-          }
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
         ]
       },
+      cleanupOutdatedCaches: true,
+      globPatterns: ['**/*.{js,css,html,ico,png,svg,json,webp,woff2}'],
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        cleanupOutdatedCaches: true,
+        navigateFallback: '/offline.html',
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.riveltime\.app\/.*$/,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: 'riveltime-api-cache',
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 3600,
@@ -66,7 +55,7 @@ export default defineConfig({
             urlPattern: /^https:\/\/api\.mapbox\.com\/.*$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'mapbox-cache',
+              cacheName: 'riveltime-mapbox-cache',
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 86400,
@@ -74,6 +63,9 @@ export default defineConfig({
             },
           },
         ],
+      },
+      devOptions: {
+        enabled: true,
       }
     })
   ],

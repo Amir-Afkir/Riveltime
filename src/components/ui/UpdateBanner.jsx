@@ -15,7 +15,7 @@ export default function UpdateBanner() {
   useEffect(() => {
     if (offlineReady) {
       console.log("✅ Riveltime est maintenant dispo hors-ligne");
-      // Tu peux afficher un toast ici avec react-hot-toast ou autre
+      // Affiche une notification ou un toast, ex: avec react-hot-toast
     }
   }, [offlineReady]);
 
@@ -23,7 +23,7 @@ export default function UpdateBanner() {
 
   return (
     <NotificationBanner
-      message="🚀 Nouvelle version disponible. Cliquez ici pour mettre à jour."
+      message="🚀 Nouvelle version disponible. Cliquez ici pour mettre à jour l'application."
       type="warning"
       onClose={() => {
         updateServiceWorker(); // recharge avec la nouvelle version
