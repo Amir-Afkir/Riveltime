@@ -94,7 +94,7 @@ export default function CommandesBoutique() {
           <button
             key={statusKey}
             onClick={() => setSelectedStatus(statusKey)}
-            className={`px-4 py-1.5 rounded-full border text-sm ${
+            className={`px-4 py-1.5 rounded-full border text-base ${
               selectedStatus === statusKey
                 ? "bg-black text-white"
                 : "bg-gray-100 text-gray-700"
@@ -109,7 +109,7 @@ export default function CommandesBoutique() {
           {selectedStatus === "accepted" && (
             <>
               <Title level={3}>Aucune commande en attente</Title>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-base text-gray-500 mb-4">
                 Les commandes apparaîtront ici dès qu’un client aura passé commande.
               </p>
               <div className="flex justify-center mb-4">
@@ -120,7 +120,7 @@ export default function CommandesBoutique() {
           {selectedStatus === "preparing" && (
             <>
               <Title level={3}>Aucune commande préparée</Title>
-              <p className="text-sm text-gray-500 mb-4">Vous n’avez encore marqué aucune commande comme étant en préparation.</p>
+              <p className="text-base text-gray-500 mb-4">Vous n’avez encore marqué aucune commande comme étant en préparation.</p>
               <div className="flex justify-center mb-4">
                 <img src="/boxe-vide.webp" alt="Aucune commande" className="w-32 h-auto opacity-80" />
               </div>
@@ -129,7 +129,7 @@ export default function CommandesBoutique() {
           {selectedStatus === "delivered" && (
             <>
               <Title level={3}>Aucune commande livrée</Title>
-              <p className="text-sm text-gray-500 mb-4">Aucune commande n’a encore été marquée comme livrée.</p>
+              <p className="text-base text-gray-500 mb-4">Aucune commande n’a encore été marquée comme livrée.</p>
               <div className="flex justify-center mb-4">
                 <img src="/boxe-vide.webp" alt="Aucune commande" className="w-32 h-auto opacity-80" />
               </div>
@@ -138,7 +138,7 @@ export default function CommandesBoutique() {
           {selectedStatus === "cancelled" && (
             <>
               <Title level={3}>Aucune commande annulée</Title>
-              <p className="text-sm text-gray-500 mb-4">Vous n’avez annulé aucune commande récemment.</p>
+              <p className="text-base text-gray-500 mb-4">Vous n’avez annulé aucune commande récemment.</p>
               <div className="flex justify-center mb-4">
                 <img src="/boxe-vide.webp" alt="Aucune commande" className="w-32 h-auto opacity-80" />
               </div>
@@ -152,17 +152,17 @@ export default function CommandesBoutique() {
             .map((order) => (
             <Card key={order._id} className="space-y-4">
               <div className="text-center space-y-1">
-                <p className="text-sm text-gray-600 font-medium flex items-center gap-1"><PackageIcon size={14} />Commande n° {order.orderNumber}</p>
-                <span className="inline-block text-xs font-medium bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                <p className="text-base text-gray-600 font-medium flex items-center gap-1"><PackageIcon size={14} />Commande n° {order.orderNumber}</p>
+                <span className="inline-block text-sm font-medium bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
                   {STATUSES[order.status] || "Statut inconnu"}
                 </span>
               </div>
 
               <div className="bg-yellow-50 border border-yellow-100 rounded-md p-3 space-y-1">
-                <div className="flex items-center gap-1 text-xs font-semibold text-gray-800">
+                <div className="flex items-center gap-1 text-sm font-semibold text-gray-800">
                   <Box size={14} /> {order.items.length} article{order.items.length > 1 && "s"}
                 </div>
-                <ul className="list-disc list-inside text-xs text-gray-700 space-y-0.5">
+                <ul className="list-disc list-inside text-sm text-gray-700 space-y-0.5">
                   {order.items.map((item) => (
                     <li key={item._id}>
                       {item.quantity} × {item.product?.name || "Produit"} 
@@ -172,7 +172,7 @@ export default function CommandesBoutique() {
                     </li>
                   ))}
                 </ul>
-                <div className="text-right text-sm font-semibold text-gray-800 pt-1 border-t border-yellow-100 mt-2">
+                <div className="text-right text-base font-semibold text-gray-800 pt-1 border-t border-yellow-100 mt-2">
                   Total : {(order.montantVendeur / 100)?.toFixed(2)} €
                 </div>
               </div>
@@ -182,7 +182,7 @@ export default function CommandesBoutique() {
                 <div className="border-t pt-2 grid grid-cols-2 gap-2">
                   {order.deliverer && (
                     <div>
-                      <p className="text-xs font-semibold text-gray-800 mb-1">Livreur</p>
+                      <p className="text-sm font-semibold text-gray-800 mb-1">Livreur</p>
                       <div className="flex items-start gap-2">
                         {order.deliverer.avatarUrl && (
                           <img
@@ -191,7 +191,7 @@ export default function CommandesBoutique() {
                             className="w-8 h-8 rounded-full object-cover border"
                           />
                         )}
-                        <div className="text-xs text-gray-700">
+                        <div className="text-sm text-gray-700">
                           <p className="truncate">{order.deliverer.fullname}</p>
                           <a href={`tel:${order.deliverer.phone}`} className="text-blue-600 underline flex items-center gap-1 truncate">
                             <Phone size={12} /> {order.deliverer.phone}
@@ -203,7 +203,7 @@ export default function CommandesBoutique() {
 
                   {order.client && (
                     <div>
-                      <p className="text-xs font-semibold text-gray-800 mb-1">Client</p>
+                      <p className="text-sm font-semibold text-gray-800 mb-1">Client</p>
                       <div className="flex items-start gap-2">
                         {order.client?.avatarUrl && (
                           <img
@@ -212,7 +212,7 @@ export default function CommandesBoutique() {
                             className="w-8 h-8 rounded-full object-cover border"
                           />
                         )}
-                        <div className="text-xs text-gray-700">
+                        <div className="text-sm text-gray-700">
                           <p className="truncate">{order.clientNom}</p>
                           <p className="flex items-center gap-1 truncate">
                             <Phone size={12} /> {order.boutiqueTelephone || order.clientTelephone}
@@ -225,9 +225,9 @@ export default function CommandesBoutique() {
               )}
 
               {order.deliveryAddress && (
-                <div className="mt-2 px-2 py-1 bg-gray-50 rounded-md border flex items-start gap-1 text-xs text-gray-700">
-                  <MapPinIcon size={12} className="mt-0.5 text-gray-500" />
-                  <p className="leading-snug">{order.deliveryAddress}</p>
+                <div className="mt-2 px-2 py-1 bg-gray-50 rounded-md border flex items-start gap-1 text-sm text-gray-700">
+                  <MapPinIcon size={16} className="mt-0.5 text-gray-500" />
+                  <p className="leading-normal">{order.deliveryAddress}</p>
                 </div>
               )}
 

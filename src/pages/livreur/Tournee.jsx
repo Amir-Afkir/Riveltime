@@ -49,10 +49,10 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
       </div>
 
       <div className="bg-yellow-50 border border-yellow-100 rounded-md p-3 space-y-1 text-sm">
-          <div className="flex items-center gap-1 text-xs font-semibold text-gray-800">
+          <div className="flex items-center gap-1 text-sm font-semibold text-gray-800">
             <MapPinIcon size={14} /> Adresse
           </div>
-        <ul className="list-disc list-inside text-xs text-gray-700 space-y-0.5">
+        <ul className="list-disc list-inside text-sm text-gray-700 space-y-0.5">
           <li>{livraison.boutiqueAddress}</li>
           <li>{livraison.deliveryAddress}</li>
         </ul>
@@ -64,7 +64,7 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
       <div className="border-t pt-2 grid grid-cols-2 gap-2">
         {livraison.boutique?.name && (
           <div>
-            <p className="text-xs font-semibold text-gray-800 mb-1">Boutique</p>
+            <p className="text-sm font-semibold text-gray-800 mb-1">Boutique</p>
             <div className="flex items-start gap-2">
               {livraison.boutique?.coverImageUrl && (
                 <img
@@ -73,7 +73,7 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
                   className="w-8 h-8 rounded-full object-cover border"
                 />
               )}
-              <div className="text-xs text-gray-700">
+              <div className="text-sm text-gray-700">
                 <p className="truncate">{livraison.boutique?.name}</p>
                 <p className="flex items-center gap-1 truncate">
                   <Phone size={12} />
@@ -90,7 +90,7 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
 
         {livraison.client?.fullname && (
           <div>
-            <p className="text-xs font-semibold text-gray-800 mb-1">Client</p>
+            <p className="text-sm font-semibold text-gray-800 mb-1">Client</p>
             <div className="flex items-start gap-2">
               {livraison.client?.avatarUrl && (
                 <img
@@ -99,7 +99,7 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
                   className="w-8 h-8 rounded-full object-cover border"
                 />
               )}
-              <div className="text-xs text-gray-700">
+              <div className="text-sm text-gray-700">
                 <p className="truncate">{livraison.client?.fullname}</p>
                 <p className="flex items-center gap-1 truncate"><Phone size={12} /> {livraison.client?.phone}</p>
               </div>
@@ -129,7 +129,7 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
                 placeholder="Code de validation"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="flex-grow px-4 py-2 text-sm text-gray-700 focus:outline-none"
+                className="flex-grow px-4 py-2 text-[16px] text-gray-700 focus:outline-none"
               />
               <Button
                 variant="secondary"
@@ -268,6 +268,20 @@ export default function Tournee() {
             </div>
           </section>
         </main>
+        <button
+          className="fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-full shadow-lg text-sm font-medium z-50
+              
+    bg-[#fde6ea]  
+    shadow-lg border border-[#ed354f]
+    flex items-center gap-2
+    cursor-pointer
+    transition-shadow duration-300
+    hover:shadow-[#ed354f]/40
+          "
+          onClick={() => alert('🗺️ Carte à venir')}
+        >
+         <MapPinIcon/> Carte
+        </button>
       </div>
     </>
   );
