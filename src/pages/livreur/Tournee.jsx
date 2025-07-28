@@ -16,8 +16,8 @@ export default function Tournee() {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v11",
-      center: [0, 0], // position temporaire avant géolocalisation
-      zoom: 13,
+      center: [1.9093, 47.9029],
+      zoom: 14,
     });
 
     let isFirstLocation = true;
