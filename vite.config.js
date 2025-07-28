@@ -48,6 +48,8 @@ export default defineConfig({
         ]
       },
       workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.riveltime\.app\/.*$/,
@@ -56,7 +58,7 @@ export default defineConfig({
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 3600, // 1 heure
+                maxAgeSeconds: 3600,
               },
             },
           },
@@ -67,7 +69,7 @@ export default defineConfig({
               cacheName: 'mapbox-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 86400, // 24h
+                maxAgeSeconds: 86400,
               },
             },
           },
