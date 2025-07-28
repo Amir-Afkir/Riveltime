@@ -1,12 +1,30 @@
 // src/pwa.js
-import { registerSW } from 'virtual:pwa-register';
+import { useRegisterSW } from 'virtual:pwa-register/react';
+import { useEffect, useState } from 'react';
 
-const updateSW = registerSW({
-  onNeedRefresh() {
-    // Recharge automatiquement dès qu'une nouvelle version est détectée
-    updateSW(true);
-  },
-  onOfflineReady() {
-    console.log("✅ App prête hors-ligne");
-  }
-});
+export function usePwaUpdater() {
+  const [offlineReady, setOfflineReady] = useState(false);
+  const [needRefresh, setNeedRefresh] = useState(false);
+  const {
+    updateServiceWorker,
+  } = useRegisterSW({
+    onOfflineReady() {
+      setOfflineReady(true);
+    },
+    onNeedRefresh() {
+      setNeedRefresh(true);
+    },
+  });
+
+  const close = () => {
+    setOfflineReady(false);
+    setNeedRefresh(false);
+  };
+
+  return {
+    offlineReady,
+    needRefresh,
+    updateServiceWorker,
+    close,
+  };
+}

@@ -46,6 +46,32 @@ export default defineConfig({
             type: 'image/png'
           }
         ]
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\.riveltime\.app\/.*$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 3600, // 1 heure
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/api\.mapbox\.com\/.*$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mapbox-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 86400, // 24h
+              },
+            },
+          },
+        ],
       }
     })
   ],
