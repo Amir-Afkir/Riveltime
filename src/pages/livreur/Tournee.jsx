@@ -6,8 +6,9 @@ import Button from "../../components/ui/Button";
 import useUserStore from "../../stores/userStore";
 
 const tabs = [
-  { key: "prochaine", label: "Prochaine livraison" },
-  { key: "historique", label: "Historique" }
+  { key: "en_cours", label: "En cours" },
+  { key: "delivered", label: "Livrées" },
+  { key: "cancelled", label: "Annulées" },
 ];
 
 function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
@@ -29,8 +30,22 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
         <p className="text-sm text-gray-600 font-medium flex items-center gap-1 justify-left">
           <PackageIcon size={14} /> Commande n° {livraison.orderNumber}
         </p>
-        <span className="inline-block text-xs font-medium bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-          En cours de livraison
+        <span className={`inline-block text-xs font-medium px-2 py-1 rounded-full ${
+          livraison.status === "accepted"
+            ? "bg-blue-100 text-blue-800"
+            : livraison.status === "preparing"
+            ? "bg-yellow-100 text-yellow-800"
+            : livraison.status === "on_the_way"
+            ? "bg-green-100 text-green-800"
+            : "bg-gray-100 text-gray-700"
+        }`}>
+          {livraison.status === "accepted"
+            ? "Acceptée"
+            : livraison.status === "preparing"
+            ? "Préparation"
+            : livraison.status === "on_the_way"
+            ? "En cours de livraison"
+            : livraison.status}
         </span>
       </div>
 
@@ -98,76 +113,105 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
         <ClockIcon size={14} /> À livrer avant {heureLivraison}
       </div>
 
-      <div className="flex items-center border border-gray-300 rounded-full overflow-hidden mt-2">
-        <input
-          type="text"
-          placeholder="Code de validation"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          className="flex-grow px-4 py-2 text-sm text-gray-700 focus:outline-none"
-        />
-        <button
-          onClick={onSubmit}
-          className="bg-[#ed354f] text-white text-sm font-medium px-6 py-2 rounded-full"
-        >
-          Livrer
-        </button>
-      </div>
+      {(livraison.status === "on_the_way" || livraison.status === "preparing") && (
+        <>
+          {livraison.status === "preparing" ? (
+            <Button
+              variant="secondary"
+              onClick={() => onSubmit("mark-on-the-way", livraison._id)}
+              className="w-full"
+            >
+              Commande récupérée
+            </Button>
+          ) : (
+            <div className="flex items-center border border-gray-300 rounded-full overflow-hidden mt-2">
+              <input
+                type="text"
+                placeholder="Code de validation"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="flex-grow px-4 py-2 text-sm text-gray-700 focus:outline-none"
+              />
+              <Button
+                variant="secondary"
+                onClick={() => onSubmit("mark-delivered", livraison._id)}
+              >
+                Livrer
+              </Button>
+            </div>
+          )}
+        </>
+      )}
     </Card>
   );
 }
 
-function HistoriqueLivraisons() {
+function ListeLivraisonsParStatut({ livraisons, statut }) {
+  const filtered = livraisons.filter(l => l.status === statut);
+  if (filtered.length === 0) {
+    return <Card><p className="text-sm text-gray-500">Aucune livraison pour ce statut</p></Card>;
+  }
   return (
-    <Card>
-      <p className="text-sm text-gray-500">Historique</p>
-      <div className="text-sm">✅ CMD-058310 livrée à 11h10</div>
-      <div className="text-sm">✅ CMD-058299 livrée à 09h45</div>
-    </Card>
+    <>
+      {filtered.map(livraison => (
+        <Card key={livraison._id} className="text-sm">
+          <p className="font-semibold">Commande n° {livraison.orderNumber}</p>
+          <p>Boutique : {livraison.boutique?.name}</p>
+          <p>Client : {livraison.client?.fullname}</p>
+          <p>Total livreur : {livraison.montantLivreur / 100} €</p>
+        </Card>
+      ))}
+    </>
   );
 }
 
 export default function Tournee() {
-  const [activeTab, setActiveTab] = useState("prochaine");
-  const [prochaineLivraison, setProchaineLivraison] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("preparing");
+  const [livraisons, setLivraisons] = useState([]);
   const [code, setCode] = useState("");
   const token = useUserStore(state => state.token);
 
   useEffect(() => {
-    const fetchLivraison = async () => {
+    const fetchLivraisons = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/livreur/preparing`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/livreur/assigned`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         const data = await res.json();
-        setProchaineLivraison(data[0] || null);
+        setLivraisons(data);
       } catch (err) {
-        console.error("Erreur récupération livraison :", err);
+        console.error("Erreur récupération livraisons :", err);
       }
     };
-    fetchLivraison();
+    fetchLivraisons();
   }, [token]);
 
-  const handleLivrer = async () => {
-    if (!prochaineLivraison || !code) return;
+  const handleLivrer = async (action, orderId) => {
+    if (!orderId || (action === "mark-delivered" && !code.trim())) {
+      if (action === "mark-delivered") {
+        alert("❌ Veuillez saisir le code de validation.");
+      }
+      return;
+    }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/${prochaineLivraison._id}/mark-delivered`, {
+      const url = `${import.meta.env.VITE_API_URL}/orders/${orderId}/${action}`;
+      const res = await fetch(url, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ code }),
+        body: action === "mark-delivered" ? JSON.stringify({ code }) : null,
       });
 
       const data = await res.json();
 
       if (res.ok) {
         alert("✅ Livraison confirmée !");
-        setProchaineLivraison(null);
+        setLivraisons(prev => prev.filter(l => l._id !== orderId));
         setCode("");
       } else {
         alert("❌ Erreur : " + data.message);
@@ -187,9 +231,9 @@ export default function Tournee() {
               {tabs.map(({ key, label }) => (
                 <button
                   key={key}
-                  onClick={() => setActiveTab(key)}
+                  onClick={() => setActiveFilter(key)}
                   className={`px-4 py-1.5 rounded-full border text-sm ${
-                    activeTab === key
+                    activeFilter === key
                       ? "bg-black text-white"
                       : "bg-gray-100 text-gray-700"
                   }`}
@@ -199,15 +243,29 @@ export default function Tournee() {
               ))}
             </div>
             <div className="space-y-3 mt-2">
-              {activeTab === "prochaine" && (
-                <ProchaineLivraison
-                  livraison={prochaineLivraison}
-                  code={code}
-                  setCode={setCode}
-                  onSubmit={handleLivrer}
+              {activeFilter === "en_cours" && (
+                livraisons.filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status)).length > 0 ? (
+                  livraisons
+                    .filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status))
+                    .map(livraison => (
+                      <ProchaineLivraison
+                        key={livraison._id}
+                        livraison={livraison}
+                        code={code}
+                        setCode={setCode}
+                        onSubmit={handleLivrer}
+                      />
+                    ))
+                ) : (
+                  <Card><p className="text-sm text-gray-500">Aucune livraison en cours</p></Card>
+                )
+              )}
+              {["delivered", "cancelled"].includes(activeFilter) && (
+                <ListeLivraisonsParStatut
+                  livraisons={livraisons}
+                  statut={activeFilter}
                 />
               )}
-              {activeTab === "historique" && <HistoriqueLivraisons />}
             </div>
           </section>
         </main>

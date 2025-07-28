@@ -170,8 +170,7 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
       }
 
       const transferGroup = `order_${Date.now()}_${boutiqueId}`;
-      const totalAmount = montantVendeur + montantLivreur;
-      const applicationFee = commissionVendeur + commissionLivreur;
+      const totalAmount = montantVendeur + montantLivreur + commissionVendeur + commissionLivreur;
 
       const formatDelay = (minutes) =>
         minutes < 60 ? `${minutes} min`
@@ -180,7 +179,7 @@ const createMultiPaymentIntentsHandler = async (req, res) => {
 
       // ✅ Création du PaymentIntent dans le compte plateforme
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(totalAmount * 100), // centimes
+        amount: Math.round(totalAmount), // déjà en centimes
         currency: 'eur',
         capture_method: 'manual',
         confirm: false,

@@ -164,7 +164,7 @@ const calculerMontantsCommande = ({
   produitsTotal,
   livraison,
   participation,
-  tauxCommission = 0.08,
+  tauxCommission = 0.095,
 }) => {
   const totalPrice = produitsTotal + livraison;
   const totalLivraison = livraison + participation;

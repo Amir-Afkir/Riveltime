@@ -11,7 +11,9 @@ import { isPointOnSegment, isDirectionConsistent } from '../utils/geoUtils.js';
 import { geocodeAdresse } from '../utils/geocodeAdresse.js';
 
 
-// Espace client
+//====================================================
+// ------------------Espace client ------------------
+//====================================================
 async function simpleDistanceEstimate(req, res) {
   try {
     const { boutiqueLocation, deliveryLocation } = req.body;
@@ -99,7 +101,10 @@ async function getOrdersByUser(req, res) {
   }
 }
 
-// Espace livreur
+//====================================================
+// ------------------Espace vendeur ------------------
+//====================================================
+
 function isCoordValid(coord) {
   return coord && typeof coord.latitude === 'number' && typeof coord.longitude === 'number';
 }
@@ -191,7 +196,8 @@ async function acceptDelivery(req, res) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 };
-async function getPreparingOrdersForLivreur(req, res) {
+// Récupérer toutes les commandes assignées à un livreur (peu importe le statut)
+async function getAssignedOrdersForLivreur(req, res) {
   try {
     const user = req.dbUser;
     if (user.role !== 'livreur') {
@@ -199,14 +205,13 @@ async function getPreparingOrdersForLivreur(req, res) {
     }
 
     const orders = await Order.find({
-      deliverer: user._id,
-      status: 'preparing'
+      deliverer: user._id
     })
       .sort({ placedAt: -1 })
       .populate([
         {
           path: 'boutique',
-          select: 'name coverImageUrl',
+          select: 'name coverImageUrl phone',
           populate: { path: 'owner', select: 'phone' },
           options: { strictPopulate: false }
         },
@@ -215,16 +220,20 @@ async function getPreparingOrdersForLivreur(req, res) {
           select: 'fullname phone avatarUrl',
           options: { strictPopulate: false }
         }
-      ]);
+      ])
+      .lean();
 
     res.json(orders);
   } catch (err) {
-    console.error('❌ Erreur récupération commandes preparing livreur :', err);
+    console.error('❌ Erreur récupération commandes assignées au livreur :', err);
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 }
 
-// Espace vendeur
+
+//====================================================
+// ------------------Espace livreur ------------------
+//====================================================
 
 // Rendre visible une commande accepter par un livreur
 async function getStatutOrdersForBoutique(req, res) {
@@ -323,6 +332,42 @@ async function cancelOrderHandler(req, res) {
   }
 }
 
+async function markOrderOnTheWay(req, res) {
+  try {
+    const user = req.dbUser;
+    const { id } = req.params;
+
+    if (user.role !== 'livreur') {
+      return res.status(403).json({ message: "Accès réservé aux livreurs." });
+    }
+
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ message: "Commande introuvable." });
+    }
+
+    if (!order.deliverer || !user._id.equals(order.deliverer)) {
+      return res.status(403).json({ message: "Vous n'êtes pas assigné à cette commande." });
+    }
+
+        console.log("📦 Statut actuel de la commande :", order.status);
+    if (order.status !== 'preparing') {
+      return res.status(400).json({ message: "La commande n'est pas en cours de préparation." });
+    }
+
+
+    order.status = 'on_the_way';
+    order.deliveryStatusHistory.push({ status: 'on_the_way', date: new Date() });
+
+    await order.save();
+
+    return res.status(200).json({ message: "Commande marquée comme en cours de livraison." });
+  } catch (err) {
+    console.error("❌ Erreur markOrderOnTheWay :", err);
+    return res.status(500).json({ message: "Erreur serveur lors de la mise à jour du statut." });
+  }
+}
+
 // Marquer une commande comme livrée avec code de vérification
 async function markOrderAsDelivered(req, res) {
   try {
@@ -343,7 +388,7 @@ async function markOrderAsDelivered(req, res) {
       return res.status(403).json({ message: "Vous n'êtes pas assigné à cette commande." });
     }
 
-    if (order.status !== 'preparing') {
+    if (order.status !== 'on_the_way') {
       return res.status(400).json({ message: "Commande non livrable à ce stade." });
     }
 
@@ -356,6 +401,14 @@ async function markOrderAsDelivered(req, res) {
     // Capture du paiement si pas encore fait
     if (order.captureStatus !== 'captured') {
       const paymentIntent = await stripe.paymentIntents.capture(order.paymentIntentId);
+      console.log("💰 Paiement capturé (centimes) :", paymentIntent.amount);
+      console.log("📌 Montant à transférer - Vendeur :", order.montantVendeur);
+      console.log("📌 Montant à transférer - Livreur :", order.montantLivreur);
+      const totalTransfers = (order.montantVendeur || 0) + (order.montantLivreur || 0);
+      console.log("📤 Total transféré :", totalTransfers);
+      const reste = paymentIntent.amount - totalTransfers;
+      console.log("🧾 Reste après transferts :", reste);
+
       order.captureStatus = 'captured';
       order.stripeStatusHistory.push({
         status: 'captured',
@@ -409,7 +462,8 @@ export {
   estimateDelivery,
   getOrdersByUser,
   getPendingOrdersForLivreur,
-  getPreparingOrdersForLivreur,
+  getAssignedOrdersForLivreur,
+  markOrderOnTheWay,
   markOrderAsDelivered,
   acceptDelivery,
   getStatutOrdersForBoutique,

@@ -16,7 +16,9 @@ router.get('/livreur/pending', orderController.getPendingOrdersForLivreur);
 // Assigner un livreur à une commande
 router.post('/:id/accept-delivery', orderController.acceptDelivery);
 // Rendre visible au livreur une commande assignée 
-router.get('/livreur/preparing', orderController.getPreparingOrdersForLivreur);
+router.get('/livreur/assigned', orderController.getAssignedOrdersForLivreur);
+// Marquer une commande comme on-the-way 
+router.put('/:id/mark-on-the-way', orderController.markOrderOnTheWay);
 // Marquer une commande comme livrée (avec code de vérification)
 router.put('/:id/mark-delivered', orderController.markOrderAsDelivered);
 
