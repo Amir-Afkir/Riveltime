@@ -1,8 +1,8 @@
-// src/components/ui/BottomSheetCarte.jsx
+// src/components/ui/BottomSheetTournee.jsx
 import { MapPinIcon, PackageIcon, ClockIcon, Phone } from "lucide-react";
 import { useState, useEffect } from "react";
-import Card from "../../components/ui/Card";
-import Button from "../../components/ui/Button";
+import Card from "./Card";
+import Button from "./Button";
 import useUserStore from "../../stores/userStore";
 
 const tabs = [
@@ -164,7 +164,7 @@ function ListeLivraisonsParStatut({ livraisons, statut }) {
   );
 }
 
-export default function BottomSheetCarte() {
+export default function BottomSheetTournee() {
   const [activeFilter, setActiveFilter] = useState("en_cours");
   const [livraisons, setLivraisons] = useState([]);
   const [code, setCode] = useState("");
@@ -250,7 +250,7 @@ export default function BottomSheetCarte() {
 
       <div
         className={`fixed inset-0 z-20 bg-[#f3f4f6] shadow-lg transition-transform duration-300 ease-in-out overflow-y-auto overscroll-contain ${
-          isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-48px)]'
+          isOpen ? 'translate-y-0' : 'translate-y-[calc(100%)]'
         }`}
         style={{ willChange: 'transform' }}
       >

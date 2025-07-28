@@ -16,15 +16,46 @@ export default function Tournee() {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v11",
-      center: [1.9093, 47.9029], // Orléans
+      center: [0, 0], // position temporaire avant géolocalisation
       zoom: 13,
     });
 
-    // Exemple : ajouter un marqueur
-    new mapboxgl.Marker()
-      .setLngLat([1.9093, 47.9029])
-      .setPopup(new mapboxgl.Popup().setHTML("<h3>Boutique ici</h3>"))
-      .addTo(map.current);
+    let isFirstLocation = true;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        console.log("📍 Nouvelle position détectée :", latitude, longitude);
+
+        // Créer ou déplacer le marqueur
+        if (!map.current._livreurMarker) {
+          map.current._livreurMarker = new mapboxgl.Marker({ color: "blue" })
+            .setLngLat([longitude, latitude])
+            .addTo(map.current);
+          console.log("📌 Marqueur créé");
+        } else {
+          map.current._livreurMarker.setLngLat([longitude, latitude]);
+          console.log("📌 Marqueur mis à jour");
+        }
+
+        if (isFirstLocation) {
+          map.current.flyTo({ center: [longitude, latitude], zoom: 14 });
+          isFirstLocation = false;
+        }
+      },
+      (error) => {
+        console.error("❌ Erreur géolocalisation :", error);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 10000,
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
   }, []);
 
   return (
