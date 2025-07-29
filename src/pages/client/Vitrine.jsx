@@ -31,11 +31,8 @@ export default function Vitrine() {
   const cart = useCartStore((state) => state.cart);
   const totalQuantity = cart?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
-  const [boutique, setBoutique] = useState(null);
-  const [produits, setProduits] = useState([]);
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
-  const [collections, setCollections] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState("tout");
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,37 +41,32 @@ export default function Vitrine() {
   // fetch boutique et produits via useResilientFetch
   const { data: boutiqueData, loading: loadingBoutique, error: errorBoutique } = useResilientFetch(`${API_URL}/boutiques/${id}`, `public-boutique-${id}`);
   const { data: produitsData, loading: loadingProduits, error: errorProduits } = useResilientFetch(`${API_URL}/boutiques/${id}/produits`, `public-produits-${id}`);
+  const boutique = boutiqueData?.boutique;
+  const produits = produitsData?.produits || [];
+  const collections = [...new Set(produits.map(p => p.collectionName).filter(Boolean))];
 
   const { token, userData } = useUserStore();
   const [estimatedDelay, setEstimatedDelay] = useState(null);
   const [distanceKm, setDistanceKm] = useState(null);
 
   useEffect(() => {
-    if (!boutiqueData || !produitsData) return;
-
-    setBoutique(boutiqueData.boutique);
-    setProduits(produitsData.produits);
-
-    const uniqueCollections = [...new Set(produitsData.produits.map(p => p.collectionName).filter(Boolean))];
-    setCollections(uniqueCollections);
-
+    if (!boutique) return;
     try {
       const newEntry = {
-        _id: boutiqueData.boutique._id,
-        name: boutiqueData.boutique.name,
-        category: boutiqueData.boutique.category,
-        distance: boutiqueData.boutique.distance || null,
-        coverImageUrl: boutiqueData.boutique.coverImageUrl || null,
+        _id: boutique._id,
+        name: boutique.name,
+        category: boutique.category,
+        distance: boutique.distance || null,
+        coverImageUrl: boutique.coverImageUrl || null,
       };
-
       const existing = JSON.parse(localStorage.getItem("recentBoutiques")) || [];
-      const filtered = existing.filter((b) => b._id !== boutiqueData.boutique._id);
+      const filtered = existing.filter((b) => b._id !== boutique._id);
       const updated = [newEntry, ...filtered].slice(0, 10);
       localStorage.setItem("recentBoutiques", JSON.stringify(updated));
     } catch (e) {
       console.error("Erreur stockage recentBoutiques:", e);
     }
-  }, [boutiqueData, produitsData]);
+  }, [boutique]);
 
   useEffect(() => {
     async function estimateFee() {
@@ -131,7 +123,7 @@ export default function Vitrine() {
     );
   }
 
-  if (loadingBoutique || loadingProduits || !boutique) {
+  if (loadingBoutique || loadingProduits || !boutiqueData?.boutique || !produitsData?.produits) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Chargement...</p>
