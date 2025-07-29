@@ -5,6 +5,7 @@ const useOrderStore = create((set, get) => ({
   orders: [],
   loading: false,
   error: null,
+  orderedSteps: [],
 
   // 🔍 Filtres dynamiques pour les livreurs
   filtreActif: "autour", // Par défaut : autour de moi
@@ -16,6 +17,7 @@ const useOrderStore = create((set, get) => ({
   setCoordsAutour: (coords) => set({ coordsAutour: coords }),
   setRayonAutour: (rayon) => set({ rayonAutour: rayon }),
   setOrders: (orders) => set({ orders }),
+  setOrderedSteps: (steps) => set({ orderedSteps: steps }),
 
   // Méthodes de récupération
   fetchBoutiqueOrders: async (token) => {
