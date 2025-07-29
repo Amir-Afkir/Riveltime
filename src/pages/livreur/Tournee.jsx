@@ -254,11 +254,11 @@ export default function Tournee() {
         <a
           href={`tel:${
             orderedSteps[0].type === "pickup"
-              ? orderedSteps[0].commande.boutique?.phone
-              : orderedSteps[0].commande.client?.phone
+              ? orderedSteps[0].commande.boutiqueTelephone
+              : orderedSteps[0].commande.clientTelephone
           }`}
           className="fixed right-4 w-12 h-12 bg-white text-black rounded-full shadow-lg flex items-center justify-center"
-          style={{ bottom: `max(5rem, calc(env(safe-area-inset-bottom) + 2rem))` }}
+          style={{ bottom: `calc(env(safe-area-inset-bottom, 2rem) + 5rem)` }}
         >
           <Phone size={20} />
         </a>
