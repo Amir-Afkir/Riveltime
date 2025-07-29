@@ -212,7 +212,9 @@ export default function Tournee() {
               alt="Avatar"
               className="w-12 h-12 rounded-full object-cover border"
             />
-            <div className="flex-1 text-left">
+         <div className="flex-1 text-left">
+              
+              <p className="text-sm text-gray-500">➡️ Nouvelle direction</p>
               <p className="font-semibold text-gray-800 text-base">
                 {orderedSteps[0].type === "pickup"
                   ? orderedSteps[0].commande.boutique?.name
