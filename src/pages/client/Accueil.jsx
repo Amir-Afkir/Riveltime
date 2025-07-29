@@ -19,11 +19,14 @@ const FILTERS = [
 export default function Accueil() {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const data = useResilientFetch(
+  const {
+    data: boutiques,
+    loading,
+    error
+  } = useResilientFetch(
     `${import.meta.env.VITE_API_URL}/client/accueil/boutiques`,
     "cachedBoutiques"
   );
-  const boutiques = Array.isArray(data) ? data : data?.boutiques || [];
   const navigate = useNavigate();
 
   const FEATURED_MESSAGES = [

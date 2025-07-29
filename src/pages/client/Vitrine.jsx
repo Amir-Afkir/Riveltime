@@ -42,8 +42,8 @@ export default function Vitrine() {
   const closeNotification = () => setNotification(null);
 
   // fetch boutique et produits via useResilientFetch
-  const boutiqueData = useResilientFetch(`${API_URL}/boutiques/${id}`, `public-boutique-${id}`);
-  const produitsData = useResilientFetch(`${API_URL}/boutiques/${id}/produits`, `public-produits-${id}`);
+  const { data: boutiqueData, loading: loadingBoutique, error: errorBoutique } = useResilientFetch(`${API_URL}/boutiques/${id}`, `public-boutique-${id}`);
+  const { data: produitsData, loading: loadingProduits, error: errorProduits } = useResilientFetch(`${API_URL}/boutiques/${id}/produits`, `public-produits-${id}`);
 
   const { token, userData } = useUserStore();
   const [estimatedDelay, setEstimatedDelay] = useState(null);
@@ -121,15 +121,17 @@ export default function Vitrine() {
     estimateFee();
   }, [boutique, userData, token]);
 
-  if (error) {
+  if (errorBoutique || errorProduits) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-100">
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-600">
+          {errorBoutique?.message || errorProduits?.message || "Erreur lors du chargement des données."}
+        </p>
       </div>
     );
   }
 
-  if (!boutiqueData || !produitsData || !boutique) {
+  if (loadingBoutique || loadingProduits || !boutique) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Chargement...</p>
