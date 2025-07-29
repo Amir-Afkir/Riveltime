@@ -257,7 +257,8 @@ export default function Tournee() {
               ? orderedSteps[0].commande.boutique?.phone
               : orderedSteps[0].commande.client?.phone
           }`}
-          className="fixed bottom-20 right-4 pb-[env(safe-area-inset-bottom)] w-12 h-12 bg-white text-black rounded-full shadow-lg flex items-center justify-center z-30"
+          className="fixed right-4 w-12 h-12 bg-white text-black rounded-full shadow-lg flex items-center justify-center z-30"
+          style={{ bottom: `max(5rem, calc(env(safe-area-inset-bottom) + 1rem))` }}
         >
           <Phone size={20} />
         </a>
