@@ -25,7 +25,9 @@ export default function Courses() {
   const token = useUserStore(state => state.token);
 
   const [orders, setOrders] = useState([]);
-  const [filterType, setFilterType] = useState("autour"); // "autour" ou "itineraire"
+  // Nouvelle gestion d'état pour le filtre actif
+  const [activeFilter, setActiveFilter] = useState("autour");
+  // Remplacer filterType par activeFilter dans tout le composant
   const [depart, setDepart] = useState("");
   const [arrivee, setArrivee] = useState("");
   const [departSuggestions, setDepartSuggestions] = useState([]);
@@ -81,7 +83,7 @@ export default function Courses() {
       const rayonFloat = parseFloat(rayon);
       let useFilter = false;
 
-      if (filterType === "autour") {
+      if (activeFilter === "autour") {
         if (coordsAutour?.lat && coordsAutour?.lon && !isNaN(rayonFloat)) {
           params.append("filterType", "autour");
           params.append("lat", coordsAutour.lat);
@@ -89,7 +91,7 @@ export default function Courses() {
           params.append("rayon", rayonFloat);
           useFilter = true;
         }
-      } else if (filterType === "itineraire") {
+      } else if (activeFilter === "itineraire") {
         if (
           coordsDepart?.lat && coordsDepart?.lon &&
           coordsArrivee?.lat && coordsArrivee?.lon &&
@@ -127,11 +129,11 @@ export default function Courses() {
     };
 
     fetchOrders();
-  }, [coordsAutour, filterType, coordsDepart, coordsArrivee, rayon, token]);
+  }, [coordsAutour, activeFilter, coordsDepart, coordsArrivee, rayon, token]);
 
   // Reset des filtres lors du changement de mode
   const handleFilterTypeChange = (newFilterType) => {
-    setFilterType(newFilterType);
+    setActiveFilter(newFilterType);
     setDepart("");
     setArrivee("");
     setDepartSuggestions([]);
@@ -168,112 +170,44 @@ export default function Courses() {
     }
   };
 
+  // Définition des onglets pour le filtre
+  const tabs = [
+    { key: "autour", label: "Autour de moi" },
+    { key: "itineraire", label: "Itinéraire" },
+  ];
+
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between">
+
+      {/* Onglets de filtre */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 px-1">
         <h1 className="text-lg font-semibold text-black">
           <span className="text-green-600 text-xl">{orders.length}</span>{" "}
           <span className="text-sm font-medium text-gray-700">annonces</span>
         </h1>
         <div className="flex gap-2">
-          {filterType === "itineraire" ? (
+          {tabs.map(({ key, label }) => (
             <button
-              onClick={() => handleFilterTypeChange("autour")}
-              className="px-4 py-4 rounded-full border text-sm transition flex items-center gap-2 bg-black text-white"
-              aria-label="Filtrer par itinéraire"
+              key={key}
+              onClick={() => handleFilterTypeChange(key)}
+              className={`px-4 py-1.5 rounded-full border text-sm ${
+                activeFilter === key
+                  ? "bg-black text-white"
+                  : "bg-gray-100 text-gray-700"
+              }`}
             >
-              <RouteIcon className="w-4 h-4" />
+              {label}
             </button>
-          ) : (
-            <button
-              onClick={() => handleFilterTypeChange("itineraire")}
-              className="px-4 py-4 rounded-full border text-sm transition flex items-center gap-2 bg-white text-gray-700"
-              aria-label="Filtrer autour d'une adresse"
-            >
-              <LocateIcon className="w-4 h-4" />
-            </button>
-          )}
+          ))}
         </div>
       </div>
 
-      {filterType === "itineraire" ? (
-        <div className="flex flex-col sm:flex-row gap-3 mt-3 mb-5 px-1">
-          <div className="relative w-full">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <RouteIcon className="w-4 h-4" />
-            </span>
-            <input
-              type="text"
-              placeholder="Adresse de départ"
-              value={depart}
-              onChange={(e) => {
-                const value = e.target.value;
-                setDepart(value);
-                fetchSuggestions(value, setDepartSuggestions);
-              }}
-              className="w-full pl-10 pr-4 py-2 text-[16px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
-              autoComplete="off"
-            />
-            {departSuggestions.length > 0 && (
-              <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-48 overflow-auto text-sm">
-                {departSuggestions.map((sug) => (
-                  <li
-                    key={sug.properties.id}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDepart(sug.properties.label);
-                      setDepartSuggestions([]);
-                      const [lon, lat] = sug.geometry.coordinates;
-                      setCoordsDepart({ lat, lon });
-                    }}
-                  >
-                    {sug.properties.label}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="relative w-full">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <RouteIcon className="w-4 h-4" />
-            </span>
-            <input
-              type="text"
-              placeholder="Adresse d’arrivée"
-              value={arrivee}
-              onChange={(e) => {
-                const value = e.target.value;
-                setArrivee(value);
-                fetchSuggestions(value, setAdresseSuggestions);
-              }}
-              className="w-full pl-10 pr-4 py-2 text-[16px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
-              autoComplete="off"
-            />
-            {adresseSuggestions.length > 0 && (
-              <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-48 overflow-auto text-sm">
-                {adresseSuggestions.map((sug) => (
-                  <li
-                    key={sug.properties.id}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setArrivee(sug.properties.label);
-                      setAdresseSuggestions([]);
-                      const [lon, lat] = sug.geometry.coordinates;
-                      setCoordsArrivee({ lat, lon });
-                    }}
-                  >
-                    {sug.properties.label}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-row flex-nowrap items-center gap-2 mt-3 mb-5 px-1">
-          <div className="relative flex-grow">
+      {/* Champs filtres toujours visibles */}
+      <div className="flex gap-3 mt-3 mb-5 px-1 flex-wrap">
+
+        {/* Adresse autour de... */}
+        {activeFilter === "autour" && (
+          <div className="relative flex-grow min-w-[220px]">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
               <LocateIcon className="w-4 h-4" />
             </span>
@@ -309,17 +243,99 @@ export default function Courses() {
               </ul>
             )}
           </div>
-          <input
-            type="number"
-            min={1}
-            max={30}
-            placeholder="Rayon"
-            value={rayon}
-            onChange={(e) => setRayon(e.target.value.replace(/[^\d.]/g, ""))}
-            className="border border-gray-300 rounded-full px-4 py-2 w-20 text-[16px] focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
-          />
-        </div>
-      )}
+        )}
+
+        {/* Adresse de départ et d’arrivée pour itinéraire */}
+        {activeFilter === "itineraire" && (
+          <>
+            {/* Adresse de départ */}
+            <div className="relative flex-grow min-w-[220px]">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <RouteIcon className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="Adresse de départ"
+                value={depart}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setDepart(value);
+                  fetchSuggestions(value, setDepartSuggestions);
+                }}
+                className="w-full pl-10 pr-4 py-2 text-[16px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
+                autoComplete="off"
+              />
+              {departSuggestions.length > 0 && (
+                <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-48 overflow-auto text-sm">
+                  {departSuggestions.map((sug) => (
+                    <li
+                      key={sug.properties.id}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDepart(sug.properties.label);
+                        setDepartSuggestions([]);
+                        const [lon, lat] = sug.geometry.coordinates;
+                        setCoordsDepart({ lat, lon });
+                      }}
+                    >
+                      {sug.properties.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {/* Adresse d’arrivée */}
+            <div className="relative flex-grow min-w-[220px]">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <RouteIcon className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="Adresse d’arrivée"
+                value={arrivee}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setArrivee(value);
+                  fetchSuggestions(value, setAdresseSuggestions);
+                }}
+                className="w-full pl-10 pr-4 py-2 text-[16px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
+                autoComplete="off"
+              />
+              {adresseSuggestions.length > 0 && (
+                <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-48 overflow-auto text-sm">
+                  {adresseSuggestions.map((sug) => (
+                    <li
+                      key={sug.properties.id}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setArrivee(sug.properties.label);
+                        setAdresseSuggestions([]);
+                        const [lon, lat] = sug.geometry.coordinates;
+                        setCoordsArrivee({ lat, lon });
+                      }}
+                    >
+                      {sug.properties.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Rayon */}
+        <input
+          type="number"
+          min={1}
+          max={30}
+          placeholder="Rayon"
+          value={rayon}
+          onChange={(e) => setRayon(e.target.value.replace(/[^\d.]/g, ""))}
+          className="border border-gray-300 rounded-full px-4 py-2 w-20 text-[16px] focus:outline-none focus:ring-2 focus:ring-[#ed354f] bg-white"
+        />
+      </div>
 
       {orders.length === 0 ? (
         <p className="text-gray-500 mt-6">Aucune commande en attente.</p>
@@ -508,5 +524,4 @@ export default function Courses() {
       </Modal>
     </div>
   );
-  <BottomSheetTournee/>
 }
