@@ -187,10 +187,21 @@ export default function Tournee() {
     initMapWithRoute();
   }, [token]);
 
+  useEffect(() => {
+    document.body.classList.add("overflow-hidden");
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
+
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
+    <div className="fixed inset-0 overflow-hidden z-0">
       {orderedSteps.length > 0 && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-white border border-gray-200 shadow-xl rounded-xl p-4 w-[90%] max-w-md">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 mt-12 bg-white border border-gray-200 shadow-xl rounded-xl p-4 w-[90%] max-w-md">
           <div className="flex items-center gap-4">
             <img
               src={
@@ -246,7 +257,7 @@ export default function Tournee() {
               ? orderedSteps[0].commande.boutique?.phone
               : orderedSteps[0].commande.client?.phone
           }`}
-          className="fixed bottom-20 right-4 w-12 h-12 bg-white hover:bg-white text-black rounded-full shadow-lg flex items-center justify-center"
+          className="fixed bottom-20 right-4 w-12 h-12 bg-white hover:bg-white text-black rounded-full shadow-lg flex items-center justify-center pb-[env(safe-area-inset-bottom)]"
         >
           <Phone size={20} />
         </a>
