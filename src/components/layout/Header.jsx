@@ -15,7 +15,7 @@ export default function Header() {
   let ville = "Votre ville";
   if (role === "livreur") {
     ville = geoVille;
-  } else if (typeof adresse === "string") {
+  } else if (typeof adresse === "string" && adresse.length > 0) {
     const match = adresse.match(/(?:\d{5})?\s*([\p{L}\s\-']+)$/u);
     ville = match?.[1]?.trim() || "Votre ville";
   }
