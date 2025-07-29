@@ -4,6 +4,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import BottomSheetTournee from "../../components/ui/BottomSheetTournee";
 import useUserStore from "../../stores/userStore";
+import { Phone, PackageIcon, MapPinIcon, TruckIcon, WeightIcon, EuroIcon, Clock } from "lucide-react";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -189,13 +190,48 @@ export default function Tournee() {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {orderedSteps.length > 0 && (
-        <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-10 bg-white/90 border border-gray-200 shadow-lg px-4 py-2 rounded-xl text-gray-800 text-sm max-w-[90%] text-center">
-          🚚 Tu dois te rendre à :{" "}
-          <strong>
-            {orderedSteps[0].type === "pickup"
-              ? orderedSteps[0].commande.boutiqueAddress
-              : orderedSteps[0].commande.deliveryAddress}
-          </strong>
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-white border border-gray-200 shadow-xl rounded-xl p-4 w-[90%] max-w-md">
+          <div className="flex items-center gap-4">
+            <img
+              src={
+                orderedSteps[0].type === "pickup"
+                  ? orderedSteps[0].commande.boutique?.coverImageUrl
+                  : orderedSteps[0].commande.client?.avatarUrl
+              }
+              alt="Avatar"
+              className="w-12 h-12 rounded-full object-cover border"
+            />
+            <div className="flex-1 text-left">
+              <p className="font-semibold text-gray-800 text-base">
+                {orderedSteps[0].type === "pickup"
+                  ? orderedSteps[0].commande.boutique?.name
+                  : orderedSteps[0].commande.client?.fullname}
+              </p>
+              <p className="text-sm text-gray-600">
+                {orderedSteps[0].type === "pickup"
+                  ? orderedSteps[0].commande.boutiqueAddress
+                  : orderedSteps[0].commande.deliveryAddress}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex justify-between items-center text-sm text-gray-700">
+            <div className="flex items-center gap-1">
+              <Clock size={16} className="text-gray-500" />
+              <span>{orderedSteps[0].commande.estimatedDelayFormatted || "?"}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <PackageIcon size={16} className="text-gray-500" />
+              <span>{orderedSteps[0].commande.items?.length || 0}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <WeightIcon size={16} className="text-gray-500" />
+              <span>{orderedSteps[0].commande.poidsFacture || "?"} kg</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <EuroIcon size={16} className="text-gray-500" />
+              <span>{(orderedSteps[0].commande.montantLivreur / 100).toFixed(2)} €</span>
+            </div>
+          </div>
         </div>
       )}
       <div
@@ -203,6 +239,18 @@ export default function Tournee() {
         className="absolute top-0 left-0 right-0 bottom-0 w-screen h-screen bg-gray-100 z-0"
       />
       <BottomSheetTournee livraisons={livraisons} orderedSteps={orderedSteps} />
+      {orderedSteps.length > 0 && (
+        <a
+          href={`tel:${
+            orderedSteps[0].type === "pickup"
+              ? orderedSteps[0].commande.boutique?.phone
+              : orderedSteps[0].commande.client?.phone
+          }`}
+          className="fixed bottom-20 right-4 w-12 h-12 bg-white hover:bg-white text-black rounded-full shadow-lg flex items-center justify-center"
+        >
+          <Phone size={20} />
+        </a>
+      )}
     </div>
   );
 }
