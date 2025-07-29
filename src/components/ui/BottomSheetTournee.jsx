@@ -167,6 +167,7 @@ function ListeLivraisonsParStatut({ livraisons, statut }) {
 export default function BottomSheetTournee() {
   const [activeFilter, setActiveFilter] = useState("en_cours");
   const [livraisons, setLivraisons] = useState([]);
+  const [orderedSteps, setOrderedSteps] = useState([]);
   const [code, setCode] = useState("");
   const [isOpen, setIsOpen] = useState(true);
   const token = useUserStore(state => state.token);
@@ -183,7 +184,7 @@ export default function BottomSheetTournee() {
   }, [isOpen]);
 
   useEffect(() => {
-    const fetchLivraisons = async () => {
+    const fetchLivraisonsEtOrdre = async () => {
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/livreur/assigned`, {
           headers: {
@@ -192,11 +193,49 @@ export default function BottomSheetTournee() {
         });
         const data = await res.json();
         setLivraisons(data);
+
+        // Générer points (corrigé)
+        const points = [];
+        const seen = new Set();
+
+        data.forEach(order => {
+          const { boutiqueLocation, deliveryLocation } = order;
+
+          if (boutiqueLocation?.lng != null && boutiqueLocation?.lat != null) {
+            const key = `${boutiqueLocation.lng},${boutiqueLocation.lat}`;
+            if (!seen.has(key)) {
+              points.push([boutiqueLocation.lng, boutiqueLocation.lat]);
+              seen.add(key);
+            }
+          }
+
+          if (deliveryLocation?.lng != null && deliveryLocation?.lat != null) {
+            const key = `${deliveryLocation.lng},${deliveryLocation.lat}`;
+            if (!seen.has(key)) {
+              points.push([deliveryLocation.lng, deliveryLocation.lat]);
+              seen.add(key);
+            }
+          }
+        });
+
+        // ⚠️ Limiter à 12 points pour l’API Mapbox
+        const limitedPoints = points.slice(0, 12);
+
+        if (limitedPoints.length < 2) return;
+
+        const coordString = limitedPoints.map(p => `${p[0]},${p[1]}`).join(";");
+        const optURL = `https://api.mapbox.com/optimized-trips/v1/mapbox/driving/${coordString}?source=first&roundtrip=false&geometries=geojson&access_token=${import.meta.env.VITE_MAPBOX_TOKEN}`;
+        const optRes = await fetch(optURL);
+        const optData = await optRes.json();
+
+        const stepIndices = optData.trips?.[0]?.waypoint_order || [];
+        const reordered = stepIndices.map(i => limitedPoints[i]);
+        setOrderedSteps(reordered);
       } catch (err) {
-        console.error("Erreur récupération livraisons :", err);
+        console.error("Erreur récupération livraisons ou ordre Mapbox :", err);
       }
     };
-    fetchLivraisons();
+    fetchLivraisonsEtOrdre();
   }, [token]);
 
   const handleLivrer = async (action, orderId) => {
@@ -238,7 +277,7 @@ export default function BottomSheetTournee() {
       {/* Contenu normal de la page : header + nav + carte interactive */}
       <div className="relative z-0">
         {/* La carte interactive sera ici */}
-        <PageCarte />
+        <PageCarte steps={orderedSteps} />
       </div>
 
       <button
@@ -305,10 +344,21 @@ export default function BottomSheetTournee() {
   );
 }
 
-export function PageCarte() {
+export function PageCarte({ steps = [] }) {
   return (
-    <div>
-      {/* Carte interactive à implémenter ici */}
+    <div className="p-4 space-y-2">
+      <h2 className="text-lg font-semibold">Itinéraire optimisé</h2>
+      {steps.length === 0 ? (
+        <p className="text-sm text-gray-500">Aucun point d'étape trouvé</p>
+      ) : (
+        <ol className="list-decimal list-inside text-sm text-gray-700 space-y-1">
+          {steps.map((p, idx) => (
+            <li key={idx}>
+              Longitude: {p[0].toFixed(4)}, Latitude: {p[1].toFixed(4)}
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }

@@ -20,6 +20,7 @@
     "axios": "^1.9.0",
     "express-jwt": "^8.5.1",
     "express-oauth2-jwt-bearer": "^1.6.1",
+    "haversine-distance": "^1.2.4",
     "jwks-rsa": "^3.2.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.523.0",

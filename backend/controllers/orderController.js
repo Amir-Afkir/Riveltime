@@ -105,6 +105,143 @@ async function getOrdersByUser(req, res) {
 // ------------------Espace vendeur ------------------
 //====================================================
 
+
+// Rendre visible une commande accepter par un vendeur
+async function getStatutOrdersForBoutique(req, res) {
+  try {
+    const user = req.dbUser;
+    if (user.role !== 'vendeur') {
+      return res.status(403).json({ error: "Accès réservé aux vendeurs." });
+    }
+
+    const boutiques = await Boutique.find({ owner: user._id }, '_id');
+    const boutiqueIds = boutiques.map(b => b._id);
+
+    const activeStatuses = ['accepted', 'preparing', 'shipped', 'delivered', 'cancelled']; // ou ce que tu utilises
+
+    const orders = await Order.find({
+      boutique: { $in: boutiqueIds },
+      status: { $in: activeStatuses }
+    })
+      .populate([
+        { path: 'items.product' },
+        { path: 'deliverer', select: 'fullname phone avatarUrl' },
+        { path: 'client', select: 'fullname phone avatarUrl' },
+        { path: 'boutique', populate: { path: 'owner', select: 'phone' } }
+      ])
+      .sort({ placedAt: -1 });
+
+    res.json(orders);
+  } catch (err) {
+    serverError(res, 'Erreur récupération commandes actives vendeur', err);
+  }
+}
+// Preparer une commande accepter par un livreur
+async function getPreparingOrdersHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const user = req.dbUser;
+
+    const order = await Order.findById(id).populate('boutique');
+    if (!order) return res.status(404).json({ message: "Commande introuvable." });
+
+    const isVendeur = order.boutique && user._id.equals(order.boutique.owner);
+    if (!isVendeur) return res.status(403).json({ message: "Accès non autorisé." });
+
+    order.status = status;
+    order.deliveryStatusHistory.push({ status, date: new Date() });
+
+    await order.save();
+
+    return res.status(200).json({ message: `Commande marquée comme ${status}.` });
+  } catch (err) {
+    console.error("❌ Erreur mise à jour statut commande :", err);
+    return res.status(500).json({ message: "Erreur serveur." });
+  }
+}
+
+// Annule une commande manuellement (par vendeur, client ou système)
+async function cancelOrderHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const user = req.dbUser;
+
+    const order = await Order.findById(id).populate('boutique');
+    if (!order) return res.status(404).json({ message: "Commande introuvable." });
+
+    const isClient = user._id.equals(order.client);
+    const isVendeur = order.boutique && user._id.equals(order.boutique.owner);
+    const isAdmin = user.role === 'admin';
+
+    if (!isClient && !isVendeur && !isAdmin) {
+      return res.status(403).json({ message: "Accès non autorisé." });
+    }
+
+    if (order.captureStatus === 'authorized') {
+      try {
+        await stripe.paymentIntents.cancel(order.paymentIntentId);
+      } catch (stripeError) {
+        console.warn("⚠️ Annulation Stripe échouée :", stripeError.message);
+      }
+    }
+
+    order.status = 'cancelled';
+    order.captureStatus = 'canceled';
+    order.deliveryStatusHistory.push({ status: 'cancelled', date: new Date() });
+    order.stripeStatusHistory.push({
+      status: 'canceled',
+      event: 'cancel_order_handler',
+      date: new Date()
+    });
+
+    await order.save();
+
+    return res.status(200).json({ message: "Commande annulée avec succès." });
+  } catch (err) {
+    console.error("❌ Erreur dans cancelOrderHandler :", err);
+    return res.status(500).json({ message: "Erreur serveur lors de l'annulation." });
+  }
+}
+
+//====================================================
+// ------------------Espace livreur ------------------
+//====================================================
+
+// Récupérer toutes les commandes assignées à un livreur (peu importe le statut)
+async function getAssignedOrdersForLivreur(req, res) {
+  try {
+    const user = req.dbUser;
+    if (user.role !== 'livreur') {
+      return res.status(403).json({ message: 'Accès réservé aux livreurs.' });
+    }
+
+    const orders = await Order.find({
+      deliverer: user._id
+    })
+      .sort({ placedAt: -1 })
+      .populate([
+        {
+          path: 'boutique',
+          select: 'name coverImageUrl phone',
+          populate: { path: 'owner', select: 'phone' },
+          options: { strictPopulate: false }
+        },
+        {
+          path: 'client',
+          select: 'fullname phone avatarUrl',
+          options: { strictPopulate: false }
+        }
+      ])
+      .lean();
+
+    res.json(orders);
+  } catch (err) {
+    console.error('❌ Erreur récupération commandes assignées au livreur :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+//
 function isCoordValid(coord) {
   return coord && typeof coord.latitude === 'number' && typeof coord.longitude === 'number';
 }
@@ -167,6 +304,7 @@ async function getPendingOrdersForLivreur(req, res) {
     res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 }
+// Accepter une commande en attente
 async function acceptDelivery(req, res) {
   try {
     const user = req.dbUser;
@@ -196,142 +334,7 @@ async function acceptDelivery(req, res) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 };
-// Récupérer toutes les commandes assignées à un livreur (peu importe le statut)
-async function getAssignedOrdersForLivreur(req, res) {
-  try {
-    const user = req.dbUser;
-    if (user.role !== 'livreur') {
-      return res.status(403).json({ message: 'Accès réservé aux livreurs.' });
-    }
-
-    const orders = await Order.find({
-      deliverer: user._id
-    })
-      .sort({ placedAt: -1 })
-      .populate([
-        {
-          path: 'boutique',
-          select: 'name coverImageUrl phone',
-          populate: { path: 'owner', select: 'phone' },
-          options: { strictPopulate: false }
-        },
-        {
-          path: 'client',
-          select: 'fullname phone avatarUrl',
-          options: { strictPopulate: false }
-        }
-      ])
-      .lean();
-
-    res.json(orders);
-  } catch (err) {
-    console.error('❌ Erreur récupération commandes assignées au livreur :', err);
-    res.status(500).json({ message: 'Erreur serveur.' });
-  }
-}
-
-
-//====================================================
-// ------------------Espace livreur ------------------
-//====================================================
-
-// Rendre visible une commande accepter par un livreur
-async function getStatutOrdersForBoutique(req, res) {
-  try {
-    const user = req.dbUser;
-    if (user.role !== 'vendeur') {
-      return res.status(403).json({ error: "Accès réservé aux vendeurs." });
-    }
-
-    const boutiques = await Boutique.find({ owner: user._id }, '_id');
-    const boutiqueIds = boutiques.map(b => b._id);
-
-    const activeStatuses = ['accepted', 'preparing', 'shipped', 'delivered', 'cancelled']; // ou ce que tu utilises
-
-    const orders = await Order.find({
-      boutique: { $in: boutiqueIds },
-      status: { $in: activeStatuses }
-    })
-      .populate([
-        { path: 'items.product' },
-        { path: 'deliverer', select: 'fullname phone avatarUrl' },
-        { path: 'client', select: 'fullname phone avatarUrl' },
-        { path: 'boutique', populate: { path: 'owner', select: 'phone' } }
-      ])
-      .sort({ placedAt: -1 });
-
-    res.json(orders);
-  } catch (err) {
-    serverError(res, 'Erreur récupération commandes actives vendeur', err);
-  }
-}
-// Preparer une commande accepter par un livreur
-async function getPreparingOrdersHandler(req, res) {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-    const user = req.dbUser;
-
-    const order = await Order.findById(id).populate('boutique');
-    if (!order) return res.status(404).json({ message: "Commande introuvable." });
-
-    const isVendeur = order.boutique && user._id.equals(order.boutique.owner);
-    if (!isVendeur) return res.status(403).json({ message: "Accès non autorisé." });
-
-    order.status = status;
-    order.deliveryStatusHistory.push({ status, date: new Date() });
-
-    await order.save();
-
-    return res.status(200).json({ message: `Commande marquée comme ${status}.` });
-  } catch (err) {
-    console.error("❌ Erreur mise à jour statut commande :", err);
-    return res.status(500).json({ message: "Erreur serveur." });
-  }
-}
-// Annule une commande manuellement (par vendeur, client ou système)
-async function cancelOrderHandler(req, res) {
-  try {
-    const { id } = req.params;
-    const user = req.dbUser;
-
-    const order = await Order.findById(id).populate('boutique');
-    if (!order) return res.status(404).json({ message: "Commande introuvable." });
-
-    const isClient = user._id.equals(order.client);
-    const isVendeur = order.boutique && user._id.equals(order.boutique.owner);
-    const isAdmin = user.role === 'admin';
-
-    if (!isClient && !isVendeur && !isAdmin) {
-      return res.status(403).json({ message: "Accès non autorisé." });
-    }
-
-    if (order.captureStatus === 'authorized') {
-      try {
-        await stripe.paymentIntents.cancel(order.paymentIntentId);
-      } catch (stripeError) {
-        console.warn("⚠️ Annulation Stripe échouée :", stripeError.message);
-      }
-    }
-
-    order.status = 'cancelled';
-    order.captureStatus = 'canceled';
-    order.deliveryStatusHistory.push({ status: 'cancelled', date: new Date() });
-    order.stripeStatusHistory.push({
-      status: 'canceled',
-      event: 'cancel_order_handler',
-      date: new Date()
-    });
-
-    await order.save();
-
-    return res.status(200).json({ message: "Commande annulée avec succès." });
-  } catch (err) {
-    console.error("❌ Erreur dans cancelOrderHandler :", err);
-    return res.status(500).json({ message: "Erreur serveur lors de l'annulation." });
-  }
-}
-
+// Marquer une commande comme réceptionné 
 async function markOrderOnTheWay(req, res) {
   try {
     const user = req.dbUser;
@@ -367,7 +370,6 @@ async function markOrderOnTheWay(req, res) {
     return res.status(500).json({ message: "Erreur serveur lors de la mise à jour du statut." });
   }
 }
-
 // Marquer une commande comme livrée avec code de vérification
 async function markOrderAsDelivered(req, res) {
   try {
@@ -456,6 +458,7 @@ async function markOrderAsDelivered(req, res) {
     res.status(500).json({ message: "Erreur serveur lors de la livraison." });
   }
 }
+
 
 export {
   simpleDistanceEstimate,

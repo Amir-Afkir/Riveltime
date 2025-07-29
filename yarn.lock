@@ -2648,6 +2648,11 @@ hasown@^2.0.2:
   dependencies:
     function-bind "^1.1.2"
 
+haversine-distance@^1.2.4:
+  version "1.2.4"
+  resolved "https://registry.npmjs.org/haversine-distance/-/haversine-distance-1.2.4.tgz"
+  integrity sha512-8MHQBQXR7GXZJIvitCf/ux+gwLtWOxmXNNz5dReG+jJbuvaEoj6QIXlaIO3cPr433BFWM4jececJaLYpwxnZhg==
+
 idb@^7.0.1:
   version "7.1.1"
   resolved "https://registry.npmjs.org/idb/-/idb-7.1.1.tgz"
