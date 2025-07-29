@@ -1,5 +1,6 @@
 // src/pages/client/Accueil.jsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useResilientFetch from "../../hooks/useResilientFetch";
 import { useNavigate } from "react-router-dom";
 import { Search, LogIn, ShoppingCart, Bike, Shirt, Laptop, Utensils, Pill, Hammer, Flower } from "lucide-react";
 import MerchantCard from "../../components/MerchantCard";
@@ -18,7 +19,10 @@ const FILTERS = [
 export default function Accueil() {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [boutiques, setBoutiques] = useState([]);
+  const boutiques = useResilientFetch(
+    `${import.meta.env.VITE_API_URL}/client/accueil/boutiques`,
+    "cachedBoutiques"
+  );
   const navigate = useNavigate();
 
   const FEATURED_MESSAGES = [
@@ -31,21 +35,8 @@ export default function Accueil() {
     "Et si vous tombiez sur votre prochain coup de cœur ?",
   ];
 
-  useEffect(() => {
-    async function fetchBoutiques() {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/client/accueil/boutiques`);
-        if (!res.ok) throw new Error("Erreur lors du fetch boutiques");
-        const data = await res.json();
-        setBoutiques(data);
-      } catch (error) {
-        console.error("Erreur fetch boutiques", error);
-      }
-    }
-    fetchBoutiques();
-  }, []);
 
-  const filteredBoutiques = boutiques.filter((b) => {
+  const filteredBoutiques = (boutiques || []).filter((b) => {
     const nom = typeof b.name === "string" ? b.name.toLowerCase() : "";
     const categorie = typeof b.category === "string" ? b.category.toLowerCase() : "";
     const search = query.toLowerCase();
@@ -237,7 +228,7 @@ export default function Accueil() {
                 distance={b.distance || null}
                 coverImage={b.coverImageUrl || null}
                 onClick={() => navigate(`/vitrine/${b._id}`)}
-                variant="popular"
+                variant="default"
               />
             ))}
           </div>
@@ -261,6 +252,7 @@ export default function Accueil() {
                 distance={b.distance || null}
                 coverImage={b.coverImageUrl || null}
                 onClick={() => navigate(`/vitrine/${b._id}`)}
+                variant="default"
               />
             ))}
           </div>

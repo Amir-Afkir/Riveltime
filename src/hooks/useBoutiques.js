@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import useUserStore from '../stores/userStore';
+import useResilientFetch from '../hooks/useResilientFetch';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -152,6 +153,7 @@ export default function useBoutiques() {
       : await createBoutique(boutiqueForm);
   };
 
+  const allBoutiques = useResilientFetch(`${API_URL}/boutiques`, 'cachedBoutiques');
   return {
     boutiques,
     loading: loading || loadingUser,

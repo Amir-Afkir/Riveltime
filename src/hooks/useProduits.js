@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
 import useUserStore from '../stores/userStore';
+import useResilientFetch from '../hooks/useResilientFetch';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -13,6 +14,9 @@ export default function useProduits() {
   const [produits, setProduits] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const produitsPublics = (boutiqueId) =>
+    useResilientFetch(`${API_URL}/produits/boutique/${boutiqueId}`, `cachedProduits-${boutiqueId}`);
 
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
@@ -127,5 +131,6 @@ export default function useProduits() {
     createProduit,
     updateProduit,
     deleteProduit,
+    produitsPublics,
   };
 }
