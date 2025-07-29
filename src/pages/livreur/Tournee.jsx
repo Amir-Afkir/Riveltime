@@ -17,6 +17,10 @@ export default function Tournee() {
 
   useEffect(() => {
     const initMapWithRoute = async () => {
+      if (!mapContainer.current) {
+        console.warn("🛑 mapContainer.current est null !");
+        return;
+      }
       let startingPoint = null;
       try {
         const position = await new Promise((resolve, reject) => {
@@ -273,11 +277,15 @@ export default function Tournee() {
       <div 
         className="absolute top-0 left-0 right-0 bottom-0 w-screen h-screen bg-gray-100 z-0"
       />
+      <div
+        ref={mapContainer}
+        className="absolute top-0 left-0 w-full h-full z-0"
+      />
       <BottomSheetTournee />
       {orderedSteps.length > 0 && (
         <a
           onClick={centerMapOnLivreur}
-          className="fixed right-4 w-12 h-12 bg-white/80 backdrop-blur-sm shadow-t-md border-t border-gray-200 text-black rounded-full flex items-center justify-center shadow-lg border transition-shadow duration-300 hover:shadow-[gray]/40"
+          className="fixed right-4 w-12 h-12 min-w-[48px] min-h-[48px] bg-white/80 backdrop-blur-sm border-t border-gray-200 text-black rounded-full flex items-center justify-center shadow-lg border transition-shadow duration-300 hover:shadow-[gray]/40"
           style={{ bottom: `calc(env(safe-area-inset-bottom, 0px) + 5rem)` }}
         >
           <LocateIcon size={20} />
