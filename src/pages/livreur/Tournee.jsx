@@ -258,7 +258,7 @@ export default function Tournee() {
               : orderedSteps[0].commande.client?.phone
           }`}
           className="fixed right-4 w-12 h-12 bg-white text-black rounded-full shadow-lg flex items-center justify-center"
-          style={{ bottom: `max(5rem, calc(env(safe-area-inset-bottom) + 1.5rem))` }}
+          style={{ bottom: `max(5rem, calc(env(safe-area-inset-bottom) + 2rem))` }}
         >
           <Phone size={20} />
         </a>
