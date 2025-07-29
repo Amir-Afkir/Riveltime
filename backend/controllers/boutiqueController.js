@@ -1,5 +1,9 @@
 // backend/controllers/boutiqueController.js
 import Boutique from '../models/Boutique.js';
+import dayjs from 'dayjs';
+import 'dayjs/locale/fr.js';
+
+dayjs.locale('fr'); // active le français
 import Product from '../models/Product.js';
 import cloudinary from '../config/cloudinary.js';
 import mongoose from 'mongoose';
@@ -16,18 +20,6 @@ function handleServerError(res, err, message = "Erreur serveur.") {
 
 function isOwner(user, doc) {
   return doc.owner?.toString() === user._id.toString();
-}
-
-// 🌐 GET - Toutes les boutiques (public)
-export async function getAllBoutiques(_req, res) {
-  try {
-    const boutiques = await Boutique.find()
-      .populate('owner', 'avatarUrl fullname')
-      .lean();
-    res.json(boutiques);
-  } catch (err) {
-    handleServerError(res, err, 'Erreur récupération boutiques');
-  }
 }
 
 // 🔐 GET - Boutiques du vendeur connecté
@@ -81,6 +73,9 @@ export async function createBoutique(req, res) {
       activerParticipation = false,
       participationPourcent = 50,
       contributionLivraisonPourcent = 20,
+      activerHoraires = false,
+      horaires = {},
+      fermetureExceptionnelle = false,
     } = req.body;
 
     if (participationPourcent > 70) {
@@ -111,6 +106,9 @@ export async function createBoutique(req, res) {
       description,
       address,
       location,
+      activerHoraires,
+      horaires,
+      fermetureExceptionnelle,
       activerParticipation,
       participationPourcent,
       contributionLivraisonPourcent,
@@ -178,6 +176,9 @@ export async function updateBoutique(req, res) {
       activerParticipation = false,
       participationPourcent = 50,
       contributionLivraisonPourcent = 20,
+      activerHoraires = false,
+      horaires = {},
+      fermetureExceptionnelle = false,
     } = req.body;
 
     if (contributionLivraisonPourcent >= 30) {
@@ -198,6 +199,14 @@ export async function updateBoutique(req, res) {
       return res.status(400).json({ error: 'Coordonnées géographiques invalides.' });
     }
 
+    if (typeof horaires === 'string') {
+      try {
+        horaires = JSON.parse(horaires);
+      } catch (e) {
+        return res.status(400).json({ error: 'Format des horaires invalide.' });
+      }
+    }
+
     if (req.imageData) {
       if (boutique.coverImagePublicId) {
         await cloudinary.uploader.destroy(boutique.coverImagePublicId);
@@ -211,6 +220,9 @@ export async function updateBoutique(req, res) {
     boutique.description = description;
     boutique.address = address;
     boutique.location = location;
+    boutique.activerHoraires = activerHoraires;
+    boutique.horaires = horaires;
+    boutique.fermetureExceptionnelle = fermetureExceptionnelle;
 
     boutique.activerParticipation = activerParticipation;
     boutique.participationPourcent = participationPourcent;

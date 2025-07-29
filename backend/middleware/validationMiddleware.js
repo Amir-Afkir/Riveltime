@@ -13,11 +13,11 @@ function validateBoutiqueData(req, res, next) {
   const { name, category } = req.body;
   const allowedCategories = [
     'Alimentation',
-    'Mobilité électrique',
-    'Prêt-à-porter',
-    'Informatique',
     'Restaurant',
     'Santé',
+    'Mobilité',
+    'Prêt-à-porter',
+    'Informatique',
     'Bricolage',
     'Jardin',
   ];

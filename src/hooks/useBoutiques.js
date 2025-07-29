@@ -15,28 +15,50 @@ const createFormData = ({
   activerParticipation,
   participationPourcent,
   contributionLivraisonPourcent,
+  activerHoraires,
+  horaires,
+  fermetureExceptionnelle,
 }) => {
   const formData = new FormData();
   formData.append("name", name);
   formData.append("category", category);
+
   if (address) {
     formData.append("address", address);
   }
+
   if (coverImage) {
     formData.append("coverImage", coverImage);
   }
+
   if (location) {
     formData.append("location", JSON.stringify(location));
   }
+
   if (activerParticipation !== undefined) {
     formData.append("activerParticipation", activerParticipation);
   }
+
   if (participationPourcent !== undefined) {
     formData.append("participationPourcent", participationPourcent);
   }
+
   if (contributionLivraisonPourcent !== undefined) {
     formData.append("contributionLivraisonPourcent", contributionLivraisonPourcent);
   }
+
+  if (activerHoraires !== undefined) {
+    formData.append("activerHoraires", activerHoraires);
+  }
+
+  if (horaires !== undefined) {
+    formData.append("horaires", JSON.stringify(horaires));
+  }
+
+  if (fermetureExceptionnelle !== undefined) {
+    formData.append("fermetureExceptionnelle", fermetureExceptionnelle);
+  }
+
   return formData;
 };
 

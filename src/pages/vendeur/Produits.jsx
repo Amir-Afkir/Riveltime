@@ -11,12 +11,14 @@ import {
 import NotificationBanner from "../../components/ui/NotificationBanner.jsx";
 
 const CATEGORIES = [
-  "Alimentation",
-  "Mobilité électrique",
-  "Prêt-à-porter",
-  "Électronique",
-  "Beauté & Bien-être",
-  "Maison & Déco",
+    'Alimentation',
+    'Restaurant',
+    'Santé',
+    'Mobilité',
+    'Prêt-à-porter',
+    'Informatique',
+    'Bricolage',
+    'Jardin',
 ];
 
 const INITIAL_BOUTIQUE_FORM = {
@@ -27,6 +29,20 @@ const INITIAL_BOUTIQUE_FORM = {
   location: null,
   coverImage: null,
   coverImageUrl: "",
+  activerHoraires: false,
+  horaires: {
+    lundi: { ouvert: false, debut: "", fin: "" },
+    mardi: { ouvert: false, debut: "", fin: "" },
+    mercredi: { ouvert: false, debut: "", fin: "" },
+    jeudi: { ouvert: false, debut: "", fin: "" },
+    vendredi: { ouvert: false, debut: "", fin: "" },
+    samedi: { ouvert: false, debut: "", fin: "" },
+    dimanche: { ouvert: false, debut: "", fin: "" },
+  },
+  fermetureExceptionnelle: false,
+  activerParticipation: false,
+  participationPourcent: "50",
+  contributionLivraisonPourcent: "20",
 };
 
 const INITIAL_PRODUIT_FORM = {
@@ -110,13 +126,39 @@ export default function Produits() {
   };
 
   const handleChangeBoutiqueForm = (e) => {
-    let { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
 
-    if (name === "activerParticipation") {
-      value = value === true || value === "true";
+    let finalValue = value;
+
+    // Checkbox
+    if (type === "checkbox") {
+      finalValue = checked;
     }
 
-    setBoutiqueForm((prev) => ({ ...prev, [name]: value }));
+    // Champs booléens ou string "true"/"false"
+    if (["activerParticipation", "activerHoraires", "fermetureExceptionnelle"].includes(name)) {
+      if (value === true || value === false) {
+        finalValue = value;
+      } else if (value === "true") {
+        finalValue = true;
+      } else if (value === "false") {
+        finalValue = false;
+      }
+    }
+
+    // Pour les horaires qui sont des objets imbriqués, on les met à jour proprement (via GestionModal)
+    if (name === "horaires" && typeof value === "object") {
+      setBoutiqueForm((prev) => ({
+        ...prev,
+        horaires: value,
+      }));
+      return;
+    }
+
+    setBoutiqueForm((prev) => ({
+      ...prev,
+      [name]: finalValue,
+    }));
   };
 
   const handleBoutiqueFileChange = (e) => {

@@ -1,6 +1,5 @@
 import express from 'express';
 import {
-  getAllBoutiques,
   getMyBoutiques,
   getBoutiqueById,
   createBoutique,
@@ -26,8 +25,6 @@ import upload from '../middleware/multerConfig.js';
 
 const router = express.Router();
 
-// 🌐 Routes publiques
-router.get('/', getAllBoutiques);
 
 router.get(
   '/mine',

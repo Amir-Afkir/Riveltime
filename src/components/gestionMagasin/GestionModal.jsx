@@ -8,14 +8,17 @@ import ToggleSwitch from "../profile/ToggleSwitch";
 
 const safeValue = (val, fallback = "") => (val === undefined || val === null ? fallback : val);
 
-const CATEGORIES = [
-  "Alimentation",
-  "Mobilité électrique",
-  "Prêt-à-porter",
-  "Électronique",
-  "Beauté & Bien-être",
-  "Maison & Déco",
-];
+  const CATEGORIES = [
+    'Alimentation',
+    'Restaurant',
+    'Santé',
+    'Mobilité',
+    'Prêt-à-porter',
+    'Informatique',
+    'Bricolage',
+    'Jardin',
+  ];
+
 
 export default function GestionModal({
   type,
@@ -35,6 +38,13 @@ export default function GestionModal({
 
   const isBoutique = type === "boutique";
   const isProduit = type === "produit";
+
+  // Ensure activerHoraires is initialized to false by default if not a boolean
+  useEffect(() => {
+    if (isBoutique && data && typeof data.activerHoraires !== "boolean") {
+      onChange({ target: { name: "activerHoraires", value: false } });
+    }
+  }, [isBoutique, data]);
 
 
   const handleBackdropClick = (e) => {
@@ -89,7 +99,9 @@ export default function GestionModal({
           onChange={async (e) => {
             const value = e.target.value;
             onChange({ target: { name: "address", value } });
-            onChange({ target: { name: "location", value: null } });
+            if (!data.location) {
+              onChange({ target: { name: "location", value: undefined } });
+            }
 
             if (value.length > 3) {
               const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${value}`);
@@ -131,13 +143,92 @@ export default function GestionModal({
         )}
       </div>
 
+      <ToggleSwitch
+        label="🕒 Définir des horaires d'ouverture"
+        checked={Boolean(data.activerHoraires)}
+        onChange={() =>
+          onChange({ target: { name: "activerHoraires", value: Boolean(!data.activerHoraires) } })
+        }
+        readOnly={false}
+      />
+
+      {/* Bloc horaires personnalisés */}
+      {data.activerHoraires && (
+        <>
+          <h4 className="text-sm font-semibold text-gray-700 mb-2 mt-4">📅 Horaires d'ouverture</h4>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map((jour) => (
+              <div key={jour}>
+                <label className="block text-sm font-medium text-gray-600 capitalize">{jour}</label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={data.horaires?.[jour]?.ouvert || false}
+                    onChange={(e) => {
+                      const value = {
+                        ...data.horaires,
+                        [jour]: {
+                          ...data.horaires?.[jour],
+                          ouvert: e.target.checked,
+                        },
+                      };
+                      onChange({ target: { name: "horaires", value } });
+                    }}
+                  />
+                  <input
+                    type="time"
+                    value={data.horaires?.[jour]?.debut || ''}
+                    onChange={(e) => {
+                      const value = {
+                        ...data.horaires,
+                        [jour]: {
+                          ...data.horaires?.[jour],
+                          debut: e.target.value,
+                        },
+                      };
+                      onChange({ target: { name: "horaires", value } });
+                    }}
+                    className="border p-1 rounded text-sm"
+                  />
+                  <input
+                    type="time"
+                    value={data.horaires?.[jour]?.fin || ''}
+                    onChange={(e) => {
+                      const value = {
+                        ...data.horaires,
+                        [jour]: {
+                          ...data.horaires?.[jour],
+                          fin: e.target.value,
+                        },
+                      };
+                      onChange({ target: { name: "horaires", value } });
+                    }}
+                    className="border p-1 rounded text-sm"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ToggleSwitch fermeture exceptionnelle toujours affiché */}
+      <ToggleSwitch
+        label="🛑 Fermeture exceptionnelle"
+        checked={!!data.fermetureExceptionnelle}
+        onChange={(value) =>
+          onChange({ target: { name: "fermetureExceptionnelle", value: Boolean(value) } })
+        }
+        readOnly={false}
+      />
+
       <h4 className="text-sm font-semibold text-gray-700 mb-2 mt-4">💸 Participation aux frais de livraison</h4>
 
       <ToggleSwitch
         label="Activer la participation"
         checked={!!data.activerParticipation}
         onChange={(value) => {
-          onChange({ target: { name: "activerParticipation", value } });
+          onChange({ target: { name: "activerParticipation", value: Boolean(value) } });
 
           if (value) {
             if (!data.participationPourcent) {

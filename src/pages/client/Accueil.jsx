@@ -7,15 +7,17 @@ import MerchantCard from "../../components/MerchantCard";
 const FILTERS = [
   { name: "Alimentation", icon: <ShoppingCart size={24} />, bg: "#4F9CF9" },
   { name: "Restaurant", icon: <Utensils size={24} />, bg: "#FF7744" },
+  { name: "Prêt-à-porter", icon: <Shirt size={24}  />, bg: "#EC4899" },
   { name: "Santé", icon: <Pill size={24} />, bg: "#FF6A7B" },
-  { name: "Mobilité", icon: <Bike size={24} />, bg: "#38D9A9" },
   { name: "Informatique", icon: <Laptop size={24} />, bg: "#A78BFA" },
+  { name: "Mobilité", icon: <Bike size={24} />, bg: "#38D9A9" },
   { name: "Bricolage", icon: <Hammer size={24} />, bg: "#FBBF24" },
   { name: "Jardin", icon: <Flower size={24} />, bg: "#34D399" },
 ];
 
 export default function Accueil() {
   const [query, setQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [boutiques, setBoutiques] = useState([]);
   const navigate = useNavigate();
 
@@ -47,7 +49,12 @@ export default function Accueil() {
     const nom = typeof b.name === "string" ? b.name.toLowerCase() : "";
     const categorie = typeof b.category === "string" ? b.category.toLowerCase() : "";
     const search = query.toLowerCase();
-    return nom.includes(search) || categorie.includes(search);
+    const categoryFilter = selectedCategory.toLowerCase();
+
+    const matchSearch = nom.includes(search) || categorie.includes(search);
+    const matchCategory = categoryFilter ? categorie === categoryFilter : true;
+
+    return matchSearch && matchCategory;
   });
 
   const randomMessage = FEATURED_MESSAGES[Math.floor(Math.random() * FEATURED_MESSAGES.length)];
@@ -60,6 +67,19 @@ export default function Accueil() {
         style={{ minHeight: "100dvh" }}
       >
         <div className="mb-3" aria-hidden="true" />
+
+        {selectedCategory && (
+          <div className="flex items-center gap-2 mb-4 ml-2">
+            <span className="text-sm text-gray-600">Filtre actif :</span>
+            <button
+              onClick={() => setSelectedCategory("")}
+              className="flex items-center gap-1 text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition"
+            >
+              <span>{selectedCategory}</span>
+              <span className="text-gray-500">✕</span>
+            </button>
+          </div>
+        )}
 
         {/* Recherche */}
         <div className="relative mb-5 pl-0">
@@ -85,7 +105,7 @@ export default function Accueil() {
                 className="w-[70px] shrink-0 snap-start flex flex-col items-center justify-center text-center"
               >
                 <button
-                  onClick={() => setQuery(name)}
+                  onClick={() => setSelectedCategory(name)}
                   className="w-[75px] h-[52px] min-h-[44px] rounded-full flex items-center justify-center transition shadow-md hover:shadow-lg hover:brightness-95"
                   style={{ backgroundColor: bg }}
                 >

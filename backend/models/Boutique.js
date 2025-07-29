@@ -63,11 +63,11 @@ const boutiqueSchema = new mongoose.Schema({
     required: true,
     enum: [
       'Alimentation',
-      'Mobilité électrique',
-      'Prêt-à-porter',
-      'Informatique',
       'Restaurant',
       'Santé',
+      'Mobilité',
+      'Prêt-à-porter',
+      'Informatique',
       'Bricolage',
       'Jardin',
     ],
@@ -79,6 +79,25 @@ const boutiqueSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
+  },
+
+  // ───── Disponibilité ─────
+  activerHoraires: {
+    type: Boolean,
+    default: false,
+  },
+  horaires: {
+    type: Map,
+    of: {
+      ouvert: { type: Boolean, default: false },
+      debut: { type: String }, // format HH:mm
+      fin: { type: String },
+    },
+    default: {},
+  },
+  fermetureExceptionnelle: {
+    type: Boolean,
+    default: false,
   },
 
   // ───── Participation livraison ─────
