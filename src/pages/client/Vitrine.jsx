@@ -1,6 +1,7 @@
 // src/pages/client/Vitrine.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import useResilientFetch from "../../hooks/useResilientFetch";
 import useUserStore from "../../stores/userStore";
 import useCartStore from "../../stores/cartStore";
 import Button from "../../components/ui/Button";
@@ -40,51 +41,40 @@ export default function Vitrine() {
   const [searchQuery, setSearchQuery] = useState("");
   const closeNotification = () => setNotification(null);
 
+  // fetch boutique et produits via useResilientFetch
+  const boutiqueData = useResilientFetch(`${API_URL}/boutiques/${id}`, `public-boutique-${id}`);
+  const produitsData = useResilientFetch(`${API_URL}/boutiques/${id}/produits`, `public-produits-${id}`);
+
   const { token, userData } = useUserStore();
   const [estimatedDelay, setEstimatedDelay] = useState(null);
   const [distanceKm, setDistanceKm] = useState(null);
 
   useEffect(() => {
-    async function fetchBoutiqueAndProduits() {
-      try {
-        const resBoutique = await fetch(`${API_URL}/boutiques/${id}`);
-        if (!resBoutique.ok) throw new Error("Boutique introuvable");
-        const { boutique } = await resBoutique.json();
+    if (!boutiqueData || !produitsData) return;
 
-        const resProduits = await fetch(`${API_URL}/boutiques/${id}/produits`);
-        if (!resProduits.ok) throw new Error("Produits introuvables");
-        const { produits } = await resProduits.json();
+    setBoutique(boutiqueData.boutique);
+    setProduits(produitsData.produits);
 
-        setBoutique(boutique);
-        setProduits(produits);
-        const uniqueCollections = [...new Set(produits.map(p => p.collectionName).filter(Boolean))];
-        setCollections(uniqueCollections);
+    const uniqueCollections = [...new Set(produitsData.produits.map(p => p.collectionName).filter(Boolean))];
+    setCollections(uniqueCollections);
 
-        // ✅ Enregistre toute la boutique dans localStorage
-        try {
-          const newEntry = {
-            _id: boutique._id,
-            name: boutique.name,
-            category: boutique.category,
-            distance: boutique.distance || null,
-            coverImageUrl: boutique.coverImageUrl || null,
-          };
+    try {
+      const newEntry = {
+        _id: boutiqueData.boutique._id,
+        name: boutiqueData.boutique.name,
+        category: boutiqueData.boutique.category,
+        distance: boutiqueData.boutique.distance || null,
+        coverImageUrl: boutiqueData.boutique.coverImageUrl || null,
+      };
 
-          const existing = JSON.parse(localStorage.getItem("recentBoutiques")) || [];
-          const filtered = existing.filter((b) => b._id !== boutique._id);
-          const updated = [newEntry, ...filtered].slice(0, 10);
-          localStorage.setItem("recentBoutiques", JSON.stringify(updated));
-        } catch (e) {
-          console.error("Erreur stockage recentBoutiques:", e);
-        }
-      } catch (err) {
-        console.error("❌ Erreur Vitrine:", err);
-        setError(err.message || "Erreur serveur");
-      }
+      const existing = JSON.parse(localStorage.getItem("recentBoutiques")) || [];
+      const filtered = existing.filter((b) => b._id !== boutiqueData.boutique._id);
+      const updated = [newEntry, ...filtered].slice(0, 10);
+      localStorage.setItem("recentBoutiques", JSON.stringify(updated));
+    } catch (e) {
+      console.error("Erreur stockage recentBoutiques:", e);
     }
-
-    fetchBoutiqueAndProduits();
-  }, [id]);
+  }, [boutiqueData, produitsData]);
 
   useEffect(() => {
     async function estimateFee() {
@@ -139,7 +129,7 @@ export default function Vitrine() {
     );
   }
 
-  if (!boutique) {
+  if (!boutiqueData || !produitsData || !boutique) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Chargement...</p>
