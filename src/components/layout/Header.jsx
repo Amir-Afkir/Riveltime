@@ -12,11 +12,13 @@ export default function Header() {
   const adresse = userData?.infosClient?.adresseComplete || userData?.infosVendeur?.adresseComplete || "";
   const { role } = userData || {};
   const { ville: geoVille } = useUserCity();
-  const ville = role === "livreur"
-    ? geoVille
-    : (typeof adresse === "string"
-        ? adresse.match(/(?:\d{5})?\s*([\p{L}\s\-']+)$/u)?.[1]?.trim() || "Votre ville"
-        : "Votre ville");
+  let ville = "Votre ville";
+  if (role === "livreur") {
+    ville = geoVille;
+  } else if (typeof adresse === "string") {
+    const match = adresse.match(/(?:\d{5})?\s*([\p{L}\s\-']+)$/u);
+    ville = match?.[1]?.trim() || "Votre ville";
+  }
 
   return (
     <header
