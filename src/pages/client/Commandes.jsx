@@ -1,40 +1,23 @@
 import { ShoppingCart, FileText, Package, Truck, Home, Clock } from "lucide-react";
 import useUserStore from "../../stores/userStore";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import Section from "../../components/ui/Section";
+import useOrderStore from "../../stores/orderStore";
+import { useEffect } from "react";
 import Title from "../../components/ui/Title";
 import Card from "../../components/ui/Card";
 
 export default function CommandesClient() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { orders, loading, error, fetchClientOrders } = useOrderStore();
   const { token, getTokenSilentlyFn } = useUserStore();
   const getToken = getTokenSilentlyFn();
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const accessToken = token || (getToken && await getToken());
-        if (!accessToken) throw new Error("Aucun token disponible");
-
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders/me`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        setOrders(res.data);
-      } catch (err) {
-        console.error("❌ Erreur chargement commandes :", err);
-        setError("Une erreur est survenue lors du chargement de vos commandes.");
-      } finally {
-        setLoading(false);
+    const init = async () => {
+      const accessToken = token || (getToken && await getToken());
+      if (accessToken) {
+        await fetchClientOrders(accessToken);
       }
     };
-
-    fetchOrders();
+    init();
   }, [token]);
 
   if (loading) {

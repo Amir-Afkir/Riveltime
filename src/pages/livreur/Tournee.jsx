@@ -4,6 +4,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import BottomSheetTournee from "../../components/ui/BottomSheetTournee";
 import useUserStore from "../../stores/userStore";
+import useOrderStore from "../../stores/orderStore";
 import { Phone, PackageIcon, MapPinIcon, LocateIcon, WeightIcon, EuroIcon, Clock } from "lucide-react";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -11,16 +12,14 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 export default function Tournee() {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [livraisons, setLivraisons] = useState([]);
-  const [orderedSteps, setOrderedSteps] = useState([]);
   const { token } = useUserStore();
+  const { orders, fetchOrdersAssignedLivreur } = useOrderStore();
+  const [orderedSteps, setOrderedSteps] = useState([]);
 
   useEffect(() => {
-    const initMapWithRoute = async () => {
-      if (!mapContainer.current) {
-        console.warn("🛑 mapContainer.current est null !");
-        return;
-      }
+    const loadMapAndFetch = async () => {
+      if (!mapContainer.current) return;
+
       let startingPoint = null;
       try {
         const position = await new Promise((resolve, reject) => {
@@ -39,14 +38,16 @@ export default function Tournee() {
         zoom: 13,
       });
 
-      // 1. Récupération des commandes du livreur
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/livreur/assigned`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const orders = await res.json();
-      setLivraisons(orders);
+      await fetchOrdersAssignedLivreur(token);
+    };
 
-      // 2. Extraire les points (boutique + client), supprimer les doublons et limiter à 12 points
+    loadMapAndFetch();
+  }, [token]);
+
+  useEffect(() => {
+    if (!map.current || orders.length === 0) return;
+
+    const runRouting = async () => {
       const points = [];
       const pointToCommandeMap = [];
       const seen = new Set();
@@ -81,115 +82,66 @@ export default function Tournee() {
         }
       }
 
-      // ⚠️ Limiter à 12 points
       const limitedPoints = points.slice(0, 12);
       console.log("🔍 Nombre de points :", limitedPoints.length);
-
       if (limitedPoints.length < 2) return;
 
-      // Préparer une chaîne de coordonnées pour l'API Directions classique
-      const coordinates = startingPoint ? [startingPoint, ...limitedPoints] : limitedPoints; // tableau de [lng, lat]
+      const currentPosition = map.current ? map.current.getCenter().toArray() : null;
+      const startingPoint = currentPosition;
+      const coordinates = startingPoint ? [startingPoint, ...limitedPoints] : limitedPoints;
       const coordsString = coordinates.map(coord => coord.join(',')).join(';');
       const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordsString}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
-      console.log("📌 Points envoyés (Directions):", coordsString);
-      console.log("🌐 URL utilisée (Directions):", url);
       const directionsRes = await fetch(url);
       const data = await directionsRes.json();
-      console.log("📦 Données Directions:", data);
+
       if (!data.routes || !data.routes.length) {
         console.error("❌ Mapbox n’a pas renvoyé de route Directions :", data);
         return;
       }
-      const route = data.routes[0].geometry;
 
-      // Utilise l'optimiseur pour déterminer l'ordre des commandes
-      const commandesOrdonnees = calculerTourneeOptimisee(orders, startingPoint);
+      const route = data.routes[0].geometry;
+      const commandesOrdonnees = calculerTourneeOptimisee(orders);
       setOrderedSteps(commandesOrdonnees);
 
-      // 3. Tracer la route (avec API Directions)
+      // Affichage de la route
       if (route) {
-        if (!map.current.isStyleLoaded()) {
-          map.current.once('load', () => {
-            console.log("🧱 Ajout du layer route (Directions)");
-
-            // Nettoyage préalable
-            if (map.current.getSource("route")) {
-              map.current.removeLayer("route");
-              map.current.removeSource("route");
-            }
-
-            // Créer un GeoJSON pour la route
-            const routeGeoJSON = {
-              type: 'Feature',
-              properties: {},
-              geometry: route,
-            };
-
-            map.current.addSource('route', {
-              type: 'geojson',
-              data: routeGeoJSON,
-            });
-
-            map.current.addLayer({
-              id: 'route',
-              type: 'line',
-              source: 'route',
-              layout: {
-                'line-join': 'round',
-                'line-cap': 'round',
-              },
-              paint: {
-                'line-color': '#3b82f6',
-                'line-width': 4,
-              },
-            });
-          });
-        } else {
-          console.log("🧱 Ajout du layer route (Directions)");
-
-          // Nettoyage préalable
-          if (map.current.getSource("route")) {
-            map.current.removeLayer("route");
-            map.current.removeSource("route");
-          }
-
-          // Créer un GeoJSON pour la route
-          const routeGeoJSON = {
-            type: 'Feature',
-            properties: {},
-            geometry: route,
-          };
-
-          map.current.addSource('route', {
-            type: 'geojson',
-            data: routeGeoJSON,
-          });
-
-          map.current.addLayer({
-            id: 'route',
-            type: 'line',
-            source: 'route',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
-            paint: {
-              'line-color': '#3b82f6',
-              'line-width': 4,
-            },
-          });
+        if (map.current.getSource("route")) {
+          map.current.removeLayer("route");
+          map.current.removeSource("route");
         }
+        const routeGeoJSON = {
+          type: 'Feature',
+          properties: {},
+          geometry: route,
+        };
+        map.current.addSource('route', {
+          type: 'geojson',
+          data: routeGeoJSON,
+        });
+        map.current.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#3b82f6',
+            'line-width': 4,
+          },
+        });
       }
 
-      // 4. Marqueurs sur chaque point avec couleurs distinctes
+      // Marqueurs
       pointToCommandeMap.forEach(({ type, location }) => {
-        const color = type === "pickup" ? "#10b981" : "#f59e0b"; // vert pour boutique, orange pour client
+        const color = type === "pickup" ? "#10b981" : "#f59e0b";
         new mapboxgl.Marker({ color }).setLngLat(location).addTo(map.current);
       });
     };
 
-    initMapWithRoute();
-  }, [token]);
+    runRouting();
+  }, [orders]);
 
   useEffect(() => {
     document.body.classList.add("overflow-hidden");

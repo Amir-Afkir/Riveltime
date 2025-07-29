@@ -1,8 +1,9 @@
 // src/components/gestionMagasin/hooks/useBoutiques.js
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import useUserStore from '../stores/userStore';
+import useBoutiqueStore from '../../stores/boutiqueStore';
 import useResilientFetch from '../hooks/useResilientFetch';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -66,9 +67,8 @@ const createFormData = ({
 export default function useBoutiques() {
   const { token, userData, loadingUser } = useUserStore();
   const isAuthenticated = !!userData;
-  const [boutiques, setBoutiques] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const boutiqueStore = useBoutiqueStore();
+  const { boutiques, loading, error, setBoutiques, setLoading, setError } = boutiqueStore;
   const abortControllerRef = useRef(null);
 
   useEffect(() => {

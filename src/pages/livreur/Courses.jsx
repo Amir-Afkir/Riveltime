@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 
@@ -20,22 +20,37 @@ import {
 } from "lucide-react";
 import useUserStore from "../../stores/userStore";
 import Card from "../../components/ui/Card";
+import useOrderStore from "../../stores/orderStore";
 
 export default function Courses() {
+  useEffect(() => setFiltreActif("autour"), []);
   const token = useUserStore(state => state.token);
 
-  const [orders, setOrders] = useState([]);
-  // Nouvelle gestion d'état pour le filtre actif
-  const [activeFilter, setActiveFilter] = useState("autour");
-  // Remplacer filterType par activeFilter dans tout le composant
-  const [depart, setDepart] = useState("");
-  const [arrivee, setArrivee] = useState("");
+  // Store state & setters
+  const {
+    orders,
+    loading,
+    error,
+    fetchOrdersLivreur,
+    filtreActif,
+    setFiltreActif,
+    depart,
+    setDepart,
+    arrivee,
+    setArrivee,
+    coordsDepart,
+    setCoordsDepart,
+    coordsArrivee,
+    setCoordsArrivee,
+    coordsAutour,
+    setCoordsAutour,
+    rayon,
+    setRayon,
+  } = useOrderStore();
+
+  // Suggestions locales (transitoires, pas besoin de store)
   const [departSuggestions, setDepartSuggestions] = useState([]);
   const [adresseSuggestions, setAdresseSuggestions] = useState([]);
-  const [coordsDepart, setCoordsDepart] = useState(null);
-  const [coordsArrivee, setCoordsArrivee] = useState(null);
-  const [coordsAutour, setCoordsAutour] = useState(null);
-  const [rayon, setRayon] = useState("5"); // en km, string pour URLSearchParams
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -75,65 +90,18 @@ export default function Courses() {
     }
   };
 
-  // Effet pour charger les commandes selon filtre et coordonnées
+  // Effet pour charger les commandes (dépendances sur les filtres)
   useEffect(() => {
-    const fetchOrders = async () => {
-      let url = `${import.meta.env.VITE_API_URL}/orders/livreur/pending`;
-      const params = new URLSearchParams();
-      const rayonFloat = parseFloat(rayon);
-      let useFilter = false;
-
-      if (activeFilter === "autour") {
-        if (coordsAutour?.lat && coordsAutour?.lon && !isNaN(rayonFloat)) {
-          params.append("filterType", "autour");
-          params.append("lat", coordsAutour.lat);
-          params.append("lon", coordsAutour.lon);
-          params.append("rayon", rayonFloat);
-          useFilter = true;
-        }
-      } else if (activeFilter === "itineraire") {
-        if (
-          coordsDepart?.lat && coordsDepart?.lon &&
-          coordsArrivee?.lat && coordsArrivee?.lon &&
-          !isNaN(rayonFloat)
-        ) {
-          params.append("filterType", "itineraire");
-          params.append("latDepart", coordsDepart.lat);
-          params.append("lonDepart", coordsDepart.lon);
-          params.append("latArrivee", coordsArrivee.lat);
-          params.append("lonArrivee", coordsArrivee.lon);
-          params.append("rayon", rayonFloat);
-          useFilter = true;
-        }
-      }
-
-      if (useFilter && params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      try {
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (!res.ok || !Array.isArray(data)) {
-          console.error("Erreur API ou réponse inattendue :", data);
-          setOrders([]);
-          return;
-        }
-        setOrders(data);
-      } catch (err) {
-        console.error("Erreur lors du chargement des commandes :", err);
-        setOrders([]);
-      }
+    const init = async () => {
+      await fetchOrdersLivreur(token);
     };
-
-    fetchOrders();
-  }, [coordsAutour, activeFilter, coordsDepart, coordsArrivee, rayon, token]);
+    init();
+  // Dépendances sur tous les filtres du store
+  }, [token, filtreActif, coordsAutour, coordsDepart, coordsArrivee, rayon]);
 
   // Reset des filtres lors du changement de mode
   const handleFilterTypeChange = (newFilterType) => {
-    setActiveFilter(newFilterType);
+    setFiltreActif(newFilterType);
     setDepart("");
     setArrivee("");
     setDepartSuggestions([]);
@@ -161,8 +129,7 @@ export default function Courses() {
       }
       const data = await res.json();
       alert("Commande acceptée !");
-      
-      setOrders((prev) => prev.filter(order => order._id !== orderId));
+      // Optionnel: tu peux ici rafraîchir les commandes via fetchOrdersLivreur si besoin
       closeModalWithAnimation();
     } catch (error) {
       alert("Erreur réseau lors de l’acceptation de la commande.");
@@ -191,7 +158,7 @@ export default function Courses() {
               key={key}
               onClick={() => handleFilterTypeChange(key)}
               className={`px-4 py-1.5 rounded-full border text-sm ${
-                activeFilter === key
+                filtreActif === key
                   ? "bg-black text-white"
                   : "bg-gray-100 text-gray-700"
               }`}
@@ -206,7 +173,7 @@ export default function Courses() {
       <div className="flex gap-3 mt-3 mb-5 px-1 flex-wrap">
 
         {/* Adresse autour de... */}
-        {activeFilter === "autour" && (
+        {filtreActif === "autour" && (
           <div className="relative flex-grow min-w-[220px]">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
               <LocateIcon className="w-4 h-4" />
@@ -246,7 +213,7 @@ export default function Courses() {
         )}
 
         {/* Adresse de départ et d’arrivée pour itinéraire */}
-        {activeFilter === "itineraire" && (
+        {filtreActif === "itineraire" && (
           <>
             {/* Adresse de départ */}
             <div className="relative flex-grow min-w-[220px]">

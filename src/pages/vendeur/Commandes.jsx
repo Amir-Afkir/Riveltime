@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import useUserStore from "../../stores/userStore";
+import useOrderStore from "../../stores/orderStore";
 import Button from "../../components/ui/Button";
 import Title from "../../components/ui/Title";
 import Card from "../../components/ui/Card";
@@ -21,69 +21,18 @@ export default function CommandesBoutique() {
     cancelled: "Annulée",
   };
 
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
   const { token } = useUserStore();
+  const {
+    orders,
+    loading,
+    fetchBoutiqueOrders,
+    cancelOrder,
+    markAsPreparing,
+  } = useOrderStore();
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders/boutique/statut`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setOrders(res.data);
-      } catch (err) {
-        console.error("Erreur récupération commandes:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
-  }, [token]);
-
-  const handleMarkAsPreparing = async (orderId) => {
-    try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/orders/${orderId}/preparing`, {
-        status: "preparing"
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setOrders((prev) =>
-        prev.map((o) => (o._id === orderId ? { ...o, status: "preparing" } : o))
-      );
-    } catch (err) {
-      alert("Erreur mise à jour du statut");
-      console.error(err);
-    }
-  };
-
-  // Exemple de fonction pour marquer comme livrée avec code de vérification
-  const handleMarkAsDelivered = async (orderId, code) => {
-    try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/orders/${orderId}/mark-delivered`, {
-        code
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      alert("Commande marquée comme livrée !");
-    } catch (err) {
-      alert("Erreur lors de la livraison : " + (err.response?.data?.message || err.message));
-      console.error(err);
-    }
-  };
-
-  const handleCancelOrder = async (orderId) => {
-    try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/orders/${orderId}/cancel`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setOrders((prev) => prev.filter((o) => o._id !== orderId));
-    } catch (err) {
-      alert("Erreur lors de l'annulation de la commande");
-      console.error(err);
-    }
-  };
+    fetchBoutiqueOrders(token);
+  }, [token, fetchBoutiqueOrders]);
 
   if (loading) return <p className="text-center mt-10 text-gray-500">Chargement des commandes...</p>;
 
@@ -233,11 +182,11 @@ export default function CommandesBoutique() {
 
               {order.status === "accepted" && (
                 <div className="flex gap-3 mt-2 justify-between">
-                  <Button onClick={() => handleCancelOrder(order._id)} variant="primary" className="w-1/3">
+                  <Button onClick={() => cancelOrder(order._id, token)} variant="primary" className="w-1/3">
                     Annuler
                   </Button>
                   <Button
-                    onClick={() => handleMarkAsPreparing(order._id)}
+                    onClick={() => markAsPreparing(order._id, token)}
                     variant="secondary"
                     className="w-2/3"
                   >
