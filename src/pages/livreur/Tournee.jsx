@@ -201,7 +201,7 @@ export default function Tournee() {
   return (
     <div className="fixed inset-0 overflow-hidden z-0">
       {orderedSteps.length > 0 && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 mt-12 bg-white/80 backdrop-blur-sm shadow-t-md border-t border-gray-200 rounded-xl p-4 w-[90%] max-w-md">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 mt-12 bg-white/80 backdrop-blur-sm shadow-t-md border-t border-gray-200 rounded-xl p-4 w-[90%] max-w-md shadow-lg border transition-shadow duration-300 hover:shadow-[gray]/40 ">
           <div className="flex items-center gap-4">
             <img
               src={
@@ -257,7 +257,7 @@ export default function Tournee() {
               ? orderedSteps[0].commande.boutiqueTelephone
               : orderedSteps[0].commande.clientTelephone
           }`}
-          className="fixed right-4 w-12 h-12 bg-white/80 backdrop-blur-sm shadow-t-md border-t border-gray-200 text-black rounded-full flex items-center justify-center"
+          className="fixed right-4 w-12 h-12 bg-white/80 backdrop-blur-sm shadow-t-md border-t border-gray-200 text-black rounded-full flex items-center justify-center shadow-lg border transition-shadow duration-300 hover:shadow-[gray]/40 flex items-center gap-1"
           style={{ bottom: `calc(env(safe-area-inset-bottom, 0px) + 5rem)` }}
         >
           <Phone size={20} />

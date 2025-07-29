@@ -282,7 +282,7 @@ export default function BottomSheetTournee() {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-20 left-1/2 transform -translate-x-1/2 mb-[env(safe-area-inset-bottom)] px-4 py-2 z-30 rounded-full text-sm bg-[#fde6ea] border border-[#ed354f] text-[#ed354f] font-medium shadow-lg border transition-shadow duration-300 hover:shadow-[#ed354f]/40 flex items-center gap-1"
+        className="fixed bottom-20 left-1/2 transform -translate-x-1/2 mb-[env(safe-area-inset-bottom)] px-4 py-2 z-30 rounded-full text-sm bg-neutral-50 border border-gray-300 !text-black font-medium shadow-lg border transition-shadow duration-300 hover:shadow-[gray]/40 flex items-center gap-1"
       >
         {isOpen ? (
           <>
