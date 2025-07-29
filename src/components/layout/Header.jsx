@@ -9,13 +9,15 @@ import useUserCity from "../../hooks/useUserCity";
 export default function Header() {
   const navigate = useNavigate();
   const userData = useUserStore((state) => state.userData);
-  const adresse = userData?.infosClient?.adresseComplete || userData?.infosVendeur?.adresseComplete || "";
+  const adresse = typeof userData === 'object'
+    ? userData?.infosClient?.adresseComplete || userData?.infosVendeur?.adresseComplete || ""
+    : "";
   const { role } = userData || {};
   const { ville: geoVille } = useUserCity();
   let ville = "Votre ville";
   if (role === "livreur") {
     ville = geoVille;
-  } else if (typeof adresse === "string" && adresse.length > 0) {
+  } else if (adresse?.match) {
     const match = adresse.match(/(?:\d{5})?\s*([\p{L}\s\-']+)$/u);
     ville = match?.[1]?.trim() || "Votre ville";
   }
