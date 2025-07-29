@@ -306,21 +306,28 @@ export default function BottomSheetTournee() {
         <div className="p-4">
           <main className="max-w-md mx-auto space-y-4 mt-12 mb-20">
             <section>
-              <div className="mb-4 overflow-x-auto whitespace-nowrap no-scrollbar flex gap-2 px-1">
-                {tabs.map(({ key, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => setActiveFilter(key)}
-                    className={`px-4 py-1.5 rounded-full border text-sm ${
-                      activeFilter === key
-                        ? "bg-black text-white"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+                <div className="mb-4 flex items-center justify-between gap-2 px-1 flex-wrap">
+                  <h1 className="text-lg font-semibold text-black">
+                    <span className="text-green-600 text-xl">{livraisons.length}</span>{" "}
+                    <span className="text-sm font-medium text-gray-700">livraisons</span>
+                  </h1>
+
+                  <div className="overflow-x-auto no-scrollbar flex gap-2">
+                    {tabs.map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => setActiveFilter(key)}
+                        className={`px-4 py-1.5 rounded-full border text-sm ${
+                          activeFilter === key
+                            ? "bg-black text-white"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               <div className="space-y-3 mt-2">
                 {activeFilter === "en_cours" && (
                   livraisons.filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status)).length > 0 ? (

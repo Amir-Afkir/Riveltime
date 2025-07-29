@@ -248,7 +248,7 @@ export default function Tournee() {
                   ? orderedSteps[0].commande.boutiqueTelephone
                   : orderedSteps[0].commande.clientTelephone
               }`}
-              className="shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-[green]/25 text-green-700 hover:bg-[green]/40"
+              className="shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-green-200 text-green-700 hover:bg-green-300"
             >
               <Phone size={18} /> 
             </a>
