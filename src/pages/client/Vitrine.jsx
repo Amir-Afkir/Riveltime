@@ -2,6 +2,15 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import useResilientFetch from "../../hooks/useResilientFetch";
+const fallbackState = (cacheKey) => {
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {
+    console.warn("Erreur lecture cache", cacheKey, e);
+  }
+  return null;
+};
 import useUserStore from "../../stores/userStore";
 import useCartStore from "../../stores/cartStore";
 import Button from "../../components/ui/Button";
@@ -39,8 +48,18 @@ export default function Vitrine() {
   const closeNotification = () => setNotification(null);
 
   // fetch boutique et produits via useResilientFetch
-  const { data: boutiqueData, loading: loadingBoutique, error: errorBoutique } = useResilientFetch(`${API_URL}/boutiques/${id}`, `public-boutique-${id}`);
-  const { data: produitsData, loading: loadingProduits, error: errorProduits } = useResilientFetch(`${API_URL}/boutiques/${id}/produits`, `public-produits-${id}`);
+  const { data: boutiqueDataRaw, loading: loadingBoutique, error: errorBoutique } = useResilientFetch(`${API_URL}/boutiques/${id}`, `public-boutique-${id}`);
+  const [boutiqueData, setBoutiqueData] = useState(() => boutiqueDataRaw || fallbackState(`public-boutique-${id}`));
+  useEffect(() => {
+    if (boutiqueDataRaw) setBoutiqueData(boutiqueDataRaw);
+  }, [boutiqueDataRaw]);
+
+  const { data: produitsDataRaw, loading: loadingProduits, error: errorProduits } = useResilientFetch(`${API_URL}/boutiques/${id}/produits`, `public-produits-${id}`);
+  const [produitsData, setProduitsData] = useState(() => produitsDataRaw || fallbackState(`public-produits-${id}`));
+  useEffect(() => {
+    if (produitsDataRaw) setProduitsData(produitsDataRaw);
+  }, [produitsDataRaw]);
+
   const boutique = boutiqueData?.boutique;
   const produits = produitsData?.produits || [];
   const collections = [...new Set(produits.map(p => p.collectionName).filter(Boolean))];
