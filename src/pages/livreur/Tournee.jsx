@@ -4,7 +4,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import BottomSheetTournee from "../../components/ui/BottomSheetTournee";
 import useUserStore from "../../stores/userStore";
-import { Phone, PackageIcon, MapPinIcon, TruckIcon, WeightIcon, EuroIcon, Clock } from "lucide-react";
+import { Phone, PackageIcon, MapPinIcon, LocateIcon, WeightIcon, EuroIcon, Clock } from "lucide-react";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -198,6 +198,19 @@ export default function Tournee() {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
 
+  const centerMapOnLivreur = async () => {
+    if (!map.current) return;
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+      const coords = [position.coords.longitude, position.coords.latitude];
+      map.current.flyTo({ center: coords, zoom: 14 });
+    } catch (err) {
+      console.error("❌ Impossible de centrer la carte :", err);
+    }
+  };
+
   return (
     <div className="fixed inset-0 overflow-hidden z-0">
       {orderedSteps.length > 0 && (
@@ -212,8 +225,7 @@ export default function Tournee() {
               alt="Avatar"
               className="w-12 h-12 rounded-full object-cover border"
             />
-         <div className="flex-1 text-left">
-              
+            <div className="flex-1 text-left">
               <p className="text-sm text-gray-500">➡️ Nouvelle direction</p>
               <p className="font-semibold text-gray-800 text-base">
                 {orderedSteps[0].type === "pickup"
@@ -226,6 +238,16 @@ export default function Tournee() {
                   : orderedSteps[0].commande.deliveryAddress}
               </p>
             </div>
+            <a
+              href={`tel:${
+                orderedSteps[0].type === "pickup"
+                  ? orderedSteps[0].commande.boutiqueTelephone
+                  : orderedSteps[0].commande.clientTelephone
+              }`}
+              className="shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-[green]/25 text-green-700 hover:bg-[green]/40"
+            >
+              <Phone size={18} /> 
+            </a>
           </div>
           <div className="mt-3 flex justify-between items-center text-sm text-gray-700">
             <div className="flex items-center gap-1">
@@ -247,24 +269,21 @@ export default function Tournee() {
           </div>
         </div>
       )}
-      <div
-        ref={mapContainer}
+
+      <div 
         className="absolute top-0 left-0 right-0 bottom-0 w-screen h-screen bg-gray-100 z-0"
       />
-      <BottomSheetTournee livraisons={livraisons} orderedSteps={orderedSteps} />
+      <BottomSheetTournee />
       {orderedSteps.length > 0 && (
         <a
-          href={`tel:${
-            orderedSteps[0].type === "pickup"
-              ? orderedSteps[0].commande.boutiqueTelephone
-              : orderedSteps[0].commande.clientTelephone
-          }`}
-          className="fixed right-4 w-12 h-12 bg-white/80 backdrop-blur-sm shadow-t-md border-t border-gray-200 text-black rounded-full flex items-center justify-center shadow-lg border transition-shadow duration-300 hover:shadow-[gray]/40 flex items-center gap-1"
+          onClick={centerMapOnLivreur}
+          className="fixed right-4 w-12 h-12 bg-white/80 backdrop-blur-sm shadow-t-md border-t border-gray-200 text-black rounded-full flex items-center justify-center shadow-lg border transition-shadow duration-300 hover:shadow-[gray]/40"
           style={{ bottom: `calc(env(safe-area-inset-bottom, 0px) + 5rem)` }}
         >
-          <Phone size={20} />
+          <LocateIcon size={20} />
         </a>
       )}
     </div>
+
   );
 }
