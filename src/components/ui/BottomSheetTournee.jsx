@@ -1,5 +1,5 @@
 // src/components/ui/BottomSheetTournee.jsx
-import { MapPinIcon, PackageIcon, ClockIcon, Phone } from "lucide-react";
+import { MapPinIcon, PackageIcon, ClockIcon, Phone, TruckIcon, MapIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import Card from "./Card";
 import Button from "./Button";
@@ -282,13 +282,23 @@ export default function BottomSheetTournee() {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-20 left-1/2 transform -translate-x-1/2 mb-[env(safe-area-inset-bottom)] px-4 py-2 z-30 rounded-full text-sm bg-[#fde6ea] border border-[#ed354f] text-[#ed354f] font-medium shadow-lg border transition-shadow duration-300 hover:shadow-[#ed354f]/40"
+        className="fixed bottom-20 left-1/2 transform -translate-x-1/2 mb-[env(safe-area-inset-bottom)] px-4 py-2 z-30 rounded-full text-sm bg-[#fde6ea] border border-[#ed354f] text-[#ed354f] font-medium shadow-lg border transition-shadow duration-300 hover:shadow-[#ed354f]/40 flex items-center gap-1"
       >
-        Carte
+        {isOpen ? (
+          <>
+            <MapIcon size={16} />
+            Carte
+          </>
+        ) : (
+          <>
+            <TruckIcon size={16} />
+            Livraison
+          </>
+        )}
       </button>
 
       <div
-        className={`fixed inset-0 z-20 bg-[#f3f4f6] shadow-lg transition-transform duration-300 ease-in-out overflow-y-auto overscroll-contain ${
+        className={`fixed inset-0 z-20 pb-10 bg-[#f3f4f6] shadow-lg transition-transform duration-300 ease-in-out overflow-y-auto overscroll-contain ${
           isOpen ? 'translate-y-0' : 'translate-y-[calc(100%)]'
         }`}
         style={{ willChange: 'transform' }}
