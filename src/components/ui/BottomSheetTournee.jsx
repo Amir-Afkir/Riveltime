@@ -12,7 +12,7 @@ const tabs = [
   { key: "historique", label: "Historique" },
 ];
 
-function ProchaineLivraison({ livraison, code, setCode, onSubmit, loading }) {
+function ProchaineLivraison({ livraison, code, setCode, onSubmit, loading, delay = 0 }) {
   if (!livraison) {
     return <Card><p className="text-sm text-gray-500">Aucune livraison en cours</p></Card>;
   }
@@ -26,7 +26,7 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit, loading }) {
   }
 
   return (
-    <Card className="space-y-4">
+    <Card className="space-y-4" delay={delay}>
       {/* Status badge */}
       {["preparing", "on_the_way"].includes(livraison.status) && (
         <span className="inline-block text-sm font-medium mb-2 px-3 py-1 rounded-full bg-blue-100 text-blue-800">
@@ -279,20 +279,24 @@ export default function BottomSheetTournee() {
               <div className="space-y-3 mt-2">
                 <>
                   {activeFilter === "en_cours" && (
-                    livraisons.filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status)).length > 0 ? (
-                      livraisons.filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status)).map(livraison => (
-                        <ProchaineLivraison
-                          key={livraison._id}
-                          livraison={livraison}
-                          code={code}
-                          setCode={setCode}
-                          onSubmit={handleLivrer}
-                          loading={loading}
-                        />
-                      ))
-                    ) : (
-                      <Card><p className="text-sm text-gray-500">Aucune livraison en cours</p></Card>
-                    )
+                    livraisons
+                      .filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status)).length > 0 ? (
+                        livraisons
+                          .filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status))
+                          .map((livraison, index) => (
+                            <ProchaineLivraison
+                              key={livraison._id}
+                              livraison={livraison}
+                              code={code}
+                              setCode={setCode}
+                              onSubmit={handleLivrer}
+                              loading={loading}
+                              delay={index * 100}
+                            />
+                          ))
+                      ) : (
+                        <Card><p className="text-sm text-gray-500">Aucune livraison en cours</p></Card>
+                      )
                   )}
                   {activeFilter === "historique" && (
                     <>

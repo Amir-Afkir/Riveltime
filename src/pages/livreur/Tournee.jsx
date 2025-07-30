@@ -190,11 +190,6 @@ export default function Tournee() {
 
   return (
     <div className="fixed inset-0 overflow-hidden z-0">
-      {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm">
-          <div className="animate-spin rounded-full h-8 w-8 border-[3px] border-[#f58ba0]/50 border-t-[#ed354f]" />
-        </div>
-      )}
       {orderedSteps.length > 0 && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 mt-12 bg-white/80 backdrop-blur-sm shadow-t-md border-t border-gray-200 rounded-xl p-4 w-[90%] max-w-md shadow-lg border transition-shadow duration-300 hover:shadow-[gray]/40 ">
           <div className="flex items-center gap-4">
