@@ -1,23 +1,6 @@
-// src/stores/boutiqueStore.js
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import axios from 'axios';
-import useUserStore from './userStore';
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-function createFormData(data) {
-  const formData = new FormData();
-  for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined && value !== null) {
-      formData.append(
-        key,
-        ['location', 'horaires'].includes(key) ? JSON.stringify(value) : value
-      );
-    }
-  }
-  return formData;
-}
+import { apiClient, withLoadingAndError, createFormData } from '../utils/api'; // Import des utilitaires centralisés
 
 const useBoutiqueStore = create(
   devtools((set, get) => ({
@@ -27,19 +10,9 @@ const useBoutiqueStore = create(
     error: null,
     abortController: null,
 
-    // ✅ Utilitaire
-    _getToken() {
-      return useUserStore.getState().token;
-    },
-
-    _getHeaders() {
-      const token = get()._getToken();
-      return token ? { Authorization: `Bearer ${token}` } : {};
-    },
-
     // ✅ UI state
-    setLoading: (value) => set({ loading: value }),
-    setError: (error) => set({ error }),
+    setLoading: (value) => set({ loading: value }), // Utilisé par withLoadingAndError
+    setError: (error) => set({ error }), // Utilisé par withLoadingAndError
     setSelectedBoutique: (b) => set({ selectedBoutique: b }),
     clearSelectedBoutique: () => set({ selectedBoutique: null }),
 
@@ -53,93 +26,81 @@ const useBoutiqueStore = create(
     fetchMyBoutiques: async () => {
       get().abortPending();
       const controller = new AbortController();
-      set({ loading: true, error: null, abortController: controller });
+      set({ abortController: controller }); // Stocker le nouveau contrôleur
 
-      try {
-        const res = await axios.get(`${API_URL}/boutiques/mine`, {
-          headers: get()._getHeaders(),
+      await withLoadingAndError(set, async () => {
+        const res = await apiClient.get('/boutiques/mine', {
           signal: controller.signal,
         });
         set({ boutiques: res.data });
-      } catch (err) {
-        if (!axios.isCancel(err)) {
-          console.error("❌ fetchMyBoutiques:", err);
-          set({ error: "Erreur lors du chargement de vos boutiques." });
-        }
-      } finally {
-        set({ loading: false, abortController: null });
-      }
+      }).finally(() => {
+        set({ abortController: null }); // Nettoyer après la requête
+      });
     },
 
-    // ✅ GET - Toutes les boutiques
+    // ✅ GET - Toutes les boutiques (accès public ou admin)
     fetchAllBoutiques: async () => {
       get().abortPending();
       const controller = new AbortController();
-      set({ loading: true, error: null, abortController: controller });
+      set({ abortController: controller });
 
-      try {
-        const res = await axios.get(`${API_URL}/boutiques`, {
-          headers: get()._getHeaders(),
+      await withLoadingAndError(set, async () => {
+        const res = await apiClient.get('/boutiques', {
           signal: controller.signal,
         });
         set({ boutiques: res.data });
-      } catch (err) {
-        if (!axios.isCancel(err)) {
-          console.error("❌ fetchAllBoutiques:", err);
-          set({ error: "Erreur lors du chargement des boutiques." });
-        }
-      } finally {
-        set({ loading: false, abortController: null });
-      }
+      }).finally(() => {
+        set({ abortController: null });
+      });
     },
 
     // ✅ POST
     createBoutique: async (data) => {
-      const formData = createFormData(data);
-      const res = await axios.post(`${API_URL}/boutiques`, formData, {
-        headers: {
-          ...get()._getHeaders(),
-          "Content-Type": "multipart/form-data",
-        },
+      await withLoadingAndError(set, async () => {
+        const formData = createFormData(data);
+        const res = await apiClient.post('/boutiques', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        set((state) => ({
+          boutiques: [...state.boutiques, res.data.boutique],
+        }));
       });
-      set((state) => ({
-        boutiques: [...state.boutiques, res.data.boutique],
-      }));
-      return res.data.boutique;
+      // Retourne la donnée si succès ou lance une erreur si échec
+      // Le composant appelant devra gérer le résultat de withLoadingAndError
     },
 
     // ✅ PUT
     updateBoutique: async (id, data) => {
-      const formData = createFormData(data);
-      const res = await axios.put(`${API_URL}/boutiques/${id}`, formData, {
-        headers: {
-          ...get()._getHeaders(),
-          "Content-Type": "multipart/form-data",
-        },
+      await withLoadingAndError(set, async () => {
+        const formData = createFormData(data);
+        const res = await apiClient.put(`/boutiques/${id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        set((state) => ({
+          boutiques: state.boutiques.map((b) =>
+            b._id === id ? res.data.boutique : b
+          ),
+        }));
       });
-      set((state) => ({
-        boutiques: state.boutiques.map((b) =>
-          b._id === id ? res.data.boutique : b
-        ),
-      }));
-      return res.data.boutique;
     },
 
     // ✅ DELETE
     deleteBoutique: async (id) => {
-      await axios.delete(`${API_URL}/boutiques/${id}`, {
-        headers: get()._getHeaders(),
+      await withLoadingAndError(set, async () => {
+        await apiClient.delete(`/boutiques/${id}`);
+        set((state) => ({
+          boutiques: state.boutiques.filter((b) => b._id !== id),
+        }));
       });
-      set((state) => ({
-        boutiques: state.boutiques.filter((b) => b._id !== id),
-      }));
     },
 
-    // ✅ Save auto
+    // ✅ Save auto (create or update)
     saveBoutique: async (data) => {
-      return data._id
-        ? await get().updateBoutique(data._id, data)
-        : await get().createBoutique(data);
+      if (data._id) {
+        return await get().updateBoutique(data._id, data);
+      } else {
+        return await get().createBoutique(data);
+      }
     },
   }))
 );

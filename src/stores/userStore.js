@@ -1,53 +1,39 @@
-// src/stores/userStore.js
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { apiClient, withLoadingAndError, transformUserDataFromStorage } from '../utils/api';
 
 const useUserStore = create(devtools((set, get) => {
-  // 📦 Utilitaires internes
-  function saveAccessToken(token) {
+  // 📦 Utilitaires internes pour le stockage local
+  const saveAccessToken = (token) => {
     localStorage.setItem("accessToken", token);
-  }
+  };
 
-  function saveUserData(user) {
+  const saveUserData = (user) => {
     localStorage.setItem("userData", JSON.stringify(user));
-  }
+  };
 
-  function clearStorage() {
+  const clearStorage = () => {
     localStorage.clear();
-  }
+    // Enlève aussi les données du store en plus de localStorage
+    set({ token: null, userData: null, loadingUser: true, auth0User: null, getTokenSilently: null });
+  };
 
-  function getCachedUser() {
+  const getCachedUser = () => {
     const raw = localStorage.getItem("userData");
-    return raw ? JSON.parse(raw) : null;
-  }
-
-  function resolveTokenFn(inputFn) {
-    const fn = typeof inputFn === 'function' ? inputFn : get().getTokenSilently;
-    if (typeof fn !== 'function') throw new Error("getTokenSilently non défini ou invalide");
-    return fn;
-  }
+    return transformUserDataFromStorage(raw ? JSON.parse(raw) : null);
+  };
 
   return {
     token: null,
     userData: null,
-    loadingUser: true,
+    loadingUser: true, // Indique le chargement initial de l'utilisateur
     auth0User: null,
-    getTokenSilently: null,
+    getTokenSilently: null, // Fonction Auth0 pour récupérer le token
 
-    // 🔄 Restaure depuis le cache local (appelé dans App.jsx ou ailleurs)
+    // 🔄 Restaure depuis le cache local
     restoreUserFromCache: () => {
       const token = localStorage.getItem("accessToken");
-      const raw = localStorage.getItem("userData");
-      let userData = raw ? JSON.parse(raw) : null;
-
-      // 🩹 Compatibilité : transforme 'id' en '_id' si nécessaire
-      if (userData) {
-        if (typeof userData._id === 'object' && userData._id.$oid) {
-          userData._id = userData._id.$oid; // 🔁 Cas export MongoDB avec $oid
-        } else if (!userData._id && userData.id) {
-          userData._id = userData.id; // 🔁 Compatibilité si seulement `id`
-        }
-      }
+      const userData = getCachedUser();
 
       console.log("🗂️ Restauration depuis le cache local...", { token, userData });
 
@@ -57,20 +43,16 @@ const useUserStore = create(devtools((set, get) => {
           userData,
           loadingUser: false,
         });
+      } else {
+        set({ loadingUser: false }); // Pas de données en cache, marquer comme non chargé
       }
     },
 
     // 🔐 Initialise depuis Auth0
-    initAuth0Session: function initAuth0Session({ auth0User, getTokenSilently }) {
-      let cached = getCachedUser();
-      if (cached) {
-        if (typeof cached._id === 'object' && cached._id.$oid) {
-          cached._id = cached._id.$oid;
-        } else if (!cached._id && cached.id) {
-          cached._id = cached.id;
-        }
-      }
+    initAuth0Session: ({ auth0User, getTokenSilently }) => {
+      const cached = getCachedUser();
 
+      // Comparer l'ID Auth0 pour s'assurer que le cache appartient à l'utilisateur actuel
       if (cached?.auth0Id === auth0User?.sub) {
         console.log("🔄 Session restaurée depuis le cache local");
         set({
@@ -81,90 +63,73 @@ const useUserStore = create(devtools((set, get) => {
           loadingUser: false,
         });
       } else {
-        console.log("📡 Aucun cache valide, récupération distante...");
-        localStorage.removeItem("userData");
-        set({ auth0User, getTokenSilently });
-        get().fetchUser({ getTokenSilently });
+        console.log("📡 Aucun cache valide ou utilisateur Auth0 différent, récupération distante...");
+        localStorage.removeItem("userData"); // Nettoyer le cache utilisateur obsolète
+        set({ auth0User, getTokenSilently, loadingUser: true }); // Mettre à jour Auth0User et marquer comme chargeant
+        get().fetchUser(); // Lancer la récupération de l'utilisateur
       }
     },
 
     // 🔄 Met à jour l'utilisateur (appel API sécurisé)
-    fetchUser: async function fetchUser({ getTokenSilently, silent = false } = {}) {
-      try {
-        const tokenFn = resolveTokenFn(getTokenSilently);
-        if (!silent) set({ loadingUser: true });
+    fetchUser: async ({ silent = false } = {}) => {
+      if (!get().getTokenSilently) {
+        console.warn("🔒 getTokenSilently non disponible. Impossible de récupérer l'utilisateur.");
+        if (!silent) set({ loadingUser: false, userData: null });
+        return;
+      }
 
-        const accessToken = await tokenFn();
-        if (!accessToken) throw new Error("Pas de token");
+      await withLoadingAndError(set, async () => {
+        if (!silent) set({ loadingUser: true }); // Assurer le loading si non silencieux
+
+        const accessToken = await get().getTokenSilently();
+        if (!accessToken) throw new Error("Pas de token disponible");
 
         saveAccessToken(accessToken);
         set({ token: accessToken });
 
-        console.log("🌐 Récupération de l'utilisateur via :", `${import.meta.env.VITE_API_URL}/users/me`);
+        console.log("🌐 Récupération de l'utilisateur via:", `${import.meta.env.VITE_API_URL}/users/me`);
 
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
+        const res = await apiClient.get('/users/me', {
+          headers: { Authorization: `Bearer ${accessToken}` }, // Le token est déjà ajouté par l'intercepteur mais on peut forcer ici
         });
-        if (!res.ok) throw new Error("Échec récupération utilisateur");
 
-        const data = await res.json();
-        console.log("👤 Données utilisateur reçues :", data);
-        const finalUser = { ...(data.user || data), auth0Id: get().auth0User?.sub };
-        console.log("🧩 Utilisateur final (transformé et enrichi) :", finalUser);
+        const finalUser = { ...(res.data.user || res.data), auth0Id: get().auth0User?.sub };
+        console.log("👤 Données utilisateur reçues et transformées:", finalUser);
 
         saveUserData(finalUser);
         set({ userData: finalUser });
-      } catch (err) {
-        console.error("❌ Erreur fetchUser Zustand:", err);
-        set({ userData: null });
-      } finally {
+      }).finally(() => {
         if (!silent) set({ loadingUser: false });
-      }
+      });
     },
 
     // 🚫 Suppression du compte utilisateur
     deleteAccount: async () => {
-      const token = get().token;
-      const user = get().userData;
-      if (!token || !user) {
+      const { token, userData } = get();
+      if (!token || !userData) {
         console.warn("❌ Impossible de supprimer le compte : utilisateur ou token manquant");
+        alert("Impossible de supprimer le compte: session non valide."); // Utiliser un système de notification plus tard
         return;
       }
 
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/account/delete/me`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      await withLoadingAndError(set, async () => {
+        const res = await apiClient.delete('/account/delete/me', {
+          // Le token est automatiquement ajouté par l'intercepteur
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          console.error("❌ Erreur suppression compte :", data.error);
-          alert("❌ Échec de la suppression du compte.");
-          return;
+        if (res.status === 200 || res.status === 204) {
+          console.log("✅ Compte supprimé avec succès");
+          clearStorage();
+          // La redirection est gérée par le composant appelant
+        } else {
+          throw new Error(res.data.error || "Échec de la suppression du compte.");
         }
-
-        console.log("✅ Compte supprimé avec succès");
-        clearStorage();
-        window.location.href = import.meta.env.VITE_BASE_URL;
-      } catch (err) {
-        console.error("❌ Erreur requête suppression :", err);
-        alert("❌ Une erreur est survenue lors de la suppression.");
-      }
-    },
-
-    // 🔑 Fournit la fonction Auth0 en mémoire
-    getTokenSilentlyFn: function getTokenSilentlyFn() {
-      return get().getTokenSilently;
+      });
     },
 
     // 🚪 Déconnexion sécurisée
-    logoutSafe: function logoutSafe(logoutFn) {
+    logoutSafe: (logoutFn) => {
       clearStorage();
-      set({ token: null, userData: null, loadingUser: true });
       logoutFn({
         returnTo: import.meta.env.VITE_BASE_URL,
         federated: true,

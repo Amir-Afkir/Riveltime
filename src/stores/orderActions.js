@@ -1,28 +1,11 @@
-import axios from "axios";
-
-/**
- * Utilitaire pour gérer proprement le chargement et les erreurs.
- */
-export const withLoading = async (set, fn) => {
-  set({ loading: true, error: null });
-  try {
-    await fn();
-  } catch (err) {
-    console.error("❌ Erreur dans l'action :", err);
-    set({ error: err?.response?.data?.error || "Erreur serveur" });
-  } finally {
-    set({ loading: false });
-  }
-};
+import { apiClient, withLoadingAndError } from "../utils/api"; // Utiliser apiClient et withLoadingAndError
 
 /**
  * 🔄 Récupérer les commandes de la boutique.
  */
 export const fetchBoutiqueOrders = async (token, set) => {
-  await withLoading(set, async () => {
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders/boutique/statut`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  await withLoadingAndError(set, async () => {
+    const res = await apiClient.get('/orders/boutique/statut'); // Token via intercepteur
     set({ orders: res.data });
   });
 };
@@ -31,10 +14,8 @@ export const fetchBoutiqueOrders = async (token, set) => {
  * 📜 Récupérer les commandes client.
  */
 export const fetchClientOrders = async (token, set) => {
-  await withLoading(set, async () => {
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  await withLoadingAndError(set, async () => {
+    const res = await apiClient.get('/orders/me');
     set({ orders: res.data });
   });
 };
@@ -43,7 +24,7 @@ export const fetchClientOrders = async (token, set) => {
  * 🚴‍♂️ Récupérer les commandes disponibles pour les livreurs.
  */
 export const fetchOrdersLivreur = async (token, set, get) => {
-  await withLoading(set, async () => {
+  await withLoadingAndError(set, async () => {
     const { filtreActif, coordsAutour, rayonAutour } = get();
 
     const params = {};
@@ -52,8 +33,7 @@ export const fetchOrdersLivreur = async (token, set, get) => {
       params.rayon = rayonAutour;
     }
 
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders/livreur/pending`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const res = await apiClient.get('/orders/livreur/pending', {
       params,
     });
     set({ orders: res.data });
@@ -64,10 +44,8 @@ export const fetchOrdersLivreur = async (token, set, get) => {
  * 🧭 Récupérer les commandes assignées au livreur.
  */
 export const fetchOrdersAssignedLivreur = async (token, set) => {
-  await withLoading(set, async () => {
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders/livreur/assigned`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  await withLoadingAndError(set, async () => {
+    const res = await apiClient.get('/orders/livreur/assigned');
     set({ orders: res.data });
   });
 };
@@ -76,12 +54,8 @@ export const fetchOrdersAssignedLivreur = async (token, set) => {
  * 📦 Marquer une commande comme en préparation.
  */
 export const markAsPreparing = async (orderId, token, set, get) => {
-  try {
-    await axios.put(
-      `${import.meta.env.VITE_API_URL}/orders/${orderId}/preparing`,
-      { status: "preparing" },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+  await withLoadingAndError(set, async () => {
+    await apiClient.put(`/orders/${orderId}/preparing`, { status: "preparing" });
 
     const currentOrders = get().orders;
     set({
@@ -89,22 +63,15 @@ export const markAsPreparing = async (orderId, token, set, get) => {
         o._id === orderId ? { ...o, status: "preparing" } : o
       ),
     });
-  } catch (err) {
-    console.error("❌ Erreur mise à jour (preparing) :", err);
-    throw err;
-  }
+  });
 };
 
 /**
- * 📦 Marquer une commande comme récupéré.
+ * 📦 Marquer une commande comme récupéré (en route).
  */
 export const markOrderOnTheWay = async (orderId, token, set, get) => {
-  try {
-    await axios.put(
-      `${import.meta.env.VITE_API_URL}/orders/${orderId}/mark-on-the-way`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+  await withLoadingAndError(set, async () => {
+    await apiClient.put(`/orders/${orderId}/mark-on-the-way`);
 
     const currentOrders = get().orders;
     set({
@@ -112,22 +79,15 @@ export const markOrderOnTheWay = async (orderId, token, set, get) => {
         o._id === orderId ? { ...o, status: "on_the_way" } : o
       ),
     });
-  } catch (err) {
-    console.error("❌ Erreur mise à jour (on-the-way) :", err);
-    throw err;
-  }
+  });
 };
 
 /**
  * 🚚 Marquer une commande comme livrée.
  */
 export const markAsDelivered = async (orderId, code, token, set, get) => {
-  try {
-    await axios.put(
-      `${import.meta.env.VITE_API_URL}/orders/${orderId}/mark-delivered`,
-      { code },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+  await withLoadingAndError(set, async () => {
+    await apiClient.put(`/orders/${orderId}/mark-delivered`, { code });
 
     const currentOrders = get().orders;
     set({
@@ -135,29 +95,19 @@ export const markAsDelivered = async (orderId, code, token, set, get) => {
         o._id === orderId ? { ...o, status: "delivered" } : o
       ),
     });
-  } catch (err) {
-    console.error("❌ Erreur livraison :", err);
-    throw err;
-  }
+  });
 };
 
 /**
  * ❌ Annuler une commande.
  */
 export const cancelOrder = async (orderId, token, set, get) => {
-  try {
-    await axios.put(
-      `${import.meta.env.VITE_API_URL}/orders/${orderId}/cancel`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+  await withLoadingAndError(set, async () => {
+    await apiClient.put(`/orders/${orderId}/cancel`);
 
     const currentOrders = get().orders;
     set({
       orders: currentOrders.filter((o) => o._id !== orderId),
     });
-  } catch (err) {
-    console.error("❌ Erreur annulation :", err);
-    throw err;
-  }
+  });
 };

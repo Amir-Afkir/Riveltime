@@ -1,5 +1,4 @@
 import { ShoppingCart, FileText, Package, Truck, Home, Clock } from "lucide-react";
-import useUserStore from "../../stores/userStore";
 import useOrderStore from "../../stores/orderStore";
 import { useEffect } from "react";
 import Title from "../../components/ui/Title";
@@ -7,18 +6,10 @@ import Card from "../../components/ui/Card";
 
 export default function CommandesClient() {
   const { orders, loading, error, fetchClientOrders } = useOrderStore();
-  const { token, getTokenSilentlyFn } = useUserStore();
-  const getToken = getTokenSilentlyFn();
 
   useEffect(() => {
-    const init = async () => {
-      const accessToken = token || (getToken && await getToken());
-      if (accessToken) {
-        await fetchClientOrders(accessToken);
-      }
-    };
-    init();
-  }, [token]);
+    fetchClientOrders();
+  }, [fetchClientOrders]);
 
   if (loading) {
     return (
