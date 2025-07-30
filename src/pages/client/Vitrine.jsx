@@ -49,8 +49,15 @@ export default function Vitrine() {
   } = useBoutiqueStore();
   const fetchEstimationSimple = useBoutiqueStore((state) => state.fetchEstimationSimple);
 
+  const token = userStore.getState().token;
+  const userData = userStore.getState().userData;
+
+  // Ref pour mémoriser les dernières coordonnées utilisées pour l'estimation
+  const lastCoordsRef = useRef({ userLat: null, userLng: null, boutiqueLat: null, boutiqueLng: null });
+
   useEffect(() => {
     if (id) {
+      useBoutiqueStore.setState({ boutiqueActive: null, produitsBoutique: [] }); // ✅ Réinitialise avant fetch
       fetchBoutiquePublic(id);
       fetchProduitsPublic(id);
     }
@@ -82,12 +89,6 @@ export default function Vitrine() {
 
   const collections = [...new Set((produits || []).map(p => p.collectionName).filter(Boolean))];
 
-  const token = userStore.getState().token;
-  const userData = userStore.getState().userData;
-
-  // Ref pour mémoriser les dernières coordonnées utilisées pour l'estimation
-  const lastCoordsRef = useRef({ userLat: null, userLng: null, boutiqueLat: null, boutiqueLng: null });
-
   useEffect(() => {
     if (!boutique) return;
     try {
@@ -117,10 +118,10 @@ export default function Vitrine() {
     );
   }
 
-  if (loading || !boutique || !produits?.length) {
+  if (!boutique) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Chargement...</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-[3px] border-[#f58ba0]/50 border-t-[#ed354f]" />
       </div>
     );
   }
@@ -139,8 +140,8 @@ export default function Vitrine() {
         <div className="rounded-xl border-2 border-gray-100 overflow-hidden max-h-[120px]">
           <div className="aspect-[2.5/1] w-full relative">
             <img
-              src={boutique.coverImageUrl}
-              alt={`Image de ${boutique.name}`}
+              src={boutique?.coverImageUrl || "/default-cover.jpg"}
+              alt={`Image de ${boutique?.name || "boutique"}`}
               className="w-full h-full object-cover"
               loading="lazy"
             />
@@ -159,6 +160,11 @@ export default function Vitrine() {
         <Title level={3} className="text-xl font-semibold leading-tight text-black">
           {boutique.name}
         </Title>
+        {loading && (
+          <div className="flex justify-center items-center my-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-[3px] border-[#f58ba0]/50 border-t-[#ed354f]" />
+          </div>
+        )}
         <p className="text-sm text-gray-600">{boutique.category}</p>
         <p className="text-sm text-gray-500">{boutique.address}</p>
         {estimation && (estimation.estimatedDelay !== null || estimation.distanceKm) && (

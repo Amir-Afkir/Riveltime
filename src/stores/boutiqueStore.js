@@ -13,6 +13,9 @@ const useBoutiqueStore = create(
     boutiqueActive: null,
     produitsBoutique: [],
     estimation: null,
+    // 🧠 Caches mémoire
+    boutiqueCache: {},
+    produitsCache: {},
 
     // ✅ UI state
     setLoading: (value) => set({ loading: value }), // Utilisé par withLoadingAndError
@@ -80,19 +83,37 @@ const useBoutiqueStore = create(
       });
     },
 
-    // ✅ GET - Boutique publique pour la page Vitrine
+    // ✅ GET - Boutique publique pour la page Vitrine (avec cache)
     fetchBoutiquePublic: async (id) => {
+      const cache = get().boutiqueCache[id];
+      if (cache) {
+        set({ boutiqueActive: cache });
+        return;
+      }
+
       await withLoadingAndError(set, async () => {
         const res = await apiClient.get(`/boutiques/${id}`);
-        set({ boutiqueActive: res.data.boutique });
+        set((state) => ({
+          boutiqueActive: res.data.boutique,
+          boutiqueCache: { ...state.boutiqueCache, [id]: res.data.boutique },
+        }));
       });
     },
 
-    // ✅ GET - Produits publics de la boutique
+    // ✅ GET - Produits publics de la boutique (avec cache)
     fetchProduitsPublic: async (id) => {
+      const cache = get().produitsCache[id];
+      if (cache) {
+        set({ produitsBoutique: cache });
+        return;
+      }
+
       await withLoadingAndError(set, async () => {
         const res = await apiClient.get(`/boutiques/${id}/produits`);
-        set({ produitsBoutique: res.data.produits });
+        set((state) => ({
+          produitsBoutique: res.data.produits,
+          produitsCache: { ...state.produitsCache, [id]: res.data.produits },
+        }));
       });
     },
 
