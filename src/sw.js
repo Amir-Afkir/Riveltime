@@ -1,50 +1,70 @@
 // src/sw.js
-// ✅ Désactive les logs Workbox même en mode dev
-self.__WB_DISABLE_DEV_LOGS = true; 
+// ✅ Désactive les logs Workbox même en dev
+self.__WB_DISABLE_DEV_LOGS = true;
 
 import { precacheAndRoute } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { NetworkFirst, StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
+import { ExpirationPlugin } from 'workbox-expiration';
+import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
-// ✅ Précache les ressources injectées automatiquement par VitePWA
+// ✅ Précache les ressources VitePWA (injectées automatiquement)
 precacheAndRoute(self.__WB_MANIFEST || []);
 
-// 👉 Tu peux ici ajouter d'autres stratégies personnalisées si besoin
-// Stratégies personnalisées pour API Riveltime et Mapbox
-import { registerRoute } from 'workbox-routing';
-import { NetworkFirst, CacheFirst } from 'workbox-strategies';
-import { ExpirationPlugin } from 'workbox-expiration';
-
-// API Riveltime : NetworkFirst
+// ✅ Cache API Riveltime
 registerRoute(
   ({ url }) => url.origin === 'https://api.riveltime.app',
   new NetworkFirst({
-    cacheName: 'riveltime-api-cache',
+    cacheName: 'api-riveltime',
     networkTimeoutSeconds: 10,
     plugins: [
       new ExpirationPlugin({
         maxEntries: 50,
-        maxAgeSeconds: 3600,
+        maxAgeSeconds: 3600, // 1h
       }),
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
     ],
   })
 );
 
-// Mapbox : CacheFirst
+// ✅ Cache Mapbox (terrain, tiles, images...)
 registerRoute(
-  ({ url }) => url.origin === 'https://api.mapbox.com',
+  ({ url }) => url.origin === 'https://api.mapbox.com' || url.origin === 'https://tiles.mapbox.com',
   new CacheFirst({
-    cacheName: 'riveltime-mapbox-cache',
+    cacheName: 'mapbox-assets',
     plugins: [
       new ExpirationPlugin({
-        maxEntries: 50,
+        maxEntries: 100,
         maxAgeSeconds: 86400, // 24h
       }),
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
     ],
   })
 );
 
-// ℹ️ Tu peux aussi écouter les événements Workbox si besoin (optionnel)
-// self.addEventListener('message', (event) => {
-//   if (event.data && event.data.type === 'SKIP_WAITING') {
-//     self.skipWaiting();
-//   }
-// });
+// ✅ Cache images (avatars, logos, cover boutique)
+registerRoute(
+  ({ request }) => request.destination === 'image',
+  new StaleWhileRevalidate({
+    cacheName: 'images-cache',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 86400 }),
+    ],
+  })
+);
+
+// ✅ Page fallback offline (optionnel)
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/offline.html'))
+    );
+  }
+});
+
+// ✅ Skip waiting & update SW dès que possible
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
