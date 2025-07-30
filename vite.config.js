@@ -23,17 +23,19 @@ export default defineConfig({
         'icon-512.png'
       ],
       manifest: {
-        id: '/', // ✅ requis pour PWABuilder
         name: 'Riveltime',
         short_name: 'Riveltime',
         description: 'Livraison locale rapide et responsable',
         start_url: '/',
         scope: '/',
+        id: '/',
+        lang: 'fr',
+        dir: 'auto',
         display: 'standalone',
+        display_override: ['standalone', 'window-controls-overlay'],
+        orientation: 'portrait',
         theme_color: '#ed354f',
         background_color: '#f3f4f6',
-        orientation: 'portrait',
-        lang: 'fr',
         icons: [
           {
             src: 'icon-192.png',
@@ -42,13 +44,13 @@ export default defineConfig({
             purpose: 'any'
           },
           {
-            src: 'icon-512-any.png',
+            src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: 'icon-512-maskable.png',
+            src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
@@ -59,45 +61,50 @@ export default defineConfig({
             type: 'image/png'
           }
         ],
-        screenshots: [ // ✅ pour PWABuilder + Store publication
+        screenshots: [
           {
-            src: 'screenshot1.png',
-            sizes: '1280x720',
-            type: 'image/png',
-            form_factor: 'wide'
+            src: "screenshot1.png",
+            sizes: "1280x720",
+            type: "image/png",
+            form_factor: "wide"
           },
           {
-            src: 'screenshot2.jpeg',
-            sizes: '709x1536',
-            type: 'image/png',
-            form_factor: 'narrow'
+            src: "screenshot2.jpeg",
+            sizes: "709x1536",
+            type: "image/jpeg",
+            form_factor: "narrow"
           },
           {
-            src: 'screenshot3.jpeg',
-            sizes: '709x1536',
-            type: 'image/png',
-            form_factor: 'narrow'
+            src: "screenshot3.jpeg",
+            sizes: "709x1536",
+            type: "image/jpeg",
+            form_factor: "narrow"
           },
           {
-            src: 'screenshot4.jpeg',
-            sizes: '709x1536',
-            type: 'image/png',
-            form_factor: 'narrow'
+            src: "screenshot4.jpeg",
+            sizes: "709x1536",
+            type: "image/jpeg",
+            form_factor: "narrow"
           },
           {
-            src: 'screenshot5.jpeg',
-            sizes: '709x1536',
-            type: 'image/png',
-            form_factor: 'narrow'
-          },
+            src: "screenshot5.jpeg",
+            sizes: "709x1536",
+            type: "image/jpeg",
+            form_factor: "narrow"
+          }
         ],
-        launch_handler: { // ✅ conseillé pour apparence native
+        launch_handler: {
           client_mode: 'auto'
         },
-        categories: ['shopping', 'utilities', 'food'], // ✅ conseillé
-        display_override: ['standalone', 'browser'], // ✅ conseil Chrome
+        categories: [
+          'food',
+          'navigation',
+          'productivity',
+          'shopping',
+          'utilities'
+        ],
         edge_side_panel: {
-          preferred: true // ✅ pour side panel Windows/Edge
+          preferred: true
         }
       },
       cleanupOutdatedCaches: true,
