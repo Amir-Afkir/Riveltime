@@ -1,8 +1,10 @@
 // src/App.jsx
 import { useEffect } from "react";
+import { Toaster } from 'react-hot-toast';
 import { useAuth0 } from "@auth0/auth0-react";
 import useUserStore from "./stores/userStore";
 import AppRoutes from './routes/AppRoutes.jsx';
+import UpdateBanner from './components/ui/UpdateBanner';
 
 export default function App() {
   const {
@@ -45,5 +47,11 @@ export default function App() {
     }
   }, [isAuthenticated, auth0User]);
 
-  return <AppRoutes />;
+  return (
+    <>
+      <UpdateBanner />
+      <AppRoutes />
+      <Toaster position="top-center" reverseOrder={false} />
+    </>
+  );
 }

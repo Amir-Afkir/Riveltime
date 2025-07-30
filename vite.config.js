@@ -12,6 +12,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      srcDir: 'src',
+      filename: 'sw.js',
+      strategies: 'injectManifest',
       registerType: 'autoUpdate',
       includeAssets: [
         'favicon.ico',
@@ -36,36 +39,10 @@ export default defineConfig({
         ]
       },
       cleanupOutdatedCaches: true,
-      globPatterns: ['**/*.{js,css,html,ico,png,svg,json,webp,woff2}'],
-      workbox: {
-        navigateFallback: '/offline.html',
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/api\.riveltime\.app\/.*$/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'riveltime-api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 3600,
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/api\.mapbox\.com\/.*$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'riveltime-mapbox-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 86400,
-              },
-            },
-          },
-        ],
-      },
+      enableWorkboxModulesLogs: false,
       devOptions: {
         enabled: true,
+        type: 'module'
       }
     })
   ],

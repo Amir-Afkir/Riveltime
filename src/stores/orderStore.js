@@ -1,11 +1,14 @@
 import { create } from "zustand";
 import * as orderActions from "../stores/orderActions";
+import { calculerTourneeOptimisee } from "../utils/calculateOptimizedTour";
 
 const useOrderStore = create((set, get) => ({
   orders: [],
   loading: false,
   error: null,
   orderedSteps: [],
+  map: null,
+  setMap: (ref) => set({ map: ref }),
 
   // 🔍 Filtres dynamiques pour les livreurs
   filtreActif: "autour", // Par défaut : autour de moi
@@ -18,6 +21,11 @@ const useOrderStore = create((set, get) => ({
   setRayonAutour: (rayon) => set({ rayonAutour: rayon }),
   setOrders: (orders) => set({ orders }),
   setOrderedSteps: (steps) => set({ orderedSteps: steps }),
+  recalculerOrderedSteps: () => {
+    const orders = get().orders;
+    const steps = calculerTourneeOptimisee(orders);
+    set({ orderedSteps: steps });
+  },
 
   // Méthodes de récupération
   fetchBoutiqueOrders: async (token) => {
@@ -34,15 +42,18 @@ const useOrderStore = create((set, get) => ({
 
   fetchOrdersAssignedLivreur: async (token) => {
     await orderActions.fetchOrdersAssignedLivreur(token, set);
+    get().recalculerOrderedSteps();
   },
 
   // Méthodes de mise à jour
   markAsPreparing: async (orderId, token) => {
     await orderActions.markAsPreparing(orderId, token, set, get);
+    get().recalculerOrderedSteps();
   },
 
   markAsDelivered: async (orderId, code, token) => {
     await orderActions.markAsDelivered(orderId, code, token, set, get);
+    get().recalculerOrderedSteps();
   },
 
   cancelOrder: async (orderId, token) => {

@@ -1,6 +1,7 @@
 // ✅ Version Zustandisée de BottomSheetTournee.jsx
 import { MapPinIcon, PackageIcon, ClockIcon, Phone, TruckIcon, MapIcon } from "lucide-react";
-import { useState, useEffect } from "react"; // ← conservez temporairement pour les autres useState
+import { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
 import Card from "./Card";
 import Button from "./Button";
 import useUserStore from "../../stores/userStore";
@@ -11,7 +12,7 @@ const tabs = [
   { key: "historique", label: "Historique" },
 ];
 
-function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
+function ProchaineLivraison({ livraison, code, setCode, onSubmit, loading }) {
   if (!livraison) {
     return <Card><p className="text-sm text-gray-500">Aucune livraison en cours</p></Card>;
   }
@@ -26,6 +27,16 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
 
   return (
     <Card className="space-y-4">
+      {/* Status badge */}
+      {["preparing", "on_the_way"].includes(livraison.status) && (
+        <span className="inline-block text-sm font-medium mb-2 px-3 py-1 rounded-full bg-blue-100 text-blue-800">
+          {livraison.status === "preparing"
+            ? "📦 À récupérer"
+            : livraison.status === "on_the_way"
+            ? "➡️ Livraison à effectuer"
+            : ""}
+        </span>
+      )}
       <div className="text-center space-y-1">
         <p className="text-sm text-gray-600 font-medium flex items-center gap-1 justify-left">
           <PackageIcon size={14} /> Commande n° {livraison.orderNumber}
@@ -115,8 +126,16 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
             variant="secondary"
             onClick={() => onSubmit("mark-on-the-way", livraison._id)}
             className="w-full"
+            disabled={loading}
           >
-            Commande récupérée
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-t-transparent border-gray-500 rounded-full animate-spin" />
+                Traitement...
+              </div>
+            ) : (
+              "Commande récupérée"
+            )}
           </Button>
         ) : (
           <div className="flex items-center border border-gray-300 rounded-full overflow-hidden mt-2">
@@ -130,8 +149,13 @@ function ProchaineLivraison({ livraison, code, setCode, onSubmit }) {
             <Button
               variant="secondary"
               onClick={() => onSubmit("mark-delivered", livraison._id)}
+              disabled={loading}
             >
-              Livrer
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-t-transparent border-gray-500 rounded-full animate-spin" />
+              ) : (
+                "Livrer"
+              )}
             </Button>
           </div>
         )
@@ -163,9 +187,31 @@ export default function BottomSheetTournee() {
   const [activeFilter, setActiveFilter] = useState("en_cours");
   const [code, setCode] = useState("");
   const [isOpen, setIsOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
   const token = useUserStore(state => state.token);
-  const { orders: livraisons, markAsDelivered, markAsPreparing } = useOrderStore();
-  const { orderedSteps } = useOrderStore();
+  const {
+    orders: livraisons,
+    markAsDelivered,
+    markAsPreparing,
+    recalculerOrderedSteps,
+    loading: loadingOrders,
+    orderedSteps,
+    map,
+  } = useOrderStore();
+
+  // Fly to the first ordered step on orderedSteps update
+  useEffect(() => {
+    if (orderedSteps?.length > 0 && map?.current?.flyTo) {
+      const step = orderedSteps[0];
+      map.current.flyTo({ center: [step.lon, step.lat], zoom: 14 });
+    }
+  }, [orderedSteps]);
+
+  // Backup: recalculate orderedSteps on mount
+  useEffect(() => {
+    recalculerOrderedSteps();
+    // eslint-disable-next-line
+  }, []);
 
   useEffect(() => {
     document.body.classList.toggle("overflow-hidden", isOpen);
@@ -174,10 +220,10 @@ export default function BottomSheetTournee() {
 
   const handleLivrer = async (action, orderId) => {
     if (!orderId || (action === "mark-delivered" && !code.trim())) {
-      if (action === "mark-delivered") alert("❌ Veuillez saisir le code de validation.");
+      if (action === "mark-delivered") toast.error("❌ Veuillez saisir le code de validation.");
       return;
     }
-
+    setLoading(true);
     try {
       if (action === "mark-on-the-way") {
         await markAsPreparing(orderId, token);
@@ -186,7 +232,9 @@ export default function BottomSheetTournee() {
         setCode("");
       }
     } catch (err) {
-      alert("❌ Erreur : " + err.message);
+      toast.error("❌ Erreur : " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -229,27 +277,30 @@ export default function BottomSheetTournee() {
               </div>
 
               <div className="space-y-3 mt-2">
-                {activeFilter === "en_cours" && (
-                  livraisons.filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status)).length > 0 ? (
-                    livraisons.filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status)).map(livraison => (
-                      <ProchaineLivraison
-                        key={livraison._id}
-                        livraison={livraison}
-                        code={code}
-                        setCode={setCode}
-                        onSubmit={handleLivrer}
-                      />
-                    ))
-                  ) : (
-                    <Card><p className="text-sm text-gray-500">Aucune livraison en cours</p></Card>
-                  )
-                )}
-                {activeFilter === "historique" && (
-                  <>
-                    <ListeLivraisonsParStatut livraisons={livraisons} statut="delivered" />
-                    <ListeLivraisonsParStatut livraisons={livraisons} statut="cancelled" />
-                  </>
-                )}
+                <>
+                  {activeFilter === "en_cours" && (
+                    livraisons.filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status)).length > 0 ? (
+                      livraisons.filter(l => ["accepted", "preparing", "on_the_way"].includes(l.status)).map(livraison => (
+                        <ProchaineLivraison
+                          key={livraison._id}
+                          livraison={livraison}
+                          code={code}
+                          setCode={setCode}
+                          onSubmit={handleLivrer}
+                          loading={loading}
+                        />
+                      ))
+                    ) : (
+                      <Card><p className="text-sm text-gray-500">Aucune livraison en cours</p></Card>
+                    )
+                  )}
+                  {activeFilter === "historique" && (
+                    <>
+                      <ListeLivraisonsParStatut livraisons={livraisons} statut="delivered" />
+                      <ListeLivraisonsParStatut livraisons={livraisons} statut="cancelled" />
+                    </>
+                  )}
+                </>
               </div>
             </section>
           </main>
