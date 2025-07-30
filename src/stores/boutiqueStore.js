@@ -5,10 +5,14 @@ import { apiClient, withLoadingAndError, createFormData } from '../utils/api'; /
 const useBoutiqueStore = create(
   devtools((set, get) => ({
     boutiques: [],
+    boutiquesClient: [],
     selectedBoutique: null,
     loading: false,
     error: null,
     abortController: null,
+    boutiqueActive: null,
+    produitsBoutique: [],
+    estimation: null,
 
     // ✅ UI state
     setLoading: (value) => set({ loading: value }), // Utilisé par withLoadingAndError
@@ -51,6 +55,44 @@ const useBoutiqueStore = create(
         set({ boutiques: res.data });
       }).finally(() => {
         set({ abortController: null });
+      });
+    },
+
+    // ✅ GET - Boutiques publiques pour la page Accueil
+    fetchBoutiquesClient: async () => {
+      // Optionnel : récupération du cache
+      const cached = localStorage.getItem("cachedBoutiques");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) {
+            set({ boutiquesClient: parsed });
+          }
+        } catch (e) {
+          console.warn("❌ Erreur lecture cache boutiquesClient:", e);
+        }
+      }
+
+      await withLoadingAndError(set, async () => {
+        const res = await apiClient.get('/client/accueil/boutiques');
+        set({ boutiquesClient: res.data });
+        localStorage.setItem("cachedBoutiques", JSON.stringify(res.data)); // 💾 mise en cache
+      });
+    },
+
+    // ✅ GET - Boutique publique pour la page Vitrine
+    fetchBoutiquePublic: async (id) => {
+      await withLoadingAndError(set, async () => {
+        const res = await apiClient.get(`/boutiques/${id}`);
+        set({ boutiqueActive: res.data.boutique });
+      });
+    },
+
+    // ✅ GET - Produits publics de la boutique
+    fetchProduitsPublic: async (id) => {
+      await withLoadingAndError(set, async () => {
+        const res = await apiClient.get(`/boutiques/${id}/produits`);
+        set({ produitsBoutique: res.data.produits });
       });
     },
 
@@ -101,6 +143,19 @@ const useBoutiqueStore = create(
       } else {
         return await get().createBoutique(data);
       }
+    },
+
+    // ✅ GET - Estimation simple (public)
+    fetchEstimationSimple: async (payload) => {
+    await withLoadingAndError(set, async () => {
+        const res = await apiClient.post("/orders/estimation-simple", payload);
+        set({ estimation: res.data });
+    });
+    },
+
+    // ✅ Reset estimation
+    clearEstimation: () => {
+      set({ estimation: null });
     },
   }))
 );

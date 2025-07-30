@@ -1,6 +1,7 @@
 // src/pages/client/Accueil.jsx
 import { useState } from "react";
-import useResilientFetch from "../../hooks/useResilientFetch";
+import useBoutiqueStore from "../../stores/boutiqueStore";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, LogIn, ShoppingCart, Bike, Shirt, Laptop, Utensils, Pill, Hammer, Flower } from "lucide-react";
 import MerchantCard from "../../components/MerchantCard";
@@ -19,14 +20,10 @@ const FILTERS = [
 export default function Accueil() {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const {
-    data: boutiques,
-    loading,
-    error
-  } = useResilientFetch(
-    `${import.meta.env.VITE_API_URL}/client/accueil/boutiques`,
-    "cachedBoutiques"
-  );
+  const { boutiquesClient, loading, error, fetchBoutiquesClient } = useBoutiqueStore();
+  useEffect(() => {
+    if (!boutiquesClient?.length) fetchBoutiquesClient();
+  }, []);
   const navigate = useNavigate();
 
   const FEATURED_MESSAGES = [
@@ -40,7 +37,7 @@ export default function Accueil() {
   ];
 
 
-  const filteredBoutiques = (boutiques || []).filter((b) => {
+  const filteredBoutiques = (boutiquesClient || []).filter((b) => {
     const nom = typeof b.name === "string" ? b.name.toLowerCase() : "";
     const categorie = typeof b.category === "string" ? b.category.toLowerCase() : "";
     const search = query.toLowerCase();

@@ -1,17 +1,8 @@
 // src/pages/client/Vitrine.jsx
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import useResilientFetch from "../../hooks/useResilientFetch";
-const fallbackState = (cacheKey) => {
-  try {
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) return JSON.parse(cached);
-  } catch (e) {
-    console.warn("Erreur lecture cache", cacheKey, e);
-  }
-  return null;
-};
-import useUserStore from "../../stores/userStore";
+import { useEffect, useState, useRef } from "react";
+import useBoutiqueStore from "../../stores/boutiqueStore";
+import userStore from "../../stores/userStore";
 import useCartStore from "../../stores/cartStore";
 import Button from "../../components/ui/Button";
 import Title from "../../components/ui/Title";
@@ -47,26 +38,55 @@ export default function Vitrine() {
   const [searchQuery, setSearchQuery] = useState("");
   const closeNotification = () => setNotification(null);
 
-  // fetch boutique et produits via useResilientFetch
-  const { data: boutiqueDataRaw, loading: loadingBoutique, error: errorBoutique } = useResilientFetch(`${API_URL}/boutiques/${id}`, `public-boutique-${id}`);
-  const [boutiqueData, setBoutiqueData] = useState(() => boutiqueDataRaw || fallbackState(`public-boutique-${id}`));
+  const {
+    boutiqueActive: boutique,
+    produitsBoutique: produits,
+    loading,
+    error: boutiqueError,
+    fetchBoutiquePublic,
+    fetchProduitsPublic,
+    estimation,
+  } = useBoutiqueStore();
+  const fetchEstimationSimple = useBoutiqueStore((state) => state.fetchEstimationSimple);
+
   useEffect(() => {
-    if (boutiqueDataRaw) setBoutiqueData(boutiqueDataRaw);
-  }, [boutiqueDataRaw]);
+    if (id) {
+      fetchBoutiquePublic(id);
+      fetchProduitsPublic(id);
+    }
 
-  const { data: produitsDataRaw, loading: loadingProduits, error: errorProduits } = useResilientFetch(`${API_URL}/boutiques/${id}/produits`, `public-produits-${id}`);
-  const [produitsData, setProduitsData] = useState(() => produitsDataRaw || fallbackState(`public-produits-${id}`));
-  useEffect(() => {
-    if (produitsDataRaw) setProduitsData(produitsDataRaw);
-  }, [produitsDataRaw]);
+    const userLat = userData?.infosClient?.latitude;
+    const userLng = userData?.infosClient?.longitude;
+    const boutiqueLat = boutique?.location?.coordinates?.[1];
+    const boutiqueLng = boutique?.location?.coordinates?.[0];
 
-  const boutique = boutiqueData?.boutique;
-  const produits = produitsData?.produits || [];
-  const collections = [...new Set(produits.map(p => p.collectionName).filter(Boolean))];
+    if (token && userLat && userLng && boutiqueLat && boutiqueLng) {
+      const lastCoords = lastCoordsRef.current;
 
-  const { token, userData } = useUserStore();
-  const [estimatedDelay, setEstimatedDelay] = useState(null);
-  const [distanceKm, setDistanceKm] = useState(null);
+      const sameCoords =
+        lastCoords.userLat === userLat &&
+        lastCoords.userLng === userLng &&
+        lastCoords.boutiqueLat === boutiqueLat &&
+        lastCoords.boutiqueLng === boutiqueLng;
+
+      if (!sameCoords) {
+        fetchEstimationSimple({
+          boutiqueLocation: { lat: boutiqueLat, lng: boutiqueLng },
+          deliveryLocation: { lat: userLat, lng: userLng },
+        });
+        lastCoordsRef.current = { userLat, userLng, boutiqueLat, boutiqueLng };
+      }
+    }
+
+  }, [id]);
+
+  const collections = [...new Set((produits || []).map(p => p.collectionName).filter(Boolean))];
+
+  const token = userStore.getState().token;
+  const userData = userStore.getState().userData;
+
+  // Ref pour mémoriser les dernières coordonnées utilisées pour l'estimation
+  const lastCoordsRef = useRef({ userLat: null, userLng: null, boutiqueLat: null, boutiqueLng: null });
 
   useEffect(() => {
     if (!boutique) return;
@@ -87,62 +107,17 @@ export default function Vitrine() {
     }
   }, [boutique]);
 
-  useEffect(() => {
-    async function estimateFee() {
-      if (
-        !token ||
-        !userData?.infosClient?.latitude ||
-        !userData?.infosClient?.longitude ||
-        !boutique?.location?.coordinates
-      ) {
-        return;
-      }
-
-      const deliveryLocation = {
-        lat: userData.infosClient.latitude,
-        lng: userData.infosClient.longitude,
-      };
-
-      const boutiqueLocation = {
-        lat: boutique.location.coordinates[1],
-        lng: boutique.location.coordinates[0],
-      };
-
-      try {
-        const response = await fetch(`${API_URL}/orders/estimation-simple`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            boutiqueLocation,
-            deliveryLocation
-          }),
-        });
-
-        const result = await response.json();
-        if (result.estimatedDelay) setEstimatedDelay(result.estimatedDelay);
-        if (result.distanceKm) setDistanceKm(result.distanceKm);
-      } catch (error) {
-        console.error("Erreur estimation frais livraison:", error);
-      }
-    }
-
-    estimateFee();
-  }, [boutique, userData, token]);
-
-  if (errorBoutique || errorProduits) {
+  if (boutiqueError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-100">
         <p className="text-red-600">
-          {errorBoutique?.message || errorProduits?.message || "Erreur lors du chargement des données."}
+          {boutiqueError?.message || "Erreur lors du chargement des données."}
         </p>
       </div>
     );
   }
 
-  if (loadingBoutique || loadingProduits || !boutiqueData?.boutique || !produitsData?.produits) {
+  if (loading || !boutique || !produits?.length) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Chargement...</p>
@@ -186,18 +161,18 @@ export default function Vitrine() {
         </Title>
         <p className="text-sm text-gray-600">{boutique.category}</p>
         <p className="text-sm text-gray-500">{boutique.address}</p>
-        {(estimatedDelay !== null || distanceKm) && (
+        {estimation && (estimation.estimatedDelay !== null || estimation.distanceKm) && (
           <div className="mt-4 flex flex-wrap justify-center gap-3 text-gray-800">
-            {distanceKm && (
+            {estimation.distanceKm && (
               <div className="flex items-center gap-2 px-3 py-1.5 text-sm">
                 <MapPin className="w-4 h-4 text-[#ed354f]" />
-                <span>{distanceKm.toFixed(1)} km</span>
+                <span>{estimation.distanceKm.toFixed(1)} km</span>
               </div>
             )}
-            {estimatedDelay !== null && (
+            {estimation.estimatedDelay !== null && (
               <div className="flex items-center gap-2 px-3 py-1.5 text-sm">
                 <Clock className="w-4 h-4 text-[#ed354f]" />
-                <span>{formatDelay(estimatedDelay)}</span>
+                <span>{formatDelay(estimation.estimatedDelay)}</span>
               </div>
             )}
           </div>

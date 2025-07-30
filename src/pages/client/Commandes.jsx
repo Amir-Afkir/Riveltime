@@ -8,8 +8,10 @@ export default function CommandesClient() {
   const { orders, loading, error, fetchClientOrders } = useOrderStore();
 
   useEffect(() => {
-    fetchClientOrders();
-  }, [fetchClientOrders]);
+    if (orders.length === 0) {
+      fetchClientOrders();
+    }
+  }, []);
 
   if (loading) {
     return (
