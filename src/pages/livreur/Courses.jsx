@@ -32,6 +32,7 @@ export default function Courses() {
     loading,
     error,
     fetchOrdersLivreur,
+    setOrders,
     filtreActif,
     setFiltreActif,
     depart,
@@ -92,6 +93,7 @@ export default function Courses() {
 
   // Effet pour charger les commandes (dépendances sur les filtres)
   useEffect(() => {
+    setOrders([]); // Vide immédiatement les anciennes commandes
     const init = async () => {
       await fetchOrdersLivreur(token);
     };

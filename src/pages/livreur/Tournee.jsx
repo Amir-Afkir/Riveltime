@@ -68,7 +68,7 @@ export default function Tournee() {
           )) {
           const { boutiqueLocation, deliveryLocation } = commande;
 
-          if (boutiqueLocation?.lng != null && boutiqueLocation?.lat != null) {
+          if (commande.status !== "on_the_way" && boutiqueLocation?.lng != null && boutiqueLocation?.lat != null) {
             const key = `${boutiqueLocation.lng},${boutiqueLocation.lat}`;
             if (!seen.has(key)) {
               points.push([boutiqueLocation.lng, boutiqueLocation.lat]);
