@@ -63,7 +63,9 @@ export default function Tournee() {
         const pointToCommandeMap = [];
         const seen = new Set();
 
-        for (const commande of orders) {
+        for (const commande of orders.filter(c =>
+            ["accepted", "preparing", "on_the_way"].includes(c.status)
+          )) {
           const { boutiqueLocation, deliveryLocation } = commande;
 
           if (boutiqueLocation?.lng != null && boutiqueLocation?.lat != null) {

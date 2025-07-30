@@ -51,6 +51,11 @@ const useOrderStore = create((set, get) => ({
     get().recalculerOrderedSteps();
   },
 
+  markOrderOnTheWay: async (orderId, token) => {
+    await orderActions.markOrderOnTheWay(orderId, token, set, get);
+    get().recalculerOrderedSteps();
+  },
+
   markAsDelivered: async (orderId, code, token) => {
     await orderActions.markAsDelivered(orderId, code, token, set, get);
     get().recalculerOrderedSteps();

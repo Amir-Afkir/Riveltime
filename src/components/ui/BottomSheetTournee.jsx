@@ -192,7 +192,7 @@ export default function BottomSheetTournee() {
   const {
     orders: livraisons,
     markAsDelivered,
-    markAsPreparing,
+    markOrderOnTheWay,
     recalculerOrderedSteps,
     loading: loadingOrders,
     orderedSteps,
@@ -226,7 +226,7 @@ export default function BottomSheetTournee() {
     setLoading(true);
     try {
       if (action === "mark-on-the-way") {
-        await markAsPreparing(orderId, token);
+        await markOrderOnTheWay(orderId, token);
       } else {
         await markAsDelivered(orderId, code, token);
         setCode("");

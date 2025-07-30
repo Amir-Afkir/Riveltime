@@ -96,6 +96,29 @@ export const markAsPreparing = async (orderId, token, set, get) => {
 };
 
 /**
+ * 📦 Marquer une commande comme récupéré.
+ */
+export const markOrderOnTheWay = async (orderId, token, set, get) => {
+  try {
+    await axios.put(
+      `${import.meta.env.VITE_API_URL}/orders/${orderId}/mark-on-the-way`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const currentOrders = get().orders;
+    set({
+      orders: currentOrders.map((o) =>
+        o._id === orderId ? { ...o, status: "on_the_way" } : o
+      ),
+    });
+  } catch (err) {
+    console.error("❌ Erreur mise à jour (on-the-way) :", err);
+    throw err;
+  }
+};
+
+/**
  * 🚚 Marquer une commande comme livrée.
  */
 export const markAsDelivered = async (orderId, code, token, set, get) => {
