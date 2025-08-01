@@ -132,29 +132,6 @@ export default function Accueil() {
       >
         <div className="mb-3" aria-hidden="true" />
 
-        {(selectedCategory || filtreDistance) && (
-          <div className="flex items-center gap-2 mb-4 ml-2 flex-wrap">
-            <span className="text-sm text-gray-600">Filtres actifs :</span>
-            {selectedCategory && (
-              <button
-                onClick={() => setSelectedCategory("")}
-                className="flex items-center gap-1 text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition"
-              >
-                <span>{selectedCategory}</span>
-                <span className="text-gray-500">✕</span>
-              </button>
-            )}
-            {filtreDistance && (
-              <button
-                onClick={() => setFiltreDistance(null)}
-                className="flex items-center gap-1 text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition"
-              >
-                <span>≤ {filtreDistance} km</span>
-                <span className="text-gray-500">✕</span>
-              </button>
-            )}
-          </div>
-        )}
 
         {/* Recherche */}
         <div className="relative mb-5 pl-0">
@@ -180,14 +157,20 @@ export default function Accueil() {
                 className="w-[70px] shrink-0 snap-start flex flex-col items-center justify-center text-center"
               >
                 <button
-                  onClick={() => setSelectedCategory(name)}
-                  className="w-[75px] h-[52px] min-h-[44px] rounded-full flex items-center justify-center transition shadow-md hover:shadow-lg hover:brightness-95"
-                  style={{ backgroundColor: bg }}
+                  onClick={() => setSelectedCategory(selectedCategory === name ? "" : name)}
+                  className={`w-[75px] h-[52px] min-h-[44px] rounded-full flex items-center justify-center transition shadow-md hover:shadow-lg hover:brightness-95 ${
+                    selectedCategory === name ? 'ring-2 ring-offset-2 ring-[#ed354f]' : ''
+                  }`}
+                  style={{
+                    backgroundColor: selectedCategory === name ? '#ed354f' : bg,
+                  }}
                 >
                   <span className="text-white">{icon}</span>
                 </button>
                 <span
-                  className="text-sm mt-1 text-gray-700 leading-tight"
+                  className={`text-sm mt-1 leading-tight ${
+                    selectedCategory === name ? 'text-[#ed354f] font-semibold' : 'text-gray-700'
+                  }`}
                   title={name}
                 >
                   {name}
@@ -253,33 +236,66 @@ export default function Accueil() {
         </section>
 
         {/* Filtres contextuels + Distance */}
-        <div className="flex flex-wrap gap-2 mt-4">
-          <button className="flex items-center gap-1 bg-white border border-gray-300 rounded-full px-4 py-1.5 text-sm text-gray-800 hover:bg-gray-100 h-[44px]">
-            <Clock3 size={16} className="text-gray-500" />
-            Ouvert maintenant
-          </button>
-          <button className="flex items-center gap-1 bg-[#ed354f] border rounded-full px-4 py-1.5 text-sm text-white hover:bg-red-600 h-[44px]">
-            <Flame size={16} className="text-[white]" />
-            Offres
-          </button>
-          <button className="flex items-center gap-2 bg-white border border-gray-300 rounded-full px-3 py-1.5 hover:bg-gray-100 h-[44px]">
-            <Truck size={20} className="text-gray-500" />
-            <div className="flex flex-col leading-tight text-left">
-              <span className="text-[12px] text-gray-800">Livraison</span>
-              <span className="text-[12px] text-gray-800 font-semibold">gratuite</span>
+        {(() => {
+          // Simuler les états actifs des filtres contextuels. Remplacez par vos vrais états (ex: filtreOuvert, filtreOffres, filtreLivraison)
+          const [filtreOuvert, setFiltreOuvert] = useState(false);
+          const [filtreOffres, setFiltreOffres] = useState(false);
+          const [filtreLivraison, setFiltreLivraison] = useState(false);
+          // Pour la démo, on laisse le code inline, mais à extraire si besoin.
+          return (
+            <div className="flex flex-wrap gap-2 mt-4">
+              <button
+                className={`flex items-center gap-1 rounded-full px-4 py-1.5 text-sm h-[44px] transition border ${
+                  filtreOuvert
+                    ? "bg-gray-100 text-gray-800 border-gray-300 ring-2 ring-offset-1 ring-[#ed354f]"
+                    : "bg-white text-gray-800 border-gray-300 hover:bg-gray-100"
+                }`}
+                onClick={() => setFiltreOuvert((v) => !v)}
+              >
+                <Clock3 size={16} className="text-gray-500" />
+                Ouvert maintenant
+              </button>
+              <button
+                className={`flex items-center gap-1 rounded-full px-4 py-1.5 text-sm h-[44px] transition border ${
+                  filtreOffres
+                    ? "bg-red-600 text-white border-red-600 ring-2 ring-offset-1 ring-[#ed354f]"
+                    : "bg-[#ed354f] text-white border hover:bg-red-600"
+                }`}
+                onClick={() => setFiltreOffres((v) => !v)}
+              >
+                <Flame size={16} className={filtreOffres ? "text-white" : "text-white"} />
+                Offres
+              </button>
+              <button
+                className={`flex items-center gap-2 rounded-full px-3 py-1.5 h-[44px] transition border ${
+                  filtreLivraison
+                    ? "bg-gray-100 text-gray-800 border-gray-300 ring-2 ring-offset-1 ring-[#ed354f]"
+                    : "bg-white text-gray-800 border-gray-300 hover:bg-gray-100"
+                }`}
+                onClick={() => setFiltreLivraison((v) => !v)}
+              >
+                <Truck size={20} className="text-gray-500" />
+                <div className="flex flex-col leading-tight text-left">
+                  <span className="text-[12px]">Livraison</span>
+                  <span className="text-[12px] font-semibold">gratuite</span>
+                </div>
+              </button>
+              <div
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full border transition cursor-pointer h-[44px] ${
+                  (filtreDistance)
+                    ? "bg-gray-100 border-gray-300 text-gray-800 ring-2 ring-offset-1 ring-[#ed354f]"
+                    : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
+                }`}
+                onClick={() => setShowDistanceFilters(prev => !prev)}
+              >
+                <span className="text-sm font-medium">À proximité</span>
+                <ChevronDown
+                  className={`w-4 h-4 text-gray-700 transition-transform duration-300 ${showDistanceFilters ? "rotate-180" : ""}`}
+                />
+              </div>
             </div>
-          </button>
-
-          <div
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-100 transition cursor-pointer h-[44px]"
-            onClick={() => setShowDistanceFilters(prev => !prev)}
-          >
-            <span className="text-sm font-medium text-gray-800">À proximité</span>
-            <ChevronDown
-              className={`w-4 h-4 text-gray-700 transition-transform duration-300 ${showDistanceFilters ? "rotate-180" : ""}`}
-            />
-          </div>
-        </div>
+          );
+        })()}
 
         <div className="relative" ref={distanceRef}>
           <div
@@ -291,7 +307,7 @@ export default function Accueil() {
               {[3, 7, 15, 25, 50, 100, 200, 500].map((km) => (
                 <button
                   key={km}
-                  onClick={() => setFiltreDistance(km)}
+                  onClick={() => setFiltreDistance(filtreDistance === km ? null : km)}
                   className={`px-3 py-1.5 rounded-full text-sm shrink-0 snap-start transition border ${
                     filtreDistance === km
                       ? "bg-[#ed354f] text-white border-[#ed354f]"
