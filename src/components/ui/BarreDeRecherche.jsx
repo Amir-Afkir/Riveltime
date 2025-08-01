@@ -34,9 +34,11 @@ useEffect(() => {
           onChange={e => onChange?.(e.target.value)}
           placeholder={placeholder}
           aria-label="Rechercher une boutique ou un produit"
+          aria-autocomplete="list"
+          name="search"
           autoComplete="off"
           enterKeyHint="search"
-          className="flex-1 text-base text-gray-800 placeholder-gray-400 bg-transparent outline-none"
+          className="flex-1 text-base text-gray-800 placeholder-gray-500 bg-transparent outline-none"
         />
       </div>
     </motion.div>
