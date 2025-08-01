@@ -8,6 +8,9 @@ import { useNavigate } from "react-router-dom";
 import AnnonceContextuelle from "../../components/ui/AnnonceContextuelle";
 import { Search, Earth, ShoppingCart, Bike, Shirt, Laptop, Utensils, Pill, Hammer, Flower, ChevronDown, Clock3, Flame, Truck } from "lucide-react";
 import MerchantCard from "../../components/MerchantCard";
+import BarreDeRecherche from "../../components/ui/BarreDeRecherche";
+
+ 
 
 const FILTERS = [
   { name: "Alimentation", icon: <ShoppingCart size={24} />, bg: "#4F9CF9" },
@@ -21,7 +24,7 @@ const FILTERS = [
 ];
 
 export default function Accueil() {
-  const [query, setQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [boutiquesAvecDistance, setBoutiquesAvecDistance] = useState([]);
   const [filtreDistance, setFiltreDistance] = useState(null);
@@ -89,7 +92,7 @@ export default function Accueil() {
   const filteredBoutiques = (boutiquesAvecDistance || []).filter((b) => {
     const nom = typeof b.name === "string" ? b.name.toLowerCase() : "";
     const categorie = typeof b.category === "string" ? b.category.toLowerCase() : "";
-    const search = query.toLowerCase();
+    const search = searchTerm.toLowerCase();
     const categoryFilter = selectedCategory.toLowerCase();
 
     const matchSearch = nom.includes(search) || categorie.includes(search);
@@ -141,19 +144,7 @@ export default function Accueil() {
 
 
         {/* Recherche */}
-        <div className="relative mb-5 pl-0">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none"
-            size={20}
-          />
-          <input
-            type="text"
-            placeholder="Rechercher une boutique..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-[16px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f]"
-          />
-        </div> 
+        <BarreDeRecherche value={searchTerm} onChange={setSearchTerm} />
 
         {/* Filtres par catégorie */}
         <div className="-mx-4">

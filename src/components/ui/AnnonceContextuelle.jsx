@@ -50,7 +50,7 @@ export default function AnnonceContextuelle({ moment = "sunny" }) {
           <p className="text-sm mt-1 opacity-90">{subtitle}</p>
         </div>
         <div className="w-[120px] h-[120px] shrink-0 ml-3">
-          <Lottie animationData={grocery} loop={false} autoplay={true} shadow-lg />
+          <Lottie animationData={grocery} loop={false} autoplay={true} className="shadow-lg" />
         </div>
       </div>
     </div>
