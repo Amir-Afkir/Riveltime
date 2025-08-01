@@ -1,6 +1,7 @@
 // src/pages/client/Accueil.jsx
 import { useState } from "react";
 import { useEffect } from "react";
+import { useRef } from "react";
 import haversine from 'haversine-distance';
 import useBoutiqueStore from "../../stores/boutiqueStore";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +26,26 @@ export default function Accueil() {
   const [filtreDistance, setFiltreDistance] = useState(null);
   const [showDistanceFilters, setShowDistanceFilters] = useState(false);
   const { boutiquesClient, loading, error, fetchBoutiquesClient, boutiquesAutour, fetchBoutiquesAutour } = useBoutiqueStore();
+
+  const distanceRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (distanceRef.current && !distanceRef.current.contains(event.target)) {
+        setShowDistanceFilters(false);
+      }
+    };
+
+    if (showDistanceFilters) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDistanceFilters]);
   useEffect(() => {
     if (!boutiquesClient?.length) fetchBoutiquesClient();
   }, []);
@@ -264,23 +285,27 @@ export default function Accueil() {
           </div>
         </div>
 
-        <div
-          className={`-mx-4 transition-all duration-300 overflow-hidden ${showDistanceFilters ? 'max-h-[200px] opacity-100' : 'max-h-0 opacity-0'}`}
-        >
-          <div className="px-4 pb-3 flex overflow-x-auto gap-3 py-2 whitespace-nowrap no-scrollbar scroll-pl-6 snap-x">
-            {[3, 7, 15, 25, 50, 100, 200, 500].map((km) => (
-              <button
-                key={km}
-                onClick={() => setFiltreDistance(km)}
-                className={`px-3 py-1.5 rounded-full text-sm shrink-0 snap-start transition border ${
-                  filtreDistance === km
-                    ? "bg-[#ed354f] text-white border-[#ed354f]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                ≤ {km} km
-              </button>
-            ))}
+        <div className="relative" ref={distanceRef}>
+          <div
+            className={`absolute z-30  -mx-4 left-0 right-0  transition-all duration-300 ${
+              showDistanceFilters ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+            }`}
+          >
+            <div className="flex overflow-x-auto gap-3 py-2 px-4 whitespace-nowrap no-scrollbar scroll-pl-6 snap-x">
+              {[3, 7, 15, 25, 50, 100, 200, 500].map((km) => (
+                <button
+                  key={km}
+                  onClick={() => setFiltreDistance(km)}
+                  className={`px-3 py-1.5 rounded-full text-sm shrink-0 snap-start transition border ${
+                    filtreDistance === km
+                      ? "bg-[#ed354f] text-white border-[#ed354f]"
+                      : "bg-white text-gray-700 shadow-md border-gray-300 hover:bg-gray-100"
+                  }`}
+                >
+                  ≤ {km} km
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
