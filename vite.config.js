@@ -109,6 +109,9 @@ export default defineConfig({
       },
       cleanupOutdatedCaches: true,
       enableWorkboxModulesLogs: false,
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024
+      },
       devOptions: {
         enabled: true,
         type: 'module'
