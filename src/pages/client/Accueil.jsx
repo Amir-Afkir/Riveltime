@@ -383,7 +383,7 @@ export default function Accueil() {
             }}
           >
             <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-0 rounded-2xl" />
-            <div className="relative z-10 flex items-center gap-4 w-full">
+            <div className="relative z-10 flex items-center gap-4 w-full relative">
               <div className="w-28 h-28 bg-white rounded-2xl overflow-hidden border border-white shadow-md relative">
                 <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl z-10" />
                 <img
@@ -401,13 +401,13 @@ export default function Accueil() {
                     💥 Coup de cœur en promo sur Riveltime
                   </p>
                 </div>
-                <button
-                  onClick={() => navigate(`/vitrine/${randomProduct.boutiqueId}`)}
-                  className="self-start bg-[#ed354f] hover:bg-[#d42e45] text-white text-xs font-semibold px-4 py-1.5 mt-4 rounded-full shadow-sm transition-all group-hover:scale-105"
-                >
-                  Découvrir
-                </button>
               </div>
+              <button
+                onClick={() => navigate(`/vitrine/${randomProduct.boutiqueId}`)}
+                className="absolute bottom-0 right-0 bg-[#ed354f] hover:bg-[#d42e45] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-sm transition-all group-hover:scale-105"
+              >
+                Découvrir
+              </button>
             </div>
             <div className="absolute top-0 right-0 px-2 py-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded-bl-xl tracking-wide">
               ⚡ Offre
