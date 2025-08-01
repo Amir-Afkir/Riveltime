@@ -1,48 +1,37 @@
 import axios from 'axios';
-import useUserStore from '../stores/userStore'; // Import direct pour récupérer le token
+import useUserStore from '../stores/userStore';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-/**
- * Configure et retourne une instance Axios préconfigurée.
- * Ajoute un intercepteur pour inclure le token d'authentification.
- */
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json', // Type de contenu par défaut, peut être écrasé
+    'Content-Type': 'application/json',
   },
 });
 
-// Intercepteur pour ajouter le token d'authentification à toutes les requêtes
-apiClient.interceptors.request.use(config => {
-  const token = useUserStore.getState().token;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+// 🔐 Ajout automatique du token d’auth
+apiClient.interceptors.request.use(
+  config => {
+    const token = useUserStore.getState().token;
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+  error => Promise.reject(error)
+);
 
 /**
- * Gère les erreurs Axios de manière centralisée.
- * @param {Error} err - L'objet erreur Axios.
- * @param {function} set - La fonction `set` du store Zustand.
- * @param {string} fallbackMessage - Message d'erreur par défaut.
- * @returns {string} Le message d'erreur affiché.
+ * Gestion d’erreur centralisée avec fallback.
  */
 export const handleAxiosError = (err, set, fallbackMessage = "Une erreur est survenue") => {
   console.error("❌ Erreur API:", err);
-  const errorMessage = err?.response?.data?.error || fallbackMessage;
-  set({ error: errorMessage });
-  return errorMessage;
+  const message = err?.response?.data?.error || fallbackMessage;
+  set({ error: message });
+  return message;
 };
 
 /**
- * Utilitaire pour encapsuler les appels API avec gestion du loading et de l'erreur.
- * @param {function} set - La fonction `set` du store Zustand.
- * @param {function} asyncFn - La fonction asynchrone à exécuter.
+ * Exécute une fonction asynchrone en gérant le loading et les erreurs.
  */
 export const withLoadingAndError = async (set, asyncFn) => {
   set({ loading: true, error: null });
@@ -50,44 +39,55 @@ export const withLoadingAndError = async (set, asyncFn) => {
     await asyncFn();
   } catch (err) {
     handleAxiosError(err, set);
-    throw err; // Rejeter l'erreur pour que l'appelant puisse la gérer si besoin
+    throw err;
   } finally {
     set({ loading: false });
   }
 };
 
 /**
- * Crée un objet FormData à partir d'un objet JavaScript.
- * Gère la sérialisation de champs spécifiques en JSON.
- * @param {Object} data - Les données à transformer en FormData.
- * @returns {FormData} L'objet FormData.
+ * Convertit un objet JS en FormData (avec sérialisation JSON si besoin).
  */
-export function createFormData(data) {
+export function createFormData(data, options = { exclude: [] }) {
   const formData = new FormData();
   for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined && value !== null) {
-      if (['location', 'horaires'].includes(key)) {
+    if (
+      value !== undefined &&
+      value !== null &&
+      !(typeof value === 'string' && value.trim() === '') &&
+      !options.exclude.includes(key)
+    ) {
+      const isJSON = ['location', 'horaires'].includes(key);
+
+      // ✅ Force sérialisation JSON uniquement sur certains champs
+      if (isJSON) {
         formData.append(key, JSON.stringify(value));
       } else {
         formData.append(key, value);
       }
     }
   }
+
+  // ✅ Ajout explicite du champ `boutique` même si sa valeur est "0" ou "false"
+  if (data.boutique && !formData.has("boutiqueId")) {
+    formData.append("boutiqueId", data.boutique);
+  }
+
   return formData;
 }
 
 /**
- * Transforme les données utilisateur brutes du local storage.
- * @param {Object} userData - Les données utilisateur à transformer.
- * @returns {Object} Les données utilisateur transformées.
+ * Variante excluant les fichiers (ex: coverImage).
+ */
+export const createFormDataSansImage = (data) =>
+  createFormData(data, { exclude: ['coverImage'] });
+
+/**
+ * Nettoie les données utilisateur récupérées du localStorage.
  */
 export function transformUserDataFromStorage(userData) {
   if (!userData) return null;
-
-  if (typeof userData._id === 'object' && userData._id.$oid) {
-    userData._id = userData._id.$oid; // Cas export MongoDB avec $oid
-  } else if (!userData._id && userData.id) {
-    userData._id = userData.id; // Compatibilité si seulement `id`
-  }
+  if (typeof userData._id === 'object' && userData._id.$oid) userData._id = userData._id.$oid;
+  if (!userData._id && userData.id) userData._id = userData.id;
   return userData;
 }

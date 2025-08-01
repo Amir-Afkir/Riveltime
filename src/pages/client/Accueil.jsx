@@ -1,9 +1,10 @@
 // src/pages/client/Accueil.jsx
 import { useState } from "react";
-import useBoutiqueStore from "../../stores/boutiqueStore";
 import { useEffect } from "react";
+import haversine from 'haversine-distance';
+import useBoutiqueStore from "../../stores/boutiqueStore";
 import { useNavigate } from "react-router-dom";
-import { Search, LogIn, ShoppingCart, Bike, Shirt, Laptop, Utensils, Pill, Hammer, Flower } from "lucide-react";
+import { Search, LogIn, ShoppingCart, Bike, Shirt, Laptop, Utensils, Pill, Hammer, Flower, ChevronDown } from "lucide-react";
 import MerchantCard from "../../components/MerchantCard";
 
 const FILTERS = [
@@ -20,10 +21,36 @@ const FILTERS = [
 export default function Accueil() {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const { boutiquesClient, loading, error, fetchBoutiquesClient } = useBoutiqueStore();
+  const [boutiquesAvecDistance, setBoutiquesAvecDistance] = useState([]);
+  const [filtreDistance, setFiltreDistance] = useState(null);
+  const [showDistanceFilters, setShowDistanceFilters] = useState(false);
+  const { boutiquesClient, loading, error, fetchBoutiquesClient, boutiquesAutour, fetchBoutiquesAutour } = useBoutiqueStore();
   useEffect(() => {
     if (!boutiquesClient?.length) fetchBoutiquesClient();
   }, []);
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+
+        const boutiques = boutiquesClient || [];
+        const boutiquesAvecDist = boutiques.map((b) => {
+          if (b.location?.coordinates?.length === 2) {
+            const [lon, lat] = b.location.coordinates;
+            const distance = haversine(
+              { lat: latitude, lon: longitude },
+              { lat, lon }
+            ) / 1000;
+            return { ...b, distanceKm: distance };
+          }
+          return b;
+        });
+        setBoutiquesAvecDistance(boutiquesAvecDist);
+      },
+      (err) => console.warn("Erreur géoloc", err),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, [boutiquesClient]);
   const navigate = useNavigate();
 
   const FEATURED_MESSAGES = [
@@ -37,7 +64,7 @@ export default function Accueil() {
   ];
 
 
-  const filteredBoutiques = (boutiquesClient || []).filter((b) => {
+  const filteredBoutiques = (boutiquesAvecDistance || []).filter((b) => {
     const nom = typeof b.name === "string" ? b.name.toLowerCase() : "";
     const categorie = typeof b.category === "string" ? b.category.toLowerCase() : "";
     const search = query.toLowerCase();
@@ -45,8 +72,9 @@ export default function Accueil() {
 
     const matchSearch = nom.includes(search) || categorie.includes(search);
     const matchCategory = categoryFilter ? categorie === categoryFilter : true;
+    const matchDistance = filtreDistance ? b.distanceKm <= filtreDistance : true;
 
-    return matchSearch && matchCategory;
+    return matchSearch && matchCategory && matchDistance;
   });
 
   const randomMessage = FEATURED_MESSAGES[Math.floor(Math.random() * FEATURED_MESSAGES.length)];
@@ -60,16 +88,27 @@ export default function Accueil() {
       >
         <div className="mb-3" aria-hidden="true" />
 
-        {selectedCategory && (
-          <div className="flex items-center gap-2 mb-4 ml-2">
-            <span className="text-sm text-gray-600">Filtre actif :</span>
-            <button
-              onClick={() => setSelectedCategory("")}
-              className="flex items-center gap-1 text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition"
-            >
-              <span>{selectedCategory}</span>
-              <span className="text-gray-500">✕</span>
-            </button>
+        {(selectedCategory || filtreDistance) && (
+          <div className="flex items-center gap-2 mb-4 ml-2 flex-wrap">
+            <span className="text-sm text-gray-600">Filtres actifs :</span>
+            {selectedCategory && (
+              <button
+                onClick={() => setSelectedCategory("")}
+                className="flex items-center gap-1 text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition"
+              >
+                <span>{selectedCategory}</span>
+                <span className="text-gray-500">✕</span>
+              </button>
+            )}
+            {filtreDistance && (
+              <button
+                onClick={() => setFiltreDistance(null)}
+                className="flex items-center gap-1 text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition"
+              >
+                <span>≤ {filtreDistance} km</span>
+                <span className="text-gray-500">✕</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -113,6 +152,38 @@ export default function Accueil() {
             ))}
           </div>
         </div>
+
+        {/* Bouton Distance amélioré */}
+        <div className="px-4 flex overflow-x-auto gap-4 py-3 whitespace-nowrap no-scrollbar scroll-pl-6 -mx-4">
+          <div
+            className="shrink-0 snap-start flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-300 bg-white hover:bg-gray-100 transition cursor-pointer"
+            onClick={() => setShowDistanceFilters(prev => !prev)}
+          >
+            <span className="text-sm font-medium text-gray-800">Distance</span>
+            <ChevronDown
+              className={`w-4 h-4 text-gray-700 transition-transform duration-300 ${showDistanceFilters ? "rotate-180" : ""}`}
+            />
+          </div>
+        </div>
+        {showDistanceFilters && (
+          <div className="-mx-4">
+            <div className=" px-4 pb-3 flex overflow-x-auto gap-3 py-2 whitespace-nowrap no-scrollbar scroll-pl-6 snap-x">
+              {[3, 7, 15, 25, 50, 100, 200, 500].map((km) => (
+                <button
+                  key={km}
+                  onClick={() => setFiltreDistance(km)}
+                  className={`px-3 py-1.5 rounded-full text-sm shrink-0 snap-start transition border ${
+                    filtreDistance === km
+                      ? "bg-[#ed354f] text-white border-[#ed354f]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                  }`}
+                >
+                  ≤ {km} km
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Section Récemment consultées */}
         {(() => {

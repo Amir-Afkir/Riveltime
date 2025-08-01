@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  getBoutiquesAutour, 
   getMyBoutiques,
   getBoutiqueById,
   createBoutique,
@@ -25,6 +26,7 @@ import upload from '../middleware/multerConfig.js';
 
 const router = express.Router();
 
+router.get("/autour", getBoutiquesAutour);
 
 router.get(
   '/mine',
@@ -40,7 +42,6 @@ router.get('/:id/produits', productController.getProduitsParBoutique);
 
 
 // 🔒 Routes protégées
-
 router.post(
   '/',
   jwtCheck,

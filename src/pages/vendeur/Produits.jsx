@@ -53,9 +53,10 @@ export default function Produits() {
   const [notification, setNotification] = useState(null);
   const closeNotification = () => setNotification(null);
 
-  useEffect(() => {
-    fetchMyBoutiques();
-  }, [fetchMyBoutiques]);
+// Nouvelle version : fetch sans attendre le token (protégé côté API client)
+useEffect(() => {
+  fetchMyBoutiques();
+}, [fetchMyBoutiques]);
 
   useEffect(() => {
     if (produits.length > 0) {
@@ -86,7 +87,15 @@ export default function Produits() {
     if (!name) return;
     setBoutiqueForm((prev) => ({ ...prev, [name]: value }));
   };
-  const handleBoutiqueFileChange = (e) => { /* ... idem */ };
+  const handleBoutiqueFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setBoutiqueForm(prev => ({
+        ...prev,
+        coverImage: file,
+      }));
+    }
+  };
 
   const handleSaveBoutique = async () => {
     try {
@@ -101,7 +110,19 @@ export default function Produits() {
       setNotification({ type: "error", message: "Échec de la sauvegarde. Veuillez réessayer." });
     }
   };
-  const handleDeleteBoutique = async () => { /* ... idem avec await deleteBoutique() */ };
+  const handleDeleteBoutique = async () => {
+  if (!selectedBoutique?._id) return;
+  try {
+    await deleteBoutique(selectedBoutique._id);
+    setNotification({ type: "success", message: "Boutique supprimée avec succès !" });
+    setSelectedBoutique(null);
+    fetchMyBoutiques(); // recharge la liste après suppression
+    setShowBoutiqueModal(false);
+  } catch (err) {
+    console.error("Erreur suppression :", err);
+    setNotification({ type: "error", message: "Erreur lors de la suppression de la boutique." });
+  }
+};
 
   // Ajout/édition d'un produit : on ouvre le modal et prépare le form local
   const handleAjouterProduit = () => {
@@ -136,7 +157,7 @@ export default function Produits() {
         saved = await updateProduit(produitForm._id, produitForm);
         setNotification({ type: "success", message: "Produit modifié avec succès !" });
       } else {
-        // Ajout : on rattache la boutique sélectionnée
+        // Ajout : on rattache la boutique sélectionnée 
         const toCreate = { ...produitForm, boutique: selectedBoutique?._id };
         saved = await createProduit(toCreate);
         setNotification({ type: "success", message: "Produit ajouté avec succès !" });

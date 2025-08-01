@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { apiClient, withLoadingAndError, handleAxiosError } from '../utils/api'; // Import des utilitaires centralisés
 import useUserStore from './userStore.js'; // Toujours nécessaire pour le token avant l'appel à withLoadingAndError
+import { createFormData } from '../utils/api';
 
 const useProduitStore = create(devtools((set, get) => ({
   produits: [],
@@ -67,19 +68,20 @@ const useProduitStore = create(devtools((set, get) => ({
     });
   },
 
-  createProduit: async (formData) => {
-    // Le token est géré par l'intercepteur apiClient
+    createProduit: async (data) => {
+    const formData = createFormData(data); // ✅ Sérialise proprement tout, y compris JSON 
+    console.log("[🧪 FormData envoyé]", [...formData.entries()]);
     await withLoadingAndError(set, async () => {
-      const res = await apiClient.post('/produits', formData, {
+        const res = await apiClient.post('/produits', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      if (res.data.success) {
+        });
+        if (res.data.success) {
         set((state) => ({ produits: [...state.produits, res.data.produit] }));
-      } else {
+        } else {
         throw new Error(res.data.error || "Erreur lors de la création.");
-      }
+        }
     });
-  },
+    },
 
   updateProduit: async (id, formData) => {
     await withLoadingAndError(set, async () => {

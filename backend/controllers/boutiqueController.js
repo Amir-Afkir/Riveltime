@@ -61,6 +61,44 @@ export async function getProduitsParBoutique(req, res) {
   }
 }
 
+// 🌐 GET - Calculer distance d'une boutique avec $geoNear
+export async function getBoutiquesAutour(req, res) {
+  try {
+    const { lat, lon, max = 20000 } = req.query; // rayon en mètres
+    if (!lat || !lon) {
+      return res.status(400).json({ message: "Latitude et longitude requises" });
+    }
+
+    const boutiques = await Boutique.aggregate([
+      {
+        $geoNear: {
+          near: { type: "Point", coordinates: [parseFloat(lon), parseFloat(lat)] },
+          distanceField: "distance",
+          spherical: true,
+          maxDistance: parseFloat(max),
+        },
+      },
+      {
+        $limit: 50
+      },
+      {
+        $project: {
+          name: 1,
+          category: 1,
+          coverImageUrl: 1,
+          location: 1,
+          distance: { $divide: ["$distance", 1000] } // en kilomètres
+        }
+      }
+    ]);
+
+    res.json(boutiques);
+  } catch (error) {
+    console.error("Erreur getBoutiquesAutour :", error);
+    res.status(500).json({ message: "Erreur serveur." });
+  }
+}
+
 // 🔐 POST - Créer une boutique (privée)
 export async function createBoutique(req, res) {
   try {

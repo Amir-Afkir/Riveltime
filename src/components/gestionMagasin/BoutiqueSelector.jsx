@@ -1,15 +1,21 @@
 import { Plus, Settings } from "lucide-react";
 import PropTypes from "prop-types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCreate, onEdit }) {
   const [shrinkingId, setShrinkingId] = useState(null);
   const [isDeselecting, setIsDeselecting] = useState(false);
 
-  const selectedBoutique = useMemo(
-    () => selectedId ? boutiques.find((b) => b._id === selectedId) : null,
-    [selectedId, boutiques]
-  );
+  useEffect(() => {
+    if (selectedId && !boutiques.find((b) => b._id === selectedId)) {
+      onSelect(null);
+    }
+  }, [selectedId, boutiques, onSelect]);
+
+  const selectedBoutique = useMemo(() => {
+    const boutique = selectedId ? boutiques.find((b) => b._id === selectedId) : null;
+    return boutique || null;
+  }, [selectedId, boutiques]);
 
   const avatarUrl = useMemo(
     () => selectedBoutique?.owner?.avatarUrl || "/avatar-default.png",
@@ -32,47 +38,50 @@ export default function BoutiqueSelector({ boutiques, selectedId, onSelect, onCr
     }, 200);
   };
 
-  const renderSelectedBoutique = () => (
-    <div
-      className={`relative w-full max-w-[350px] mx-auto overflow-visible ${
-        isDeselecting ? "animate-fade-shrink-out" : "animate-expand-card"
-      }`}
-      key={selectedBoutique._id}
-    >
-      <div className="rounded-xl border-2 border-gray-100 overflow-hidden max-h-[120px]">
-        <div className="aspect-[2.5/1] w-full relative">
-          <button
-            onClick={handleDeselect}
-            className="absolute inset-0 w-full h-full focus:outline-none"
-            aria-label={`Désélectionner ${selectedBoutique.name}`}
-          >
-            <img
-              src={selectedBoutique.coverImageUrl}
-              alt={`Image de ${selectedBoutique.name}`}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </button>
-        </div>
-      </div>
-      <div className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 w-[72px] h-[72px] rounded-full border-2 border-white shadow-md overflow-hidden bg-white z-[60]">
-        <img
-          src={avatarUrl}
-          alt={`Avatar de ${selectedBoutique.owner?.fullname || "vendeur"}`}
-          title={selectedBoutique.owner?.fullname || "Vendeur"}
-          className="w-full h-full object-cover rounded-full"
-        />
-      </div>
-      <button
-        onClick={() => onEdit(selectedBoutique)}
-        className="absolute top-2.5 right-2.5 z-[70] bg-white/70 backdrop-blur-sm p-3 rounded-full shadow hover:bg-white transition w-12 h-12 flex items-center justify-center"
-        title="Modifier la boutique"
-        aria-label="Modifier la boutique"
+  const renderSelectedBoutique = () => {
+    if (!selectedBoutique) return null;
+    return (
+      <div
+        className={`relative w-full max-w-[350px] mx-auto overflow-visible ${
+          isDeselecting ? "animate-fade-shrink-out" : "animate-expand-card"
+        }`}
+        key={selectedBoutique._id}
       >
-        <Settings className="w-6 h-6 text-gray-700" />
-      </button>
-    </div>
-  );
+        <div className="rounded-xl border-2 border-gray-100 overflow-hidden max-h-[120px]">
+          <div className="aspect-[2.5/1] w-full relative">
+            <button
+              onClick={handleDeselect}
+              className="absolute inset-0 w-full h-full focus:outline-none"
+              aria-label={`Désélectionner ${selectedBoutique.name}`}
+            >
+              <img
+                src={selectedBoutique.coverImageUrl}
+                alt={`Image de ${selectedBoutique.name}`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </button>
+          </div>
+        </div>
+        <div className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 w-[72px] h-[72px] rounded-full border-2 border-white shadow-md overflow-hidden bg-white z-[60]">
+          <img
+            src={avatarUrl}
+            alt={`Avatar de ${selectedBoutique.owner?.fullname || "vendeur"}`}
+            title={selectedBoutique.owner?.fullname || "Vendeur"}
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+        <button
+          onClick={() => onEdit(selectedBoutique)}
+          className="absolute top-2.5 right-2.5 z-[70] bg-white/70 backdrop-blur-sm p-3 rounded-full shadow hover:bg-white transition w-12 h-12 flex items-center justify-center"
+          title="Modifier la boutique"
+          aria-label="Modifier la boutique"
+        >
+          <Settings className="w-6 h-6 text-gray-700" />
+        </button>
+      </div>
+    );
+  };
 
   const renderBoutique = (b) => {
     const isShrinking = shrinkingId === b._id;
