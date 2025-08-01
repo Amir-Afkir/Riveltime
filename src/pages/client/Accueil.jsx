@@ -6,7 +6,7 @@ import haversine from 'haversine-distance';
 import useBoutiqueStore from "../../stores/boutiqueStore";
 import { useNavigate } from "react-router-dom";
 import Lottie from "lottie-react";
-import grocery from "../../assets/lotties/grocery.json"; // à adapter selon ton chemin
+import grocery from "../../assets/lotties/Grocery.json"; // à adapter selon ton chemin
 import { Search, Earth, ShoppingCart, Bike, Shirt, Laptop, Utensils, Pill, Hammer, Flower, ChevronDown, Clock3, Flame, Truck } from "lucide-react";
 import MerchantCard from "../../components/MerchantCard";
 
