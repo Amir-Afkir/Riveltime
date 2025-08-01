@@ -1,5 +1,4 @@
-// utils/geocodeAdresse.js
-import fetch from 'node-fetch';
+// utils/geocodeAdresse.js 
 
 /**
  * Géocode une adresse texte en coordonnées latitude/longitude

@@ -14,7 +14,6 @@
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",
     "@auth0/auth0-spa-js": "^2.2.0",
-    "@radix-ui/react-dialog": "^1.1.14",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.5.0",
     "axios": "^1.9.0",
@@ -24,6 +23,7 @@
     "haversine-distance": "^1.2.4",
     "jwks-rsa": "^3.2.0",
     "jwt-decode": "^4.0.0",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.523.0",
     "mapbox-gl": "^3.13.0",
     "multer": "^2.0.1",

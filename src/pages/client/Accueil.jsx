@@ -5,6 +5,8 @@ import { useRef } from "react";
 import haversine from 'haversine-distance';
 import useBoutiqueStore from "../../stores/boutiqueStore";
 import { useNavigate } from "react-router-dom";
+//import Lottie from "lottie-react";
+//import grocery from "../../assets/lotties/grocery.json"; // à adapter selon ton chemin
 import { Search, Earth, ShoppingCart, Bike, Shirt, Laptop, Utensils, Pill, Hammer, Flower, ChevronDown, Clock3, Flame, Truck } from "lucide-react";
 import MerchantCard from "../../components/MerchantCard";
 
@@ -168,12 +170,6 @@ export default function Accueil() {
             className="w-full pl-10 pr-4 py-2 text-[16px] border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ed354f]"
           />
         </div> 
-
-        {/* Bloc météo */}
-        <div className="mt-4 mb-2 bg-blue-100 border border-blue-200 rounded-xl px-4 py-3 shadow-sm">
-          <p className="text-sm font-medium text-blue-900">👋 Il fait beau aujourd’hui</p>
-          <p className="text-sm text-blue-800">C’est le moment de commander local !</p>
-        </div>
 
         {/* Filtres par catégorie */}
         <div className="-mx-4">
