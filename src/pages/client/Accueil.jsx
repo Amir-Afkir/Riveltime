@@ -5,8 +5,7 @@ import { useRef } from "react";
 import haversine from 'haversine-distance';
 import useBoutiqueStore from "../../stores/boutiqueStore";
 import { useNavigate } from "react-router-dom";
-import Lottie from "lottie-react";
-import grocery from "../../assets/lotties/Grocery.json"; // à adapter selon ton chemin
+import AnnonceContextuelle from "../../components/ui/AnnonceContextuelle";
 import { Search, Earth, ShoppingCart, Bike, Shirt, Laptop, Utensils, Pill, Hammer, Flower, ChevronDown, Clock3, Flame, Truck } from "lucide-react";
 import MerchantCard from "../../components/MerchantCard";
 
@@ -107,6 +106,14 @@ export default function Accueil() {
   const randomProduct = allProducts.length
     ? allProducts[Math.floor(Math.random() * allProducts.length)]
     : null;
+
+  const getMomentOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 11) return "morning";
+    if (hour >= 11 && hour < 17) return "sunny";
+    if (hour >= 17 && hour < 21) return "evening";
+    return "cold";
+  };
 
   return (
     <>
@@ -354,20 +361,8 @@ export default function Accueil() {
           }
         })()}
 
-        {/* Section annonce */}
-        <div className="relative my-4 px-4 py-4 rounded-xl bg-cover bg-center shadow-sm overflow-hidden border border-gray-100 text-white"
-            style={{ backgroundImage: 'url(/images/cover-sunny.jpg)' }}>
-          <div className="absolute inset-0 bg-black/30 rounded-xl z-0" />
-          <div className="relative z-10 flex justify-between items-center">
-            <div className="flex flex-col">
-              <p className="text-base font-semibold">Il fait beau aujourd’hui ☀️</p>
-              <p className="text-sm mt-1 opacity-90">Voici quelques idées fraîches</p>
-            </div>
-            <div className="w-[120px] h-[120px] shrink-0 ml-3">
-              <Lottie animationData={grocery} loop autoplay />
-            </div>
-          </div>
-        </div>
+        {/* Section annonce dynamique */}
+        <AnnonceContextuelle moment={getMomentOfDay()} />
 
         {/* Section Populaires */}
         <section className="mt-8">
@@ -390,30 +385,38 @@ export default function Accueil() {
 
         {/* Section produit vedette */}
         {randomProduct && (
-          <div className="relative group mt-6 px-4 py-4 rounded-2xl bg-gradient-to-r from-red-100 to-red-50 shadow-md flex items-center gap-4 overflow-hidden border border-red-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-            <div className="w-28 h-28 bg-white rounded-2xl overflow-hidden border border-white shadow-md relative">
-              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl z-10" />
-              <img
-                src={randomProduct.imageUrl}
-                alt={randomProduct.name}
-                className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-              />
-            </div>
-            <div className="flex-1 flex flex-col justify-between h-full py-1">
-              <div>
-                <p className="text-sm font-bold text-black-900 truncate">
-                  {randomProduct.name}
-                </p>
-                <p className="text-[13px] text-black-800 mt-1">
-                  💥 Coup de cœur en promo sur Riveltime
-                </p>
+          <div
+            className="relative group mt-6 px-4 py-4 rounded-2xl bg-cover bg-center shadow-md flex items-center gap-4 overflow-hidden border border-red-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+            style={{
+              backgroundImage: `url(${boutiquesClient.find(b => b._id === randomProduct.boutiqueId)?.coverImageUrl || ''})`
+            }}
+          >
+            <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-0 rounded-2xl" />
+            <div className="relative z-10 flex items-center gap-4 w-full">
+              <div className="w-28 h-28 bg-white rounded-2xl overflow-hidden border border-white shadow-md relative">
+                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl z-10" />
+                <img
+                  src={randomProduct.imageUrl}
+                  alt={randomProduct.name}
+                  className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                />
               </div>
-              <button
-                onClick={() => navigate(`/vitrine/${randomProduct.boutiqueId}`)}
-                className="self-start bg-[#ed354f] hover:bg-[#d42e45] text-white text-xs font-semibold px-4 py-1.5 mt-4 rounded-full shadow-sm transition-all group-hover:scale-105"
-              >
-                Découvrir
-              </button>
+              <div className="flex-1 flex flex-col justify-between h-full py-1">
+                <div>
+                  <p className="text-sm font-bold text-black-900 truncate">
+                    {randomProduct.name}
+                  </p>
+                  <p className="text-[13px] text-black-800 mt-1">
+                    💥 Coup de cœur en promo sur Riveltime
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate(`/vitrine/${randomProduct.boutiqueId}`)}
+                  className="self-start bg-[#ed354f] hover:bg-[#d42e45] text-white text-xs font-semibold px-4 py-1.5 mt-4 rounded-full shadow-sm transition-all group-hover:scale-105"
+                >
+                  Découvrir
+                </button>
+              </div>
             </div>
             <div className="absolute top-0 right-0 px-2 py-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded-bl-xl tracking-wide">
               ⚡ Offre
